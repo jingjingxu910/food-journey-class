@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" role="img" aria-label="口腔示意图">
+  <defs>
+    <linearGradient id="lip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7babd"/>
+      <stop offset="1" stop-color="#e9808a"/>
+    </linearGradient>
+    <linearGradient id="tongue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#faafb2"/>
+      <stop offset="1" stop-color="#e9828c"/>
+    </linearGradient>
+  </defs>
+  <path d="M31 77c20-27 49-40 89-40s69 13 89 40c-20 27-49 39-89 39S51 104 31 77z" fill="url(#lip)"/>
+  <path d="M50 77c17-15 40-22 70-22s53 7 70 22c-17 15-40 22-70 22s-53-7-70-22z" fill="#b65060"/>
+  <g fill="#fffaf1" stroke="#e7c7bf" stroke-width="1.2">
+    <rect x="78" y="57" width="12" height="13" rx="3"/>
+    <rect x="91" y="55" width="13" height="15" rx="3"/>
+    <rect x="105" y="54" width="15" height="16" rx="3"/>
+    <rect x="121" y="54" width="15" height="16" rx="3"/>
+    <rect x="137" y="55" width="13" height="15" rx="3"/>
+    <rect x="151" y="57" width="12" height="13" rx="3"/>
+  </g>
+  <path d="M69 84c14-11 31-16 51-16s37 5 51 16c-12 9-29 15-51 15s-39-6-51-15z" fill="url(#tongue)"/>
+  <g fill="#fffaf1" stroke="#e7c7bf" stroke-width="1.1">
+    <rect x="85" y="87" width="12" height="8" rx="2.5"/>
+    <rect x="98" y="89" width="14" height="8" rx="2.5"/>
+    <rect x="113" y="90" width="14" height="8" rx="2.5"/>
+    <rect x="128" y="89" width="14" height="8" rx="2.5"/>
+    <rect x="143" y="87" width="12" height="8" rx="2.5"/>
+  </g>
+  <path d="M72 57c13-8 29-12 48-12s35 4 48 12" fill="none" stroke="#fff0ee" stroke-linecap="round" stroke-width="5" opacity=".72"/>
+</svg>

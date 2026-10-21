@@ -5,26 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f3f8f6" />
     <title>消化模型工作台｜食物在身体里的旅行</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20261022-3" />
     <script defer src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script defer src="model-workbench.js"></script>
+    <script defer src="model-workbench.js?v=20261022-3"></script>
   </head>
-  <body class="model-page">
+  <body class="model-page student-page">
     <main class="model-app">
       <header class="model-topbar">
-        <a class="model-back" href="index.html">← 课程首页</a>
+        <a class="model-back" href="index.html">← 返回</a>
         <div class="model-identity">
           <span id="connection-status" class="connection-status">本机记录</span>
           <strong id="group-badge">第 1 组</strong>
+          <button id="model-fullscreen-button" class="model-fullscreen-button" type="button">全屏</button>
         </div>
       </header>
 
       <section id="student-view" class="model-student-view">
         <div class="model-heading">
           <div>
-            <p id="phase-label" class="model-eyebrow">V1 · 初始模型</p>
-            <h1 id="model-title">食物会怎样在身体里旅行？</h1>
-            <p id="model-prompt">把器官自由摆到人体上，再直接画出食物经过的路线。这里不会提示对错。</p>
+            <p id="phase-label" class="model-eyebrow">V1</p>
+            <h1 id="model-title">食物在身体里的旅行</h1>
+            <p id="model-prompt">把器官摆到人体上。</p>
           </div>
           <div class="phase-track" aria-label="课堂进度">
             <span id="phase-v1" class="active">初次建模</span><i></i><span>AR观察</span><i></i><span id="phase-v2">证据修正</span>
@@ -33,21 +34,21 @@
 
         <section class="anatomy-workspace">
           <aside class="organ-shelf" aria-labelledby="shelf-title">
-            <div><p class="model-eyebrow">器官区</p><h2 id="shelf-title">拖到人体上</h2><p>位置没有框，也不会自动吸附。</p></div>
+            <div><h2 id="shelf-title">器官</h2></div>
             <div id="organ-palette" class="organ-palette"></div>
           </aside>
 
           <div class="body-stage-wrap">
             <div id="body-stage" class="body-stage" aria-label="人体消化模型画布">
-              <img class="body-outline" src="assets/anatomy/body-outline.svg" alt="正面人体轮廓" draggable="false" />
+              <img class="body-outline" src="assets/anatomy/body-outline-generated.png?v=20261022-5" alt="儿童正面人体轮廓" draggable="false" />
               <canvas id="route-canvas" aria-label="食物旅行路线画布"></canvas>
               <div id="placed-organs" class="placed-organs"></div>
-              <div id="draw-tip" class="draw-tip" hidden>从口腔开始，用一笔画出食物的旅行路线</div>
+              <div id="draw-tip" class="draw-tip" hidden>画出食物的路线</div>
             </div>
           </div>
 
           <aside class="model-tools">
-            <div class="task-card"><span id="placement-count">0 / 5</span><strong>器官已放置</strong><p id="task-hint">先把 5 个器官都放到你认为合适的位置。</p></div>
+            <div class="task-card"><span id="placement-count">0 / 5</span><strong>已放置</strong><p id="task-hint">拖动器官</p></div>
             <button id="draw-route-button" class="tool-button tool-button--primary" type="button" disabled>✎ 画食物路线</button>
             <button id="undo-button" class="tool-button" type="button">↶ 撤销上一步</button>
             <button id="clear-route-button" class="tool-button" type="button">清除路线</button>
@@ -55,7 +56,7 @@
         </section>
 
         <footer class="model-footer">
-          <div><strong id="route-summary">等待画路线</strong><span id="save-status" role="status">系统会记录每次移动，不显示正确答案。</span></div>
+          <div><strong id="route-summary">画出食物的路线</strong><span id="save-status" role="status"></span></div>
           <button id="submit-model-button" class="submit-model-button" type="button">保存 V1 初始模型</button>
         </footer>
       </section>
@@ -71,5 +72,6 @@
         <div id="group-dashboard" class="group-dashboard"></div>
       </section>
     </main>
+    <section id="portrait-notice" class="portrait-notice"><div><strong>请将平板竖过来</strong><span>竖屏后开始摆放器官</span></div></section>
   </body>
 </html>

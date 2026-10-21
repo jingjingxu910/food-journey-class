@@ -87,9 +87,9 @@ a { color: inherit; }
 .palette-organ img { width: 72px; height: 76px; object-fit: contain; filter: drop-shadow(0 5px 5px rgba(107, 50, 61, .12)); }
 .palette-organ span { font-size: 13px; font-weight: 900; }
 .palette-organ:active img { transform: scale(.95); }
-.body-stage-wrap { display: grid; overflow: hidden; place-items: center; padding: 8px 18px; background: radial-gradient(circle at 50% 42%, #ffffff 0 28%, #f0f8f5 75%, #e6f1ee 100%); }
-.body-stage { position: relative; width: min(100%, 420px); aspect-ratio: 420 / 680; overflow: hidden; border-radius: 36% 36% 18% 18% / 10% 10% 8% 8%; touch-action: none; }
-.body-outline { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; pointer-events: none; }
+.body-stage-wrap { display: grid; overflow: hidden; place-items: center; padding: 8px 18px; background: #fff; }
+.body-stage { position: relative; width: min(100%, 420px); aspect-ratio: 420 / 680; overflow: hidden; touch-action: none; }
+.body-outline { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; pointer-events: none; }
 .placed-organs, #route-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .placed-organs { z-index: 3; pointer-events: none; }
 #route-canvas { z-index: 4; pointer-events: none; touch-action: none; }
@@ -153,4 +153,81 @@ a { color: inherit; }
   .palette-organ { min-height: 95px; }
   .palette-organ img { width: 62px; height: 62px; }
   .group-dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.home-page .app-shell { min-height: 100svh; padding-bottom: 18px; }
+.home-page .site-topbar { min-height: 42px; }
+.home-actions { display: flex; gap: 8px; align-items: center; }
+.home-page .brand { color: #24545a; font-size: 16px; }
+.home-page .brand-mark { display: none; }
+.home-page .hero { min-height: 210px; margin: 10px 0 14px; padding: clamp(28px, 4vw, 54px); border-radius: 24px; background: linear-gradient(135deg, #2a8586, #57aa9d); }
+.home-page .hero::before { top: -90px; right: 12%; width: 220px; height: 220px; border-width: 20px; }
+.home-page .hero::after { width: 260px; height: 260px; background: #f5df9d66; }
+.home-page .hero h1 { max-width: 760px; margin: 4px 0 10px; font-size: clamp(36px, 5vw, 64px); letter-spacing: -.045em; }
+.home-page .hero h1 em { color: inherit; }
+.home-page .intro { max-width: 600px; font-size: 16px; }
+.home-page .home-illustration { position: relative; z-index: 1; justify-self: center; padding: 18px 24px; border: 1px solid #ffffff63; border-radius: 999px; color: #fff; background: #ffffff1c; font-weight: 900; }
+.home-page .section-heading { margin-bottom: 10px; }
+.home-page .section-heading > p { display: none; }
+.home-page .section-heading h2 { font-size: 22px; }
+.home-page .module-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.home-page .module-card { min-height: 156px; padding: 15px; border-radius: 18px; }
+.home-page .module-card::after { width: 100px; height: 100px; }
+.home-page .module-icon { width: 38px; height: 38px; margin-top: 7px; border-radius: 12px; font-size: 21px; }
+.home-page .module-card h2 { margin: 8px 0 3px; font-size: 17px; }
+.home-page .module-card p { font-size: 12px; line-height: 1.45; }
+.home-page .module-action { padding-top: 6px; font-size: 12px; }
+
+.model-page { min-width: 0; overflow: hidden; }
+.model-app { display: flex; min-height: 100svh; flex-direction: column; padding: 8px 0 10px; }
+.model-topbar { min-height: 38px; padding: 0 6px; }
+.model-identity { gap: 7px; }
+.model-identity strong { padding: 6px 10px; font-size: 13px; }
+.connection-status { display: none; }
+.model-fullscreen-button { padding: 6px 10px; border: 1px solid #cce1dd; border-radius: 999px; color: #276c70; background: #fff; font-size: 13px; font-weight: 900; }
+.model-student-view { display: flex; min-height: 0; flex: 1; flex-direction: column; }
+.model-heading { min-height: 64px; padding: 6px 6px 8px; }
+.model-heading h1 { margin: 1px 0 2px; font-size: clamp(24px, 4vw, 34px); }
+.model-heading > div > p:last-child { color: #657b7c; font-size: 14px; line-height: 1.35; }
+.model-heading .phase-track { display: none; }
+.model-eyebrow { font-size: 11px; letter-spacing: .1em; }
+.anatomy-workspace { min-height: 0; flex: 1; grid-template-columns: 130px minmax(280px, 1fr) 130px; border-radius: 20px; }
+.organ-shelf, .model-tools { padding: 13px 9px; }
+.organ-shelf { gap: 6px; }
+.organ-shelf h2 { margin: 0; font-size: 17px; }
+.organ-palette { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+.palette-organ { min-height: 0; padding: 2px; }
+.palette-organ img { width: 50px; height: 58px; }
+.palette-organ span { font-size: 11px; }
+.body-stage-wrap { padding: 4px; }
+.body-stage { width: auto; height: 100%; max-width: 100%; }
+.body-outline { object-fit: contain; }
+.placed-organ img { max-height: 116px; }
+.placed-organ span { display: none; }
+.draw-tip { top: 8px; padding: 6px 10px; font-size: 11px; }
+.model-tools { gap: 7px; }
+.task-card { margin-bottom: 0; padding: 10px 8px; border-radius: 13px; text-align: center; }
+.task-card span { font-size: 22px; }
+.task-card strong { margin: 0 0 2px; font-size: 12px; }
+.task-card p { display: none; }
+.tool-button { min-height: 39px; padding: 7px 4px; border-radius: 11px; font-size: 12px; }
+.model-footer { min-height: 52px; margin-top: 8px; padding: 8px 12px; border-radius: 15px; }
+.model-footer strong { font-size: 13px; }
+.model-footer span { display: none; }
+.submit-model-button { min-height: 38px; padding: 8px 14px; font-size: 13px; }
+.portrait-notice { display: none; }
+
+@media (orientation: landscape) and (max-height: 900px) {
+  .student-page:not(.teacher-mode) > main { display: none; }
+  .student-page:not(.teacher-mode) .portrait-notice { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; color: #275d61; background: #f2f8f6; text-align: center; }
+  .portrait-notice div { display: flex; flex-direction: column; gap: 10px; }
+  .portrait-notice strong { font-size: 28px; }
+  .portrait-notice span { color: #6d8587; }
+}
+
+@media (max-width: 760px) {
+  .home-page .module-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-page .module-card { min-height: 138px; }
+  .anatomy-workspace { grid-template-columns: 106px minmax(250px, 1fr) 106px; }
+  .palette-organ img { width: 43px; height: 51px; }
 }

@@ -1,9 +1,9 @@
 const organs = [
-  { id: "mouth", name: "口腔", image: "assets/organs/mouth.svg", width: 17 },
-  { id: "esophagus", name: "食道", image: "assets/organs/esophagus.svg", width: 9 },
-  { id: "stomach", name: "胃", image: "assets/organs/stomach.svg", width: 20 },
-  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.svg", width: 25 },
-  { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.svg", width: 29 },
+  { id: "mouth", name: "口腔", image: "assets/organs/mouth-gentle.svg", width: 12 },
+  { id: "esophagus", name: "食道", image: "assets/organs/esophagus.png", width: 15 },
+  { id: "stomach", name: "胃", image: "assets/organs/stomach.png", width: 18 },
+  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.png", width: 23 },
+  { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.png", width: 26 },
 ];
 
 const CLOUD_ENV = "fishing-classroom-d5dzcz19db484d";
@@ -165,7 +165,7 @@ function endOrganDrag(event) {
     if (!dragState.from && !model.placementOrder.includes(dragState.organId)) model.placementOrder.push(dragState.organId);
     model.modificationCount += 1;
     model.moves.push({ organId: dragState.organId, from: dragState.from, to: point, at: Date.now(), durationMs: Date.now() - dragState.startedAt });
-    saveStatus.textContent = phase === "v1" ? "已记录这次摆放。" : "已记录这次证据修正。";
+    saveStatus.textContent = "";
     render();
   }
   dragState = null;
@@ -206,7 +206,7 @@ function setDrawMode(enabled) {
   drawButton.classList.toggle("is-active", drawMode);
   drawButton.textContent = drawMode ? "完成画线" : "✎ 画食物路线";
   drawTip.hidden = !drawMode;
-  if (drawMode) saveStatus.textContent = "请用一笔画出路线；重画会保留尝试次数。";
+  if (drawMode) saveStatus.textContent = "";
 }
 
 function startRoute(event) {
@@ -240,7 +240,7 @@ function finishRoute(event) {
   drawing = false;
   calculateRouteOrder();
   setDrawMode(false);
-  saveStatus.textContent = "路线已记录；如果不满意，可以重新画。";
+  saveStatus.textContent = "";
   render();
 }
 
@@ -272,7 +272,7 @@ function undo() {
   if (phase === "v1") v1 = previous;
   else v2 = previous;
   setDrawMode(false);
-  saveStatus.textContent = "已撤销上一步。";
+  saveStatus.textContent = "";
   render();
 }
 
@@ -286,7 +286,7 @@ function clearRoute() {
   model.routeDistances = {};
   model.modificationCount += 1;
   setDrawMode(false);
-  saveStatus.textContent = "路线已清除，可以重新画。";
+  saveStatus.textContent = "";
   render();
 }
 
@@ -415,12 +415,12 @@ function startRevision() {
   studentView.hidden = false;
   document.querySelector("#phase-label").textContent = "V2 · 证据修正";
   document.querySelector("#model-title").textContent = "用观察证据修正模型";
-  document.querySelector("#model-prompt").textContent = "直接调整原来的器官与路线。系统会比较前后变化，但仍不会提示答案。";
+  document.querySelector("#model-prompt").textContent = "根据观察调整器官和路线。";
   document.querySelector("#phase-v1").classList.remove("active");
   document.querySelector("#phase-v1").classList.add("done");
   document.querySelector("#phase-v2").classList.add("active");
   submitButton.textContent = "保存 V2 修正模型";
-  saveStatus.textContent = "请根据 AR 观察到的证据进行修改。";
+  saveStatus.textContent = "";
   render();
 }
 
@@ -448,7 +448,7 @@ function miniModel(model, label) {
     if (!position) return "";
     return `<img src="${organ.image}" alt="${organ.name}" title="${organ.name}" style="left:${position.x}%;top:${position.y}%;width:${organ.width}%">`;
   }).join("");
-  return `<div><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline.svg" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}"/></svg>${pieces}</div></div>`;
+  return `<div><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.png?v=20261022-5" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}"/></svg>${pieces}</div></div>`;
 }
 
 function latestRecord(records, id) {
@@ -510,6 +510,7 @@ function initialize() {
   document.querySelector("#group-badge").textContent = mode === "teacher" ? "教师端" : `第 ${groupId} 组`;
   document.querySelector(".model-back").href = `index.html?group=${groupId}`;
   if (mode === "teacher") {
+    document.body.classList.add("teacher-mode");
     studentView.hidden = true;
     teacherView.hidden = false;
     refreshDashboard();
@@ -534,4 +535,5 @@ document.querySelector("#clear-route-button").addEventListener("click", clearRou
 submitButton.addEventListener("click", submitModel);
 document.querySelector("#refresh-dashboard").addEventListener("click", refreshDashboard);
 document.querySelector("#export-button").addEventListener("click", exportRecords);
+document.querySelector("#model-fullscreen-button").addEventListener("click", () => document.documentElement.requestFullscreen?.());
 initialize();

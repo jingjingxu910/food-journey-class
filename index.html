@@ -5,53 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#176a8c" />
     <title>食物在身体里的旅行</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="styles.css?v=20261022-4" />
   </head>
-  <body>
+  <body class="home-page student-page">
     <main class="app-shell">
       <nav class="site-topbar" aria-label="课程导航">
-        <a class="brand" href="index.html"><span class="brand-mark">✦</span><span>人体探险实验室</span></a>
-        <span class="topbar-badge">四年级科学</span>
+        <a class="brand" href="index.html"><span>食物在身体里的旅行</span></a>
+        <div class="home-actions"><span id="home-group-badge" class="topbar-badge" hidden></span><button id="fullscreen-button" class="topbar-badge" type="button">全屏</button></div>
       </nav>
 
       <header class="hero hero--home">
         <div class="hero-copy">
-          <p class="eyebrow">任务 01 · 消化系统探险</p>
-          <h1>食物在身体里的<br /><em>奇妙旅行</em></h1>
-          <p class="intro">从一口食物出发，闯过六个消化站，发现身体里的科学秘密。</p>
-          <section class="lesson-status" aria-label="课堂进度">
-            <span class="status-dot" aria-hidden="true"></span>
-            <span>已解锁 2 个互动任务</span>
-          </section>
+          <p class="eyebrow">四年级科学</p>
+          <h1>食物在身体里的旅行</h1>
+          <p class="intro">今天，我们通过模型、观察和拼装来研究这个问题。</p>
         </div>
-        <div class="hero-orbit" aria-hidden="true">
-          <span class="orbit-tag orbit-tag--one">口腔</span>
-          <span class="orbit-tag orbit-tag--two">胃</span>
-          <span class="orbit-tag orbit-tag--three">小肠</span>
-          <div class="hero-planet">✦</div>
-          <div class="orbit-line"></div>
-        </div>
+        <div class="home-illustration" aria-hidden="true">食物的旅行</div>
       </header>
 
       <div class="section-heading">
-        <div><p class="eyebrow">选择任务</p><h2>今天，从哪里开始探险？</h2></div>
-        <p>每完成一项任务，就离“消化小达人”更近一步。</p>
+        <div><p class="eyebrow">课堂活动</p><h2>按课堂步骤完成</h2></div>
       </div>
 
       <section class="module-grid" aria-label="课堂模块">
-        <a class="module-card module-card--active" href="device-check.html">
-          <span class="module-number">准备</span>
-          <span class="module-icon module-icon--blue">⌁</span>
-          <h2>设备检测</h2>
-          <p>确认摄像头、人体识别和 3D 是否可用。</p>
-          <span class="module-action">开始检测 →</span>
-        </a>
-
         <a class="module-card module-card--active" href="model-workbench.html">
           <span class="module-number">任务 1</span>
           <span class="module-icon module-icon--orange">↝</span>
-          <h2>初始模型与修正</h2>
-          <p>先表达自己的想法，再用观察证据修正模型。</p>
+          <h2>初始模型</h2>
+          <p>摆出你认为合适的位置和路线。</p>
           <span class="module-action">开始建模 →</span>
         </a>
 
@@ -59,27 +40,36 @@
           <span class="module-number">任务 2</span>
           <span class="module-icon module-icon--violet">◎</span>
           <h2>AR 观察</h2>
-          <p>在真人画面中观察器官的位置与连接。</p>
-          <span class="module-action">等待摄像头权限</span>
+          <p>观察消化器官的位置和连接。</p>
+          <span class="module-action">待开启</span>
         </article>
 
         <article class="module-card module-card--locked">
           <span class="module-number">任务 3</span>
           <span class="module-icon module-icon--mint">◌</span>
-          <h2>实体拼装</h2>
-          <p>用实体模型合作拼装，说明拼装理由。</p>
+          <h2>修正模型</h2>
+          <p>根据观察到的证据修改模型。</p>
           <span class="module-action">即将解锁</span>
         </article>
 
         <article class="module-card module-card--locked">
           <span class="module-number">任务 4</span>
           <span class="module-icon module-icon--blue">◒</span>
-          <h2>3D 食物旅行</h2>
-          <p>以第一人称走进人体消化通道。</p>
+          <h2>实体拼装</h2>
+          <p>合作完成消化系统模型。</p>
+          <span class="module-action">即将解锁</span>
+        </article>
+
+        <article class="module-card module-card--locked">
+          <span class="module-number">任务 5</span>
+          <span class="module-icon module-icon--violet">◒</span>
+          <h2>食物的旅行</h2>
+          <p>从第一人称体验食物的旅行。</p>
           <span class="module-action">即将解锁</span>
         </article>
       </section>
     </main>
-    <script type="module" src="app.js"></script>
+    <section class="portrait-notice"><div><strong>请将平板竖过来</strong><span>竖屏后进入本课活动</span></div></section>
+    <script type="module" src="app.js?v=20261022-3"></script>
   </body>
 </html>
