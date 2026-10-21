@@ -3,55 +3,73 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#176a8c" />
-    <title>二维模型工作台｜食物在身体里的旅行</title>
+    <meta name="theme-color" content="#f3f8f6" />
+    <title>消化模型工作台｜食物在身体里的旅行</title>
     <link rel="stylesheet" href="styles.css" />
+    <script defer src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
+    <script defer src="model-workbench.js"></script>
   </head>
-  <body>
-    <main class="app-shell">
-      <nav class="site-topbar" aria-label="活动导航">
-        <a class="back-link" href="index.html">← 课程首页</a>
-        <button id="export-button" class="export-button" type="button">导出本机学习记录</button>
-      </nav>
-      <header class="hero lesson-hero model-hero">
-        <p id="phase-label" class="eyebrow">V1 · 我的初始想法</p>
-        <h1 id="model-title">先画出你的消化模型</h1>
-        <p id="model-prompt" class="intro">把器官放到你认为正确的位置，再排出食物会经过的顺序。此时没有对错提示。</p>
+  <body class="model-page">
+    <main class="model-app">
+      <header class="model-topbar">
+        <a class="model-back" href="index.html">← 课程首页</a>
+        <div class="model-identity">
+          <span id="connection-status" class="connection-status">本机记录</span>
+          <strong id="group-badge">第 1 组</strong>
+        </div>
       </header>
 
-      <section id="student-code-card" class="student-code-card" aria-labelledby="code-title">
-        <div><p class="board-kicker">开始前</p><h2 id="code-title">输入学习编号</h2><p>可使用座位号或教师分配的编号；不需要填写姓名。</p></div>
-        <div class="code-entry"><input id="student-code" maxlength="12" placeholder="例如：4-01" autocomplete="off" /><button id="start-model-button" type="button">开始建模</button></div>
-      </section>
-
-      <section id="workbench" class="model-workbench" hidden>
-        <div class="model-progress"><span id="position-step" class="is-active">1 · 器官位置</span><i></i><span id="route-step">2 · 食物路线</span><i></i><span id="revision-step">3 · 观察后修正</span></div>
-        <section id="position-board" class="model-board">
-          <div class="board-title"><div><p class="board-kicker">位置模型</p><h2>把器官放进人体图</h2></div><p>按住插图，拖到你认为合适的位置。</p></div>
-          <div class="model-layout">
-            <div id="body-model" class="scientific-body" aria-label="人体消化器官模型">
-              <div class="scientific-head"></div><div class="scientific-neck"></div><div class="scientific-torso"></div>
-              <div class="model-slot model-slot--mouth" data-board="position" data-slot="mouth"></div>
-              <div class="model-slot model-slot--esophagus" data-board="position" data-slot="esophagus"></div>
-              <div class="model-slot model-slot--stomach" data-board="position" data-slot="stomach"></div>
-              <div class="model-slot model-slot--small-intestine" data-board="position" data-slot="small-intestine"></div>
-              <div class="model-slot model-slot--large-intestine" data-board="position" data-slot="large-intestine"></div>
-            </div>
-            <div><p class="palette-label">拖动器官</p><div id="position-palette" class="image-palette"></div></div>
+      <section id="student-view" class="model-student-view">
+        <div class="model-heading">
+          <div>
+            <p id="phase-label" class="model-eyebrow">V1 · 初始模型</p>
+            <h1 id="model-title">食物会怎样在身体里旅行？</h1>
+            <p id="model-prompt">把器官自由摆到人体上，再直接画出食物经过的路线。这里不会提示对错。</p>
           </div>
+          <div class="phase-track" aria-label="课堂进度">
+            <span id="phase-v1" class="active">初次建模</span><i></i><span>AR观察</span><i></i><span id="phase-v2">证据修正</span>
+          </div>
+        </div>
+
+        <section class="anatomy-workspace">
+          <aside class="organ-shelf" aria-labelledby="shelf-title">
+            <div><p class="model-eyebrow">器官区</p><h2 id="shelf-title">拖到人体上</h2><p>位置没有框，也不会自动吸附。</p></div>
+            <div id="organ-palette" class="organ-palette"></div>
+          </aside>
+
+          <div class="body-stage-wrap">
+            <div id="body-stage" class="body-stage" aria-label="人体消化模型画布">
+              <img class="body-outline" src="assets/anatomy/body-outline.svg" alt="正面人体轮廓" draggable="false" />
+              <canvas id="route-canvas" aria-label="食物旅行路线画布"></canvas>
+              <div id="placed-organs" class="placed-organs"></div>
+              <div id="draw-tip" class="draw-tip" hidden>从口腔开始，用一笔画出食物的旅行路线</div>
+            </div>
+          </div>
+
+          <aside class="model-tools">
+            <div class="task-card"><span id="placement-count">0 / 5</span><strong>器官已放置</strong><p id="task-hint">先把 5 个器官都放到你认为合适的位置。</p></div>
+            <button id="draw-route-button" class="tool-button tool-button--primary" type="button" disabled>✎ 画食物路线</button>
+            <button id="undo-button" class="tool-button" type="button">↶ 撤销上一步</button>
+            <button id="clear-route-button" class="tool-button" type="button">清除路线</button>
+          </aside>
         </section>
 
-        <section id="route-board" class="model-board" hidden>
-          <div class="board-title"><div><p class="board-kicker">路径模型</p><h2>排出食物旅行路线</h2></div><p>按住器官插图，依次放到 1—5 站。</p></div>
-          <div class="route-layout"><div id="route-palette" class="image-palette"></div><div class="route-slots">
-            <div class="route-slot" data-board="route" data-slot="1"><span>1</span></div><div class="route-slot" data-board="route" data-slot="2"><span>2</span></div><div class="route-slot" data-board="route" data-slot="3"><span>3</span></div><div class="route-slot" data-board="route" data-slot="4"><span>4</span></div><div class="route-slot" data-board="route" data-slot="5"><span>5</span></div>
-          </div></div>
-        </section>
-        <p id="model-feedback" class="model-feedback" role="status"></p>
-        <div class="model-actions"><button id="clear-button" class="secondary-button" type="button">清空当前步骤</button><button id="next-button" type="button">下一步：排列路线</button></div>
+        <footer class="model-footer">
+          <div><strong id="route-summary">等待画路线</strong><span id="save-status" role="status">系统会记录每次移动，不显示正确答案。</span></div>
+          <button id="submit-model-button" class="submit-model-button" type="button">保存 V1 初始模型</button>
+        </footer>
       </section>
-      <section id="saved-panel" class="saved-panel" hidden></section>
+
+      <section id="transition-panel" class="transition-panel" hidden></section>
+      <section id="teacher-view" class="teacher-model-view" hidden>
+        <div class="teacher-model-heading">
+          <div><p class="model-eyebrow">教师端 · 实时数据</p><h1>12 个小组的模型变化</h1></div>
+          <div><button id="refresh-dashboard" class="tool-button" type="button">刷新数据</button><button id="export-button" class="tool-button" type="button">导出本机记录</button></div>
+        </div>
+        <p class="teacher-note">每张图保留学生真实摆放位置与所画路线；系统只呈现变化，不替学生判分。</p>
+        <div id="teacher-summary" class="teacher-summary"></div>
+        <div id="group-dashboard" class="group-dashboard"></div>
+      </section>
     </main>
-    <script defer src="model-workbench.js"></script>
   </body>
 </html>

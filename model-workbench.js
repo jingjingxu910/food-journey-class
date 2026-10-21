@@ -1,130 +1,537 @@
 const organs = [
-  { id: "mouth", name: "口腔", image: "assets/organs/mouth.png" },
-  { id: "esophagus", name: "食道", image: "assets/organs/esophagus.png" },
-  { id: "stomach", name: "胃", image: "assets/organs/stomach.png" },
-  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.png" },
-  { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.png" },
+  { id: "mouth", name: "口腔", image: "assets/organs/mouth.svg", width: 17 },
+  { id: "esophagus", name: "食道", image: "assets/organs/esophagus.svg", width: 9 },
+  { id: "stomach", name: "胃", image: "assets/organs/stomach.svg", width: 20 },
+  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.svg", width: 25 },
+  { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.svg", width: 29 },
 ];
-const emptyMap = () => Object.fromEntries(organs.map((organ) => [organ.id, null]));
-const emptyRoute = () => Object.fromEntries(["1", "2", "3", "4", "5"].map((station) => [station, null]));
+
+const CLOUD_ENV = "fishing-classroom-d5dzcz19db484d";
+const CLOUD_COLLECTION = "food-journey-groups";
+const params = new URLSearchParams(location.search);
+const mode = params.get("mode") === "teacher" ? "teacher" : "student";
+const parsedGroup = Number(params.get("group"));
+const groupId = Number.isInteger(parsedGroup) && parsedGroup >= 1 && parsedGroup <= 12 ? parsedGroup : 1;
+const sessionId = `group-${groupId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+const studentView = document.querySelector("#student-view");
+const teacherView = document.querySelector("#teacher-view");
+const transitionPanel = document.querySelector("#transition-panel");
+const stage = document.querySelector("#body-stage");
+const placedLayer = document.querySelector("#placed-organs");
+const palette = document.querySelector("#organ-palette");
+const canvas = document.querySelector("#route-canvas");
+const context = canvas.getContext("2d");
+const drawButton = document.querySelector("#draw-route-button");
+const submitButton = document.querySelector("#submit-model-button");
+const saveStatus = document.querySelector("#save-status");
+const routeSummary = document.querySelector("#route-summary");
+const drawTip = document.querySelector("#draw-tip");
+const placementCount = document.querySelector("#placement-count");
+const taskHint = document.querySelector("#task-hint");
+
 let phase = "v1";
-let step = "position";
-let sessionId = "";
-let startedAt = 0;
-let v1 = { position: emptyMap(), route: emptyRoute(), changes: 0 };
-let v2 = { position: emptyMap(), route: emptyRoute(), changes: 0 };
-let draggedOrgan = null;
-let dragGhost = null;
+let v1 = createModel();
+let v2 = null;
+let dragState = null;
+let drawMode = false;
+let drawing = false;
+let history = [];
+let cloudDatabase = null;
+let cloudLoginPromise = null;
 
-const workbench = document.querySelector("#workbench");
-const savedPanel = document.querySelector("#saved-panel");
-const codeCard = document.querySelector("#student-code-card");
-const studentCodeInput = document.querySelector("#student-code");
-const feedback = document.querySelector("#model-feedback");
-const nextButton = document.querySelector("#next-button");
-const clearButton = document.querySelector("#clear-button");
-
-function activeModel() { return phase === "v1" ? v1 : v2; }
-function targetMap() { return activeModel()[step]; }
-function organById(organId) { return organs.find((organ) => organ.id === organId); }
-function allPlaced(map) { return Object.values(map).every(Boolean); }
-
-function createPiece(organId) {
-  const organ = organById(organId);
-  const piece = document.createElement("button");
-  piece.className = "organ-image-piece";
-  piece.type = "button";
-  piece.dataset.organ = organ.id;
-  piece.setAttribute("aria-label", organ.name);
-  piece.innerHTML = `<img src="${organ.image}" alt="${organ.name}" /><span>${organ.name}</span>`;
-  piece.addEventListener("pointerdown", beginDrag);
-  return piece;
+function createModel() {
+  return {
+    startedAt: Date.now(),
+    completedAt: null,
+    positions: {},
+    placementOrder: [],
+    moves: [],
+    modificationCount: 0,
+    routePoints: [],
+    routeOrder: [],
+    routeDistances: {},
+    routeAttempts: [],
+  };
 }
 
-function renderBoard(board) {
-  const map = activeModel()[board];
-  const palette = document.querySelector(`#${board}-palette`);
-  document.querySelectorAll(`[data-board="${board}"][data-slot]`).forEach((slot) => {
-    slot.replaceChildren();
-    const organId = map[slot.dataset.slot];
-    if (organId) slot.append(createPiece(organId));
-  });
+function clone(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function activeModel() {
+  return phase === "v1" ? v1 : v2;
+}
+
+function organById(id) {
+  return organs.find((organ) => organ.id === id);
+}
+
+function allOrgansPlaced() {
+  return organs.every((organ) => activeModel().positions[organ.id]);
+}
+
+function snapshot() {
+  history.push(clone(activeModel()));
+  if (history.length > 30) history.shift();
+}
+
+function createOrganButton(organ, placed = false) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = placed ? "placed-organ" : "palette-organ";
+  button.dataset.organ = organ.id;
+  button.setAttribute("aria-label", organ.name);
+  button.innerHTML = `<img src="${organ.image}" alt="" draggable="false"><span>${organ.name}</span>`;
+  button.addEventListener("pointerdown", beginOrganDrag);
+  return button;
+}
+
+function renderPalette() {
   palette.replaceChildren();
-  organs.filter((organ) => !Object.values(map).includes(organ.id)).forEach((organ) => palette.append(createPiece(organ.id)));
+  organs.filter((organ) => !activeModel().positions[organ.id]).forEach((organ) => palette.append(createOrganButton(organ)));
+}
+
+function renderPlacedOrgans() {
+  placedLayer.replaceChildren();
+  organs.forEach((organ) => {
+    const position = activeModel().positions[organ.id];
+    if (!position) return;
+    const button = createOrganButton(organ, true);
+    button.style.left = `${position.x}%`;
+    button.style.top = `${position.y}%`;
+    button.style.width = `${organ.width}%`;
+    placedLayer.append(button);
+  });
 }
 
 function render() {
-  document.querySelector("#position-board").hidden = step !== "position";
-  document.querySelector("#route-board").hidden = step !== "route";
-  document.querySelector("#position-step").classList.toggle("is-active", step === "position");
-  document.querySelector("#route-step").classList.toggle("is-active", step === "route");
-  document.querySelector("#revision-step").classList.toggle("is-active", phase === "v2");
-  document.querySelector("#phase-label").textContent = phase === "v1" ? "V1 · 我的初始想法" : "V2 · 用观察证据修正模型";
-  document.querySelector("#model-title").textContent = phase === "v1" ? "先画出你的消化模型" : "回到模型，做出你的修正";
-  document.querySelector("#model-prompt").textContent = phase === "v1" ? "把器官放到你认为正确的位置，再排出食物会经过的顺序。此时没有对错提示。" : "根据刚才的 AR 观察，调整位置和路线；系统会保存你的变化。";
-  nextButton.textContent = step === "position" ? "下一步：排列路线" : phase === "v1" ? "保存 V1，前往 AR 观察" : "保存 V2 修正模型";
-  renderBoard(step);
+  renderPalette();
+  renderPlacedOrgans();
+  drawRoute();
+  const count = Object.keys(activeModel().positions).length;
+  placementCount.textContent = `${count} / ${organs.length}`;
+  drawButton.disabled = count !== organs.length;
+  taskHint.textContent = count === organs.length ? "位置可以继续修改；准备好后直接在人体上画一笔。" : "先把 5 个器官都放到你认为合适的位置。";
+  const order = activeModel().routeOrder.map((id) => organById(id).name);
+  routeSummary.textContent = order.length ? `你的路线：${order.join(" → ")}` : "等待画路线";
 }
 
-function beginDrag(event) {
-  draggedOrgan = event.currentTarget.dataset.organ;
-  dragGhost = event.currentTarget.cloneNode(true);
-  dragGhost.classList.add("drag-ghost");
-  document.body.append(dragGhost);
-  moveGhost(event);
+function pointerPosition(event) {
+  const rect = stage.getBoundingClientRect();
+  return {
+    x: Math.max(2, Math.min(98, ((event.clientX - rect.left) / rect.width) * 100)),
+    y: Math.max(2, Math.min(98, ((event.clientY - rect.top) / rect.height) * 100)),
+  };
 }
-function moveGhost(event) { if (dragGhost) { dragGhost.style.left = `${event.clientX}px`; dragGhost.style.top = `${event.clientY}px`; } }
-function endDrag(event) {
-  if (!draggedOrgan) return;
-  const target = document.elementFromPoint(event.clientX, event.clientY)?.closest(`[data-board="${step}"][data-slot]`);
-  dragGhost?.remove(); dragGhost = null;
-  if (target) {
-    const map = targetMap();
-    Object.keys(map).forEach((slot) => { if (map[slot] === draggedOrgan) map[slot] = null; });
-    map[target.dataset.slot] = draggedOrgan;
-    activeModel().changes += 1;
-    feedback.textContent = phase === "v1" ? "已记录你的想法，继续完成模型。" : "已记录这次修正。";
-    renderBoard(step);
+
+function beginOrganDrag(event) {
+  if (drawMode) return;
+  event.preventDefault();
+  const organId = event.currentTarget.dataset.organ;
+  const organ = organById(organId);
+  const ghost = document.createElement("img");
+  ghost.className = "organ-drag-ghost";
+  ghost.src = organ.image;
+  ghost.style.width = `${Math.max(54, stage.clientWidth * organ.width / 100)}px`;
+  document.body.append(ghost);
+  dragState = {
+    organId,
+    from: activeModel().positions[organId] ? clone(activeModel().positions[organId]) : null,
+    startedAt: Date.now(),
+    ghost,
+  };
+  event.currentTarget.classList.add("is-moving");
+  moveOrganDrag(event);
+}
+
+function moveOrganDrag(event) {
+  if (!dragState) return;
+  dragState.ghost.style.left = `${event.clientX}px`;
+  dragState.ghost.style.top = `${event.clientY}px`;
+}
+
+function endOrganDrag(event) {
+  if (!dragState) return;
+  const rect = stage.getBoundingClientRect();
+  const inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
+  dragState.ghost.remove();
+  document.querySelectorAll(".is-moving").forEach((element) => element.classList.remove("is-moving"));
+  if (inside) {
+    snapshot();
+    const point = pointerPosition(event);
+    const model = activeModel();
+    model.positions[dragState.organId] = point;
+    if (!dragState.from && !model.placementOrder.includes(dragState.organId)) model.placementOrder.push(dragState.organId);
+    model.modificationCount += 1;
+    model.moves.push({ organId: dragState.organId, from: dragState.from, to: point, at: Date.now(), durationMs: Date.now() - dragState.startedAt });
+    saveStatus.textContent = phase === "v1" ? "已记录这次摆放。" : "已记录这次证据修正。";
+    render();
   }
-  draggedOrgan = null;
+  dragState = null;
 }
-function clearCurrentStep() { activeModel()[step] = step === "position" ? emptyMap() : emptyRoute(); activeModel().changes += 1; renderBoard(step); }
 
-function database() {
+function resizeCanvas() {
+  const rect = stage.getBoundingClientRect();
+  const ratio = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(rect.width * ratio);
+  canvas.height = Math.round(rect.height * ratio);
+  canvas.style.width = `${rect.width}px`;
+  canvas.style.height = `${rect.height}px`;
+  context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  drawRoute();
+}
+
+function drawRoute() {
+  const rect = stage.getBoundingClientRect();
+  context.clearRect(0, 0, rect.width, rect.height);
+  const points = activeModel().routePoints;
+  if (points.length < 2) return;
+  context.beginPath();
+  context.moveTo(points[0].x * rect.width / 100, points[0].y * rect.height / 100);
+  points.slice(1).forEach((point) => context.lineTo(point.x * rect.width / 100, point.y * rect.height / 100));
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.strokeStyle = "rgba(24, 129, 117, .92)";
+  context.lineWidth = Math.max(5, rect.width * .012);
+  context.shadowColor = "rgba(255,255,255,.9)";
+  context.shadowBlur = 3;
+  context.stroke();
+  context.shadowBlur = 0;
+}
+
+function setDrawMode(enabled) {
+  drawMode = enabled && allOrgansPlaced();
+  stage.classList.toggle("is-drawing", drawMode);
+  drawButton.classList.toggle("is-active", drawMode);
+  drawButton.textContent = drawMode ? "完成画线" : "✎ 画食物路线";
+  drawTip.hidden = !drawMode;
+  if (drawMode) saveStatus.textContent = "请用一笔画出路线；重画会保留尝试次数。";
+}
+
+function startRoute(event) {
+  if (!drawMode) return;
+  event.preventDefault();
+  snapshot();
+  const model = activeModel();
+  if (model.routePoints.length) model.routeAttempts.push({ points: model.routePoints, order: model.routeOrder, at: Date.now() });
+  model.routePoints = [pointerPosition(event)];
+  model.routeOrder = [];
+  model.routeDistances = {};
+  model.modificationCount += 1;
+  drawing = true;
+  canvas.setPointerCapture?.(event.pointerId);
+  drawRoute();
+}
+
+function moveRoute(event) {
+  if (!drawing) return;
+  event.preventDefault();
+  const point = pointerPosition(event);
+  const points = activeModel().routePoints;
+  const previous = points[points.length - 1];
+  if (Math.hypot(point.x - previous.x, point.y - previous.y) >= .45) points.push(point);
+  drawRoute();
+}
+
+function finishRoute(event) {
+  if (!drawing) return;
+  event.preventDefault();
+  drawing = false;
+  calculateRouteOrder();
+  setDrawMode(false);
+  saveStatus.textContent = "路线已记录；如果不满意，可以重新画。";
+  render();
+}
+
+function calculateRouteOrder() {
+  const model = activeModel();
+  const ranked = organs.map((organ) => {
+    const position = model.positions[organ.id];
+    let closestIndex = 0;
+    let closestDistance = Infinity;
+    model.routePoints.forEach((point, index) => {
+      const distance = Math.hypot(point.x - position.x, point.y - position.y);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+    model.routeDistances[organ.id] = Number(closestDistance.toFixed(2));
+    return { id: organ.id, index: closestIndex };
+  });
+  model.routeOrder = ranked.sort((a, b) => a.index - b.index).map((item) => item.id);
+}
+
+function undo() {
+  if (!history.length) {
+    saveStatus.textContent = "现在还没有可以撤销的操作。";
+    return;
+  }
+  const previous = history.pop();
+  if (phase === "v1") v1 = previous;
+  else v2 = previous;
+  setDrawMode(false);
+  saveStatus.textContent = "已撤销上一步。";
+  render();
+}
+
+function clearRoute() {
+  if (!activeModel().routePoints.length) return;
+  snapshot();
+  const model = activeModel();
+  model.routeAttempts.push({ points: model.routePoints, order: model.routeOrder, at: Date.now() });
+  model.routePoints = [];
+  model.routeOrder = [];
+  model.routeDistances = {};
+  model.modificationCount += 1;
+  setDrawMode(false);
+  saveStatus.textContent = "路线已清除，可以重新画。";
+  render();
+}
+
+function openDatabase() {
   return new Promise((resolve, reject) => {
-    const request = indexedDB.open("foodJourneyClass", 1);
-    request.onupgradeneeded = () => request.result.createObjectStore("learningRecords", { keyPath: "id" });
+    const request = indexedDB.open("foodJourneyClass", 2);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains("learningRecords")) request.result.createObjectStore("learningRecords", { keyPath: "id" });
+    };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error);
   });
 }
-async function saveRecord() {
-  const databaseHandle = await database();
-  const record = { id: sessionId, studentCode: studentCodeInput.value.trim(), startedAt, updatedAt: Date.now(), pendingSync: true, v1, v2: phase === "v2" ? v2 : null };
-  await new Promise((resolve, reject) => { const transaction = databaseHandle.transaction("learningRecords", "readwrite"); transaction.objectStore("learningRecords").put(record); transaction.oncomplete = resolve; transaction.onerror = () => reject(transaction.error); });
-}
-async function advance() {
-  if (!allPlaced(targetMap())) { feedback.textContent = "请先放完全部 5 个器官，再进入下一步。"; return; }
-  if (step === "position") { step = "route"; feedback.textContent = "现在请排出食物旅行的顺序。"; render(); return; }
-  await saveRecord();
-  workbench.hidden = true;
-  savedPanel.hidden = false;
-  if (phase === "v1") {
-    savedPanel.innerHTML = `<p class="board-kicker">V1 已保存</p><h2>你的初始模型已记录</h2><p>现在进入 AR 观察。完成观察后，回到这里点击下方按钮修正模型。</p><button id="start-v2-button" type="button">我已完成 AR 观察，开始 V2 修正</button>`;
-    document.querySelector("#start-v2-button").addEventListener("click", () => { phase = "v2"; step = "position"; v2 = JSON.parse(JSON.stringify(v1)); savedPanel.hidden = true; workbench.hidden = false; feedback.textContent = "请根据观察到的证据调整模型。"; render(); });
-  } else {
-    savedPanel.innerHTML = `<p class="board-kicker">V2 已保存</p><h2>你完成了模型修正</h2><p>系统已保存 V1 与 V2 的差异，等待教师端收集。</p>`;
-  }
-}
-async function exportRecords() {
-  const databaseHandle = await database();
-  const records = await new Promise((resolve, reject) => { const request = databaseHandle.transaction("learningRecords", "readonly").objectStore("learningRecords").getAll(); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); });
-  const url = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: "application/json" }));
-  const link = document.createElement("a"); link.href = url; link.download = `food-journey-records-${Date.now()}.json`; link.click(); URL.revokeObjectURL(url);
+
+async function saveLocal(record) {
+  const database = await openDatabase();
+  await new Promise((resolve, reject) => {
+    const transaction = database.transaction("learningRecords", "readwrite");
+    transaction.objectStore("learningRecords").put(record);
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+  });
 }
 
-document.querySelector("#start-model-button").addEventListener("click", () => {
-  if (!studentCodeInput.value.trim()) { studentCodeInput.focus(); return; }
-  sessionId = crypto.randomUUID(); startedAt = Date.now(); codeCard.hidden = true; workbench.hidden = false; render();
-});
-nextButton.addEventListener("click", advance); clearButton.addEventListener("click", clearCurrentStep); document.addEventListener("pointermove", moveGhost); document.addEventListener("pointerup", endDrag); document.querySelector("#export-button").addEventListener("click", exportRecords);
+async function loadLocalRecords() {
+  const database = await openDatabase();
+  return new Promise((resolve, reject) => {
+    const request = database.transaction("learningRecords", "readonly").objectStore("learningRecords").getAll();
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+async function initializeCloud() {
+  if (cloudDatabase) return cloudDatabase;
+  if (!window.cloudbase) throw new Error("CloudBase SDK unavailable");
+  const app = window.cloudbase.init({ env: CLOUD_ENV, region: "ap-shanghai" });
+  cloudDatabase = app.database();
+  if (!cloudLoginPromise) {
+    cloudLoginPromise = (async () => {
+      const auth = app.auth();
+      const state = await auth.getLoginState();
+      if (!state) await auth.signInAnonymously();
+    })();
+  }
+  await cloudLoginPromise;
+  return cloudDatabase;
+}
+
+async function syncRecord(record) {
+  try {
+    const database = await initializeCloud();
+    const reference = database.collection(CLOUD_COLLECTION).doc(`group-${groupId}`);
+    let current = {};
+    try {
+      const result = await reference.get();
+      current = Array.isArray(result?.data) ? result.data[0] || {} : result?.data || {};
+    } catch {}
+    const records = Array.isArray(current.records) ? current.records.filter((item) => item.id !== record.id) : [];
+    records.push(record);
+    const payload = { id: groupId, records: records.slice(-20), updatedAt: Date.now() };
+    try {
+      await reference.update(payload);
+    } catch {
+      await reference.set(payload);
+    }
+    record.pendingSync = false;
+    await saveLocal(record);
+    document.querySelector("#connection-status").textContent = "已上传教师端";
+    return true;
+  } catch (error) {
+    console.error("同步失败，记录已保存在本机", error);
+    document.querySelector("#connection-status").textContent = "本机已保存";
+    return false;
+  }
+}
+
+function buildRecord() {
+  return {
+    id: sessionId,
+    groupId,
+    lesson: "food-journey",
+    createdAt: v1.startedAt,
+    updatedAt: Date.now(),
+    pendingSync: true,
+    v1,
+    v2,
+  };
+}
+
+async function submitModel() {
+  if (!allOrgansPlaced()) {
+    saveStatus.textContent = "请先把 5 个器官都摆到人体上。";
+    return;
+  }
+  if (activeModel().routePoints.length < 8) {
+    saveStatus.textContent = "还差一笔食物旅行路线。点击“画食物路线”后直接在人体上画。";
+    return;
+  }
+  activeModel().completedAt = Date.now();
+  const record = buildRecord();
+  await saveLocal(record);
+  document.querySelector("#connection-status").textContent = "本机已保存";
+  syncRecord(record);
+  studentView.hidden = true;
+  transitionPanel.hidden = false;
+  if (phase === "v1") {
+    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已保存</p><h1>先保留现在的想法</h1><p>接下来去进行 AR 观察。观察结束后回到这里，在同一张模型上调整器官和路线。</p><div class="transition-actions"><button id="start-v2-button" class="submit-model-button" type="button">AR 观察完成，开始修正</button></div>`;
+    document.querySelector("#start-v2-button").addEventListener("click", startRevision);
+  } else {
+    const changed = compareModels(v1, v2);
+    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已保存</p><h1>模型修正完成</h1><p>你们调整了 <strong>${changed.organs.length}</strong> 个器官，并${changed.routeChanged ? "重新思考了" : "保留了"}食物路线。系统已经把前后两版一起交给老师。</p>`;
+  }
+}
+
+function startRevision() {
+  phase = "v2";
+  v2 = clone(v1);
+  v2.startedAt = Date.now();
+  v2.completedAt = null;
+  v2.moves = [];
+  v2.modificationCount = 0;
+  v2.routeAttempts = [];
+  history = [];
+  transitionPanel.hidden = true;
+  studentView.hidden = false;
+  document.querySelector("#phase-label").textContent = "V2 · 证据修正";
+  document.querySelector("#model-title").textContent = "用观察证据修正模型";
+  document.querySelector("#model-prompt").textContent = "直接调整原来的器官与路线。系统会比较前后变化，但仍不会提示答案。";
+  document.querySelector("#phase-v1").classList.remove("active");
+  document.querySelector("#phase-v1").classList.add("done");
+  document.querySelector("#phase-v2").classList.add("active");
+  submitButton.textContent = "保存 V2 修正模型";
+  saveStatus.textContent = "请根据 AR 观察到的证据进行修改。";
+  render();
+}
+
+function compareModels(first, second) {
+  if (!second) return { organs: [], routeChanged: false };
+  const changedOrgans = organs.filter((organ) => {
+    const a = first.positions[organ.id];
+    const b = second.positions[organ.id];
+    return !a || !b || Math.hypot(a.x - b.x, a.y - b.y) > 2.5;
+  }).map((organ) => organ.name);
+  return { organs: changedOrgans, routeChanged: first.routeOrder.join(",") !== second.routeOrder.join(",") || second.routeAttempts.length > 0 };
+}
+
+function formatDuration(model) {
+  if (!model?.completedAt) return "未完成";
+  const seconds = Math.max(1, Math.round((model.completedAt - model.startedAt) / 1000));
+  return seconds >= 60 ? `${Math.floor(seconds / 60)}分${seconds % 60}秒` : `${seconds}秒`;
+}
+
+function miniModel(model, label) {
+  if (!model) return `<div class="mini-empty"><strong>${label}</strong><span>尚未提交</span></div>`;
+  const polyline = model.routePoints.map((point) => `${point.x},${point.y}`).join(" ");
+  const pieces = organs.map((organ) => {
+    const position = model.positions[organ.id];
+    if (!position) return "";
+    return `<img src="${organ.image}" alt="${organ.name}" title="${organ.name}" style="left:${position.x}%;top:${position.y}%;width:${organ.width}%">`;
+  }).join("");
+  return `<div><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline.svg" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}"/></svg>${pieces}</div></div>`;
+}
+
+function latestRecord(records, id) {
+  return records.filter((record) => Number(record.groupId) === id).sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))[0] || null;
+}
+
+function renderDashboard(records) {
+  const completedV1 = records.filter((record) => record.v1?.completedAt).length;
+  const completedV2 = records.filter((record) => record.v2?.completedAt).length;
+  document.querySelector("#teacher-summary").innerHTML = `<div><strong>${completedV1}</strong><span>组完成 V1</span></div><div><strong>${completedV2}</strong><span>组完成 V2</span></div><div><strong>${records.length}</strong><span>本次记录</span></div>`;
+  document.querySelector("#group-dashboard").innerHTML = Array.from({ length: 12 }, (_, index) => {
+    const id = index + 1;
+    const record = latestRecord(records, id);
+    if (!record) return `<article class="group-model-card is-empty"><header><h2>第 ${id} 组</h2><span>等待提交</span></header></article>`;
+    const difference = compareModels(record.v1, record.v2);
+    const placement = record.v1.placementOrder.map((organId) => organById(organId)?.name).filter(Boolean).join(" → ") || "未记录";
+    const route = record.v1.routeOrder.map((organId) => organById(organId)?.name).filter(Boolean).join(" → ") || "未画路线";
+    return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${record.v2?.completedAt ? "V2 已完成" : "V1 已完成"}</span></header><div class="mini-compare">${miniModel(record.v1, "V1 初始")}${miniModel(record.v2, "V2 修正")}</div><dl><div><dt>初次摆放</dt><dd>${placement}</dd></div><div><dt>初始路线</dt><dd>${route}</dd></div><div><dt>完成时间</dt><dd>V1 ${formatDuration(record.v1)}${record.v2 ? ` · V2 ${formatDuration(record.v2)}` : ""}</dd></div><div><dt>修正证据</dt><dd>${record.v2 ? `移动 ${difference.organs.length} 个器官：${difference.organs.join("、") || "未移动"}；路线${difference.routeChanged ? "有变化" : "未变化"}` : "等待 AR 后修正"}</dd></div></dl></article>`;
+  }).join("");
+}
+
+async function loadCloudRecords() {
+  const database = await initializeCloud();
+  const result = await database.collection(CLOUD_COLLECTION).get();
+  const documents = Array.isArray(result?.data) ? result.data : [];
+  return documents.flatMap((document) => Array.isArray(document.records) ? document.records : []);
+}
+
+async function refreshDashboard() {
+  const button = document.querySelector("#refresh-dashboard");
+  button.disabled = true;
+  button.textContent = "正在刷新…";
+  const localRecords = await loadLocalRecords().catch(() => []);
+  let cloudRecords = [];
+  try {
+    cloudRecords = await loadCloudRecords();
+    document.querySelector("#connection-status").textContent = "教师端已连接";
+  } catch (error) {
+    console.error("教师端云端读取失败", error);
+    document.querySelector("#connection-status").textContent = "仅显示本机记录";
+  }
+  const merged = new Map([...localRecords, ...cloudRecords].map((record) => [record.id, record]));
+  renderDashboard([...merged.values()]);
+  button.disabled = false;
+  button.textContent = "刷新数据";
+}
+
+async function exportRecords() {
+  const records = await loadLocalRecords();
+  const url = URL.createObjectURL(new Blob([JSON.stringify(records, null, 2)], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `food-journey-records-${Date.now()}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function initialize() {
+  document.querySelector("#group-badge").textContent = mode === "teacher" ? "教师端" : `第 ${groupId} 组`;
+  document.querySelector(".model-back").href = `index.html?group=${groupId}`;
+  if (mode === "teacher") {
+    studentView.hidden = true;
+    teacherView.hidden = false;
+    refreshDashboard();
+    setInterval(refreshDashboard, 15000);
+    return;
+  }
+  render();
+  resizeCanvas();
+  new ResizeObserver(resizeCanvas).observe(stage);
+}
+
+document.addEventListener("pointermove", moveOrganDrag);
+document.addEventListener("pointerup", endOrganDrag);
+document.addEventListener("pointercancel", endOrganDrag);
+canvas.addEventListener("pointerdown", startRoute);
+canvas.addEventListener("pointermove", moveRoute);
+canvas.addEventListener("pointerup", finishRoute);
+canvas.addEventListener("pointercancel", finishRoute);
+drawButton.addEventListener("click", () => setDrawMode(!drawMode));
+document.querySelector("#undo-button").addEventListener("click", undo);
+document.querySelector("#clear-route-button").addEventListener("click", clearRoute);
+submitButton.addEventListener("click", submitModel);
+document.querySelector("#refresh-dashboard").addEventListener("click", refreshDashboard);
+document.querySelector("#export-button").addEventListener("click", exportRecords);
+initialize();
