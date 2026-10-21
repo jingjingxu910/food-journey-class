@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#176a8c" />
+    <title>人体器官定位｜食物在身体里的旅行</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <a href="index.html">← 返回课堂首页</a>
+      <header class="hero lesson-hero">
+        <p class="eyebrow">活动二 · 找一找，放一放</p>
+        <h1>消化器官在哪里？</h1>
+        <p class="intro">按住下方器官卡片，拖到人体轮廓中的正确位置。</p>
+      </header>
+
+      <section class="body-activity" aria-label="人体器官定位活动">
+        <div class="body-map" aria-label="人体正面轮廓">
+          <div class="body-head" aria-hidden="true"></div>
+          <div class="body-neck" aria-hidden="true"></div>
+          <div class="body-torso" aria-hidden="true"></div>
+          <div class="body-arm body-arm--left" aria-hidden="true"></div>
+          <div class="body-arm body-arm--right" aria-hidden="true"></div>
+          <div class="body-leg body-leg--left" aria-hidden="true"></div>
+          <div class="body-leg body-leg--right" aria-hidden="true"></div>
+
+          <div class="body-slot body-slot--mouth" data-organ="mouth"><span>①</span></div>
+          <div class="body-slot body-slot--esophagus" data-organ="esophagus"><span>②</span></div>
+          <div class="body-slot body-slot--stomach" data-organ="stomach"><span>③</span></div>
+          <div class="body-slot body-slot--small-intestine" data-organ="small-intestine"><span>④</span></div>
+          <div class="body-slot body-slot--large-intestine" data-organ="large-intestine"><span>⑤</span></div>
+          <div class="body-slot body-slot--anus" data-organ="anus"><span>⑥</span></div>
+        </div>
+
+        <section class="body-side-panel" aria-labelledby="body-map-title">
+          <h2 id="body-map-title">放置器官</h2>
+          <p>数字提示食物旅行的先后顺序。</p>
+          <output id="body-progress-output">已定位 0 / 6 个器官</output>
+          <p id="body-feedback" class="drag-feedback" role="status">从任意一张器官卡片开始。</p>
+          <button id="body-restart-button" class="restart-button" type="button">重新挑战</button>
+        </section>
+      </section>
+
+      <section class="organ-tray" aria-labelledby="body-tray-title">
+        <h2 id="body-tray-title">器官卡片</h2>
+        <div id="body-organ-pieces" class="organ-pieces">
+          <button class="organ-piece" type="button" data-organ="mouth">口腔</button>
+          <button class="organ-piece" type="button" data-organ="esophagus">食道</button>
+          <button class="organ-piece" type="button" data-organ="stomach">胃</button>
+          <button class="organ-piece" type="button" data-organ="small-intestine">小肠</button>
+          <button class="organ-piece" type="button" data-organ="large-intestine">大肠</button>
+          <button class="organ-piece" type="button" data-organ="anus">肛门</button>
+        </div>
+      </section>
+    </main>
+    <script defer src="body-map.js"></script>
+  </body>
+</html>

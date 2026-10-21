@@ -71,4 +71,31 @@ button:disabled { cursor: default; opacity: .7; }
 .restart-button { background: #556d7a; }
 .restart-button:hover, .restart-button:focus-visible { background: #344d5a; }
 
+.body-activity { display: grid; grid-template-columns: minmax(280px, 1fr) minmax(220px, .7fr); gap: 1rem; align-items: stretch; }
+.body-map { position: relative; min-height: 610px; overflow: hidden; border-radius: 1.25rem; background: linear-gradient(150deg, #d7f3fb, #f4fcff); box-shadow: inset 0 0 0 2px #b6e1ee; }
+.body-head, .body-neck, .body-torso, .body-arm, .body-leg { position: absolute; background: #f7cfa9; }
+.body-head { top: 34px; left: calc(50% - 57px); width: 114px; height: 126px; border-radius: 49% 49% 44% 44%; }
+.body-neck { top: 144px; left: calc(50% - 25px); width: 50px; height: 42px; }
+.body-torso { top: 174px; left: calc(50% - 103px); width: 206px; height: 268px; border-radius: 46% 46% 22% 22%; }
+.body-arm { top: 187px; width: 52px; height: 260px; border-radius: 999px; }
+.body-arm--left { left: calc(50% - 144px); transform: rotate(7deg); }
+.body-arm--right { right: calc(50% - 144px); transform: rotate(-7deg); }
+.body-leg { top: 422px; width: 72px; height: 220px; border-radius: 0 0 999px 999px; }
+.body-leg--left { left: calc(50% - 76px); }
+.body-leg--right { right: calc(50% - 76px); }
+.body-slot { position: absolute; z-index: 2; display: grid; width: 58px; height: 58px; place-items: center; border: 3px dashed #176a8c; border-radius: 50%; color: #176a8c; background: #ffffffc7; font-weight: 900; }
+.body-slot.is-correct { width: auto; min-width: 64px; border-style: solid; border-color: #32a76a; border-radius: .85rem; background: #e9f8ef; }
+.body-slot.is-correct > span { display: none; }
+.body-slot--mouth { top: 102px; left: calc(50% - 29px); }
+.body-slot--esophagus { top: 205px; left: calc(50% - 29px); }
+.body-slot--stomach { top: 278px; left: calc(50% + 18px); }
+.body-slot--small-intestine { top: 338px; left: calc(50% - 29px); }
+.body-slot--large-intestine { top: 397px; left: calc(50% - 29px); }
+.body-slot--anus { top: 464px; left: calc(50% - 29px); }
+.body-side-panel { display: flex; flex-direction: column; padding: 1.4rem; border-radius: 1.25rem; background: #fff; box-shadow: 0 10px 28px #0a5b7420; }
+.body-side-panel h2 { margin: 0; }
+.body-side-panel output { display: inline-block; width: fit-content; margin-top: .8rem; padding: .45rem .7rem; border-radius: 999px; color: #176a8c; background: #dff5fa; font-weight: 800; }
+.body-side-panel .restart-button { margin-top: auto; }
+
+@media (max-width: 640px) { .body-activity { grid-template-columns: 1fr; } .body-map { min-height: 590px; } }
 @media (max-width: 480px) { .app-shell { width: min(100% - 1.25rem, 980px); padding-top: 1.25rem; } }
