@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#176a8c" />
+    <title>设备检测｜食物在身体里的旅行</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <a href="index.html">← 返回课堂首页</a>
+      <header class="hero">
+        <p class="eyebrow">课前工具</p>
+        <h1>设备检测</h1>
+        <p class="intro">先确认浏览器能否运行课堂所需的 3D 图形。</p>
+      </header>
+      <section class="check-card" aria-labelledby="webgl-title">
+        <p class="check-step">检测 1 / 3</p>
+        <h2 id="webgl-title">3D 图形（WebGL）</h2>
+        <p>这项能力用于后面的消化器官 3D 模型和第一人称食物旅行。</p>
+        <button id="webgl-check-button" type="button">开始检测 3D 图形能力</button>
+        <p id="webgl-result" class="check-result" role="status">尚未检测</p>
+        <canvas id="webgl-canvas" class="webgl-canvas" width="640" height="180" aria-label="WebGL 检测画面"></canvas>
+      </section>
+    </main>
+    <script defer src="device-check.js"></script>
+  </body>
+</html>
