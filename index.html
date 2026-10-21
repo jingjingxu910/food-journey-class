@@ -9,51 +9,74 @@
   </head>
   <body>
     <main class="app-shell">
-      <header class="hero">
-        <p class="eyebrow">四年级科学 · 课堂互动应用</p>
-        <h1>食物在身体里的旅行</h1>
-        <p class="intro">跟随食物，认识人体消化系统的奇妙旅程。</p>
+      <nav class="site-topbar" aria-label="课程导航">
+        <a class="brand" href="index.html"><span class="brand-mark">✦</span><span>人体探险实验室</span></a>
+        <span class="topbar-badge">四年级科学</span>
+      </nav>
+
+      <header class="hero hero--home">
+        <div class="hero-copy">
+          <p class="eyebrow">任务 01 · 消化系统探险</p>
+          <h1>食物在身体里的<br /><em>奇妙旅行</em></h1>
+          <p class="intro">从一口食物出发，闯过六个消化站，发现身体里的科学秘密。</p>
+          <section class="lesson-status" aria-label="课堂进度">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span>已解锁 2 个互动任务</span>
+          </section>
+        </div>
+        <div class="hero-orbit" aria-hidden="true">
+          <span class="orbit-tag orbit-tag--one">口腔</span>
+          <span class="orbit-tag orbit-tag--two">胃</span>
+          <span class="orbit-tag orbit-tag--three">小肠</span>
+          <div class="hero-planet">✦</div>
+          <div class="orbit-line"></div>
+        </div>
       </header>
 
-      <section class="lesson-status" aria-label="课堂开发进度">
-        <span class="status-dot" aria-hidden="true"></span>
-        <span>第一步：平板能力检测</span>
-      </section>
+      <div class="section-heading">
+        <div><p class="eyebrow">选择任务</p><h2>今天，从哪里开始探险？</h2></div>
+        <p>每完成一项任务，就离“消化小达人”更近一步。</p>
+      </div>
 
       <section class="module-grid" aria-label="课堂模块">
         <a class="module-card module-card--active" href="device-check.html">
-          <span class="module-number">01</span>
+          <span class="module-number">准备</span>
+          <span class="module-icon module-icon--blue">⌁</span>
           <h2>设备检测</h2>
           <p>确认摄像头、人体识别和 3D 是否可用。</p>
           <span class="module-action">开始检测 →</span>
         </a>
 
         <a class="module-card module-card--active" href="organ-drag.html">
-          <span class="module-number">02</span>
+          <span class="module-number">任务 1</span>
+          <span class="module-icon module-icon--orange">↝</span>
           <h2>器官拖放</h2>
           <p>把消化器官放进食物旅行的正确站点。</p>
           <span class="module-action">开始挑战 →</span>
         </a>
 
         <a class="module-card module-card--active" href="body-map.html">
-          <span class="module-number">03</span>
+          <span class="module-number">任务 2</span>
+          <span class="module-icon module-icon--violet">◎</span>
           <h2>人体器官定位</h2>
           <p>把消化器官拖到人体轮廓中的正确位置。</p>
           <span class="module-action">开始挑战 →</span>
         </a>
 
         <article class="module-card module-card--locked">
-          <span class="module-number">04</span>
+          <span class="module-number">任务 3</span>
+          <span class="module-icon module-icon--mint">◌</span>
           <h2>人体 AR</h2>
           <p>在真人画面上叠加消化器官。</p>
-          <span>即将制作</span>
+          <span class="module-action">等待摄像头权限</span>
         </article>
 
         <article class="module-card module-card--locked">
-          <span class="module-number">05</span>
+          <span class="module-number">任务 4</span>
+          <span class="module-icon module-icon--blue">◒</span>
           <h2>3D 食物旅行</h2>
           <p>以第一人称走进人体消化通道。</p>
-          <span>即将制作</span>
+          <span class="module-action">即将解锁</span>
         </article>
       </section>
     </main>

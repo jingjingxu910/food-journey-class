@@ -9,9 +9,12 @@
   </head>
   <body>
     <main class="app-shell">
-      <a href="index.html">← 返回课堂首页</a>
+      <nav class="site-topbar" aria-label="活动导航">
+        <a class="back-link" href="index.html">← 课程首页</a>
+        <span class="topbar-badge">任务 1 / 4</span>
+      </nav>
       <header class="hero lesson-hero">
-        <p class="eyebrow">活动一 · 拖一拖，排一排</p>
+        <p class="eyebrow">任务 1 · 拖一拖，排一排</p>
         <h1>食物要经过哪些地方？</h1>
         <p class="intro">把下方器官拖到食物旅行的正确站点。</p>
       </header>
@@ -24,7 +27,7 @@
 
       <section class="journey-board" aria-labelledby="journey-title">
         <div class="journey-heading">
-          <h2 id="journey-title">食物旅行路线</h2>
+          <div><p class="board-kicker">挑战路线</p><h2 id="journey-title">食物旅行路线</h2></div>
           <output id="progress-output">已完成 0 / 6 站</output>
         </div>
         <div class="journey-slots">
@@ -38,7 +41,7 @@
       </section>
 
       <section class="organ-tray" aria-labelledby="tray-title">
-        <h2 id="tray-title">器官卡片</h2>
+        <div class="tray-heading"><div><p class="board-kicker">工具箱</p><h2 id="tray-title">器官卡片</h2></div><span>按住并拖动</span></div>
         <div id="organ-pieces" class="organ-pieces">
           <button class="organ-piece" type="button" data-organ="mouth">口腔</button>
           <button class="organ-piece" type="button" data-organ="esophagus">食道</button>
