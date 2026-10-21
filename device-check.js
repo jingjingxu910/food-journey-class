@@ -1,6 +1,9 @@
 const checkButton = document.querySelector("#webgl-check-button");
 const result = document.querySelector("#webgl-result");
 const canvas = document.querySelector("#webgl-canvas");
+const cameraButton = document.querySelector("#camera-check-button");
+const cameraResult = document.querySelector("#camera-result");
+const cameraPreview = document.querySelector("#camera-preview");
 
 function setResult(message, state) {
   result.textContent = message;
@@ -21,3 +24,43 @@ function runWebGlCheck() {
 }
 
 checkButton.addEventListener("click", runWebGlCheck);
+
+function setCameraResult(message, state) {
+  cameraResult.textContent = message;
+  cameraResult.dataset.state = state;
+}
+
+async function runCameraCheck() {
+  if (!navigator.mediaDevices?.getUserMedia) {
+    setCameraResult("此浏览器不支持网页摄像头访问。", "failed");
+    return;
+  }
+
+  cameraButton.disabled = true;
+  cameraButton.textContent = "正在请求摄像头权限…";
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        facingMode: "user",
+        width: { ideal: 640 },
+        height: { ideal: 480 },
+      },
+    });
+
+    cameraPreview.srcObject = stream;
+    setCameraResult("检测通过：前置摄像头已开启。", "passed");
+    cameraButton.textContent = "摄像头已开启";
+  } catch (error) {
+    const permissionDenied = error.name === "NotAllowedError";
+    setCameraResult(
+      permissionDenied ? "未获得摄像头权限。请在浏览器提示中选择“允许”。" : "摄像头未能开启，请记录此提示。",
+      "failed",
+    );
+    cameraButton.disabled = false;
+    cameraButton.textContent = "重新检测前置摄像头";
+  }
+}
+
+cameraButton.addEventListener("click", runCameraCheck);

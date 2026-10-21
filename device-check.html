@@ -23,6 +23,15 @@
         <p id="webgl-result" class="check-result" role="status">尚未检测</p>
         <canvas id="webgl-canvas" class="webgl-canvas" width="640" height="180" aria-label="WebGL 检测画面"></canvas>
       </section>
+
+      <section class="check-card" aria-labelledby="camera-title">
+        <p class="check-step">检测 2 / 3</p>
+        <h2 id="camera-title">前置摄像头</h2>
+        <p>用于在真人画面上叠加器官。画面只在当前设备显示，不会上传或保存。</p>
+        <button id="camera-check-button" type="button">开启前置摄像头检测</button>
+        <p id="camera-result" class="check-result" role="status">尚未检测</p>
+        <video id="camera-preview" class="camera-preview" autoplay muted playsinline aria-label="摄像头预览"></video>
+      </section>
     </main>
     <script defer src="device-check.js"></script>
   </body>
