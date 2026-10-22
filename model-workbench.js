@@ -12,7 +12,7 @@ const params = new URLSearchParams(location.search);
 const mode = params.get("mode") === "teacher" ? "teacher" : "student";
 const parsedGroup = Number(params.get("group"));
 const groupId = Number.isInteger(parsedGroup) && parsedGroup >= 1 && parsedGroup <= 12 ? parsedGroup : 1;
-const sessionId = `group-${groupId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+let sessionId = `group-${groupId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
 const studentView = document.querySelector("#student-view");
 const teacherView = document.querySelector("#teacher-view");
@@ -39,6 +39,7 @@ let drawing = false;
 let history = [];
 let cloudDatabase = null;
 let cloudLoginPromise = null;
+let draftSaveTimer = null;
 
 function createModel() {
   return {
@@ -112,7 +113,7 @@ function render() {
   const count = Object.keys(activeModel().positions).length;
   placementCount.textContent = `${count} / ${organs.length}`;
   drawButton.disabled = count !== organs.length;
-  taskHint.textContent = count === organs.length ? "位置可以继续修改；准备好后直接在人体上画一笔。" : "先把 5 个器官都放到你认为合适的位置。";
+  taskHint.textContent = count === organs.length ? "位置还可以调整，再画出路线。" : "把 5 个器官放在你认为合适的位置。";
   const order = activeModel().routeOrder.map((id) => organById(id).name);
   routeSummary.textContent = order.length ? `你的路线：${order.join(" → ")}` : "等待画路线";
 }
@@ -167,6 +168,7 @@ function endOrganDrag(event) {
     model.moves.push({ organId: dragState.organId, from: dragState.from, to: point, at: Date.now(), durationMs: Date.now() - dragState.startedAt });
     saveStatus.textContent = "";
     render();
+    queueDraftSave();
   }
   dragState = null;
 }
@@ -242,6 +244,7 @@ function finishRoute(event) {
   setDrawMode(false);
   saveStatus.textContent = "";
   render();
+  queueDraftSave();
 }
 
 function calculateRouteOrder() {
@@ -274,6 +277,7 @@ function undo() {
   setDrawMode(false);
   saveStatus.textContent = "";
   render();
+  queueDraftSave();
 }
 
 function clearRoute() {
@@ -288,6 +292,7 @@ function clearRoute() {
   setDrawMode(false);
   saveStatus.textContent = "";
   render();
+  queueDraftSave();
 }
 
 function openDatabase() {
@@ -309,6 +314,25 @@ async function saveLocal(record) {
     transaction.oncomplete = resolve;
     transaction.onerror = () => reject(transaction.error);
   });
+}
+
+async function saveDraftNow() {
+  if (mode !== "student") return;
+  clearTimeout(draftSaveTimer);
+  const record = buildRecord();
+  record.updatedAt = Date.now();
+  try {
+    await saveLocal(record);
+  } catch (error) {
+    saveStatus.textContent = "本机保存失败，请暂时不要退出。";
+    console.error("草稿保存失败", error);
+  }
+}
+
+function queueDraftSave() {
+  if (mode !== "student") return;
+  clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(saveDraftNow, 150);
 }
 
 async function loadLocalRecords() {
@@ -377,13 +401,36 @@ function buildRecord() {
   };
 }
 
+function showSavedTransition(record) {
+  studentView.hidden = true;
+  transitionPanel.hidden = false;
+  if (!record.v2?.completedAt) {
+    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已保存</p><h1>初始想法已保留</h1><p>完成观察后，再回来看一看。</p><div class="saved-model-preview">${miniModel(record.v1, "已保存模型")}</div><div class="transition-actions"><button id="start-v2-button" class="submit-model-button" type="button">观察完成，开始修正</button></div>`;
+    document.querySelector("#start-v2-button").addEventListener("click", startRevision);
+    return;
+  }
+  const changed = compareModels(record.v1, record.v2);
+  transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已保存</p><h1>模型修正完成</h1><p>你们调整了 <strong>${changed.organs.length}</strong> 个器官，并${changed.routeChanged ? "重新思考了" : "保留了"}食物路线。前后两版已保存。</p>`;
+}
+
+function applyRevisionView() {
+  phase = "v2";
+  document.querySelector("#phase-label").textContent = "V2 · 证据修正";
+  document.querySelector("#model-title").textContent = "用观察证据修正模型";
+  document.querySelector("#model-prompt").textContent = "看看初始模型，想一想要不要调整。";
+  document.querySelector("#phase-v1").classList.remove("active");
+  document.querySelector("#phase-v1").classList.add("done");
+  document.querySelector("#phase-v2").classList.add("active");
+  submitButton.textContent = "保存 V2 修正模型";
+}
+
 async function submitModel() {
   if (!allOrgansPlaced()) {
-    saveStatus.textContent = "请先把 5 个器官都摆到人体上。";
+    saveStatus.textContent = "先放好 5 个器官。";
     return;
   }
   if (activeModel().routePoints.length < 8) {
-    saveStatus.textContent = "还差一笔食物旅行路线。点击“画食物路线”后直接在人体上画。";
+    saveStatus.textContent = "在人体上画出食物的路线。";
     return;
   }
   activeModel().completedAt = Date.now();
@@ -394,8 +441,7 @@ async function submitModel() {
   studentView.hidden = true;
   transitionPanel.hidden = false;
   if (phase === "v1") {
-    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已保存</p><h1>先保留现在的想法</h1><p>接下来去进行 AR 观察。观察结束后回到这里，在同一张模型上调整器官和路线。</p><div class="transition-actions"><button id="start-v2-button" class="submit-model-button" type="button">AR 观察完成，开始修正</button></div>`;
-    document.querySelector("#start-v2-button").addEventListener("click", startRevision);
+    showSavedTransition(record);
   } else {
     const changed = compareModels(v1, v2);
     transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已保存</p><h1>模型修正完成</h1><p>你们调整了 <strong>${changed.organs.length}</strong> 个器官，并${changed.routeChanged ? "重新思考了" : "保留了"}食物路线。系统已经把前后两版一起交给老师。</p>`;
@@ -403,25 +449,21 @@ async function submitModel() {
 }
 
 function startRevision() {
-  phase = "v2";
-  v2 = clone(v1);
-  v2.startedAt = Date.now();
-  v2.completedAt = null;
-  v2.moves = [];
-  v2.modificationCount = 0;
-  v2.routeAttempts = [];
+  if (!v2) {
+    v2 = clone(v1);
+    v2.startedAt = Date.now();
+    v2.completedAt = null;
+    v2.moves = [];
+    v2.modificationCount = 0;
+    v2.routeAttempts = [];
+  }
+  applyRevisionView();
   history = [];
   transitionPanel.hidden = true;
   studentView.hidden = false;
-  document.querySelector("#phase-label").textContent = "V2 · 证据修正";
-  document.querySelector("#model-title").textContent = "用观察证据修正模型";
-  document.querySelector("#model-prompt").textContent = "根据观察调整器官和路线。";
-  document.querySelector("#phase-v1").classList.remove("active");
-  document.querySelector("#phase-v1").classList.add("done");
-  document.querySelector("#phase-v2").classList.add("active");
-  submitButton.textContent = "保存 V2 修正模型";
   saveStatus.textContent = "";
   render();
+  queueDraftSave();
 }
 
 function compareModels(first, second) {
@@ -466,7 +508,8 @@ function renderDashboard(records) {
     const difference = compareModels(record.v1, record.v2);
     const placement = record.v1.placementOrder.map((organId) => organById(organId)?.name).filter(Boolean).join(" → ") || "未记录";
     const route = record.v1.routeOrder.map((organId) => organById(organId)?.name).filter(Boolean).join(" → ") || "未画路线";
-    return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${record.v2?.completedAt ? "V2 已完成" : "V1 已完成"}</span></header><div class="mini-compare">${miniModel(record.v1, "V1 初始")}${miniModel(record.v2, "V2 修正")}</div><dl><div><dt>初次摆放</dt><dd>${placement}</dd></div><div><dt>初始路线</dt><dd>${route}</dd></div><div><dt>完成时间</dt><dd>V1 ${formatDuration(record.v1)}${record.v2 ? ` · V2 ${formatDuration(record.v2)}` : ""}</dd></div><div><dt>修正证据</dt><dd>${record.v2 ? `移动 ${difference.organs.length} 个器官：${difference.organs.join("、") || "未移动"}；路线${difference.routeChanged ? "有变化" : "未变化"}` : "等待 AR 后修正"}</dd></div></dl></article>`;
+    const status = record.v2?.completedAt ? "V2 已完成" : record.v1?.completedAt ? "V1 已完成" : "进行中";
+    return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${status}</span></header><div class="mini-compare">${miniModel(record.v1, "V1 初始")}${miniModel(record.v2, "V2 修正")}</div><dl><div><dt>初次摆放</dt><dd>${placement}</dd></div><div><dt>初始路线</dt><dd>${route}</dd></div><div><dt>完成时间</dt><dd>V1 ${formatDuration(record.v1)}${record.v2 ? ` · V2 ${formatDuration(record.v2)}` : ""}</dd></div><div><dt>修正证据</dt><dd>${record.v2 ? `移动 ${difference.organs.length} 个器官：${difference.organs.join("、") || "未移动"}；路线${difference.routeChanged ? "有变化" : "未变化"}` : "等待 AR 后修正"}</dd></div></dl></article>`;
   }).join("");
 }
 
@@ -506,7 +549,7 @@ async function exportRecords() {
   URL.revokeObjectURL(url);
 }
 
-function initialize() {
+async function initialize() {
   document.querySelector("#group-badge").textContent = mode === "teacher" ? "教师端" : `第 ${groupId} 组`;
   document.querySelector(".model-back").href = `index.html?group=${groupId}`;
   if (mode === "teacher") {
@@ -517,6 +560,26 @@ function initialize() {
     setInterval(refreshDashboard, 15000);
     return;
   }
+  const savedRecords = await loadLocalRecords().catch(() => []);
+  const savedRecord = savedRecords
+    .filter((record) => Number(record.groupId) === groupId)
+    .sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))[0];
+  if (savedRecord) {
+    sessionId = savedRecord.id;
+    v1 = savedRecord.v1 ? clone(savedRecord.v1) : createModel();
+    v2 = savedRecord.v2 ? clone(savedRecord.v2) : null;
+    if (v2) applyRevisionView();
+  }
+  if (v2?.completedAt) {
+    studentView.hidden = true;
+    transitionPanel.hidden = false;
+    showSavedTransition(savedRecord);
+    return;
+  }
+  if (v1.completedAt && !v2) {
+    showSavedTransition(savedRecord);
+    return;
+  }
   render();
   resizeCanvas();
   new ResizeObserver(resizeCanvas).observe(stage);
@@ -525,6 +588,7 @@ function initialize() {
 document.addEventListener("pointermove", moveOrganDrag);
 document.addEventListener("pointerup", endOrganDrag);
 document.addEventListener("pointercancel", endOrganDrag);
+window.addEventListener("pagehide", () => { void saveDraftNow(); });
 canvas.addEventListener("pointerdown", startRoute);
 canvas.addEventListener("pointermove", moveRoute);
 canvas.addEventListener("pointerup", finishRoute);
