@@ -13,6 +13,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { min-width: 320px; min-height: 100vh; margin: 0; background: radial-gradient(circle at 4% 4%, #ffefad 0 2px, transparent 3px) 0 0 / 48px 48px, linear-gradient(135deg, #f9fcf9, #e9f6f7); }
 button, input { font: inherit; }
 button { cursor: pointer; }
@@ -89,7 +90,7 @@ a { color: inherit; }
 .palette-organ span { font-size: 13px; font-weight: 900; }
 .palette-organ:active img { transform: scale(.95); }
 .body-stage-wrap { display: grid; overflow: hidden; place-items: center; padding: 8px 18px; background: #fff; }
-.body-stage { position: relative; width: min(100%, 420px); aspect-ratio: 420 / 680; overflow: hidden; touch-action: none; }
+.body-stage { position: relative; width: min(100%, 420px); aspect-ratio: 2 / 3; overflow: hidden; touch-action: none; }
 .body-outline { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; user-select: none; pointer-events: none; }
 .placed-organs, #route-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .placed-organs { z-index: 3; pointer-events: none; }
@@ -98,6 +99,8 @@ a { color: inherit; }
 .body-stage.is-drawing .placed-organ { pointer-events: none; }
 .placed-organ { position: absolute; display: block; padding: 0; border: 0; background: transparent; filter: drop-shadow(0 4px 4px rgba(96, 47, 58, .18)); transform: translate(-50%, -50%); pointer-events: auto; touch-action: none; user-select: none; }
 .placed-organ img { display: block; width: 100%; max-height: 132px; object-fit: contain; pointer-events: none; }
+.placed-organ--esophagus img { height: 100%; max-height: none; object-fit: cover; }
+.placed-organ[data-organ="stomach"] img { transform: rotate(-8deg); }
 .placed-organ span { position: absolute; bottom: -17px; left: 50%; color: #38585c; font-size: 11px; font-weight: 900; white-space: nowrap; text-shadow: 0 1px 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, -1px 0 0 #fff; transform: translateX(-50%); pointer-events: none; }
 .is-moving { opacity: .28; }
 .organ-drag-ghost { position: fixed; z-index: 999; max-height: 150px; object-fit: contain; filter: drop-shadow(0 9px 8px rgba(78,42,48,.22)); transform: translate(-50%, -50%) scale(1.05); pointer-events: none; }
@@ -122,34 +125,50 @@ a { color: inherit; }
 .transition-panel p:not(.model-eyebrow) { color: #627a80; font-size: 18px; line-height: 1.7; }
 .transition-actions { margin-top: 24px; }
 .teacher-model-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 18px 4px 8px; }
-.teacher-model-heading > div:last-child { display: flex; gap: 8px; }
+.teacher-model-heading > div:first-child { margin-right: auto; }
+.teacher-controls { position: relative; z-index: 5; }
+.teacher-controls summary { padding: 9px 13px; border: 1px solid #d6e5e1; border-radius: 12px; color: #315d61; background: #fff; cursor: pointer; font-weight: 900; list-style: none; }
+.teacher-controls summary::-webkit-details-marker { display: none; }
+.teacher-controls > div { position: absolute; top: calc(100% + 8px); right: 0; display: flex; min-width: 170px; flex-direction: column; gap: 7px; padding: 10px; border: 1px solid #d6e5e1; border-radius: 14px; background: #fff; box-shadow: 0 12px 28px rgba(45,85,82,.16); }
 .teacher-note { margin: 0 4px 16px; color: #6e8285; }
 .tool-button--danger { color: #9a3e35; background: #fdebe8; }
 .tool-button--danger:hover { background: #f9d8d3; }
-.clear-data-status { min-height: 1.4em; margin: -8px 4px 12px; color: #526e72; font-size: 13px; }
+.clear-data-status { margin: -8px 4px 12px; color: #526e72; font-size: 13px; }
 .teacher-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
 .teacher-summary div { display: flex; align-items: baseline; gap: 9px; padding: 15px 18px; border-radius: 18px; background: #fff; box-shadow: 0 8px 22px rgba(45,85,82,.07); }
 .teacher-summary strong { color: #277c76; font-size: 30px; }
 .teacher-summary span { color: #71868a; font-weight: 800; }
+.teacher-pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin: 0 0 12px; }
+.teacher-pagination span { min-width: 150px; color: #526e72; font-size: 14px; font-weight: 900; text-align: center; }
+.teacher-pagination button:disabled { cursor: default; opacity: .45; }
 .group-dashboard { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .group-model-card { min-height: 300px; padding: 16px; border: 1px solid #dce8e4; border-radius: 22px; background: #fff; box-shadow: 0 8px 24px rgba(45,85,82,.06); }
 .group-model-card > header { display: flex; justify-content: space-between; align-items: center; }
 .group-model-card h2 { margin: 0; font-size: 20px; }
 .group-model-card header span { padding: 5px 9px; border-radius: 999px; color: #24766d; background: #e2f2ec; font-size: 11px; font-weight: 900; }
 .group-model-card.is-empty { min-height: 90px; opacity: .62; }
-.mini-compare { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 12px 0; }
-.mini-label { display: block; margin-bottom: 4px; color: #60777b; font-size: 11px; text-align: center; }
-.mini-model { position: relative; aspect-ratio: 420 / 680; overflow: hidden; border-radius: 14px; background: #f2f7f5; }
+.mini-compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+.mini-compare.single-model { grid-template-columns: minmax(0, 1fr); }
+.mini-compare.single-model .mini-model-single { width: min(100%, 360px); justify-self: center; }
+.mini-label { display: block; margin-bottom: 5px; color: #60777b; font-size: 14px; font-weight: 900; text-align: center; }
+.mini-model { position: relative; aspect-ratio: 2 / 3; overflow: hidden; border-radius: 14px; background: #f2f7f5; }
 .mini-body { position: absolute; inset: 0; width: 100%; height: 100%; }
 .mini-model svg { position: absolute; z-index: 3; inset: 0; width: 100%; height: 100%; }
-.mini-model polyline { fill: none; stroke: #188175; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.mini-model polyline { fill: none; stroke: #188175; stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; }
 .mini-model > img:not(.mini-body) { position: absolute; z-index: 2; max-height: 20%; object-fit: contain; transform: translate(-50%, -50%); }
+.mini-model > img.organ-esophagus { height: 16%; max-height: none; object-fit: cover; }
+.mini-model > img.organ-stomach { transform: translate(-50%, -50%) rotate(-8deg); }
+.mini-model-clickable { cursor: zoom-in; }
+.mini-model-clickable:focus-visible { outline: 3px solid #399c90; outline-offset: 3px; }
 .mini-empty { display: grid; min-height: 130px; place-content: center; border-radius: 14px; color: #8a9b9d; background: #f2f7f5; text-align: center; }
 .mini-empty span { font-size: 11px; }
-.group-model-card dl { margin: 0; font-size: 12px; }
-.group-model-card dl div { display: grid; grid-template-columns: 66px 1fr; gap: 7px; padding: 5px 0; border-top: 1px solid #edf2f0; }
-.group-model-card dt { color: #7d9093; font-weight: 900; }
-.group-model-card dd { margin: 0; color: #405b60; line-height: 1.45; }
+.group-model-analysis { margin: 6px 0 0; padding-top: 9px; border-top: 1px solid #edf2f0; color: #405b60; font-size: 14px; line-height: 1.5; }
+.model-preview-dialog { width: min(92vw, 900px); max-width: none; max-height: 92vh; padding: 20px; overflow: auto; border: 0; border-radius: 22px; background: #fff; box-shadow: 0 20px 70px rgba(15,45,52,.3); }
+.model-preview-dialog::backdrop { background: rgba(17,38,43,.64); }
+.model-preview-dialog-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.model-preview-dialog-heading h2 { margin: 0; color: #1d3e46; }
+.preview-model-image { width: min(100%, 480px); margin: 12px auto 0; }
+.preview-model-image .mini-model { width: min(48vh, 480px); height: min(72vh, 720px); margin: 0 auto; }
 
 @media (max-width: 980px) {
   .model-heading { align-items: start; flex-direction: column; gap: 10px; }
@@ -158,6 +177,11 @@ a { color: inherit; }
   .palette-organ { min-height: 95px; }
   .palette-organ img { width: 62px; height: 62px; }
   .group-dashboard { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .teacher-model-heading { flex-wrap: wrap; }
+  .group-dashboard { grid-template-columns: minmax(0, 1fr); }
 }
 
 .home-page .app-shell { min-height: 100svh; padding-bottom: 18px; }
@@ -184,6 +208,8 @@ a { color: inherit; }
 .home-page .module-action { padding-top: 6px; font-size: 12px; }
 
 .model-page { min-width: 0; overflow: hidden; }
+.teacher-mode .model-topbar { display: none; }
+.teacher-mode .model-app { width: min(100% - 40px, 1840px); }
 .model-app { display: flex; min-height: 100svh; flex-direction: column; padding: 8px 0 10px; }
 .model-topbar { min-height: 38px; padding: 0 6px; }
 .model-identity { gap: 7px; }

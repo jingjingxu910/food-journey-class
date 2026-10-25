@@ -1,13 +1,14 @@
 const organs = [
   { id: "mouth", name: "口腔", image: "assets/organs/mouth-gentle.svg", width: 12 },
-  { id: "esophagus", name: "食道", image: "assets/organs/esophagus.png", width: 15 },
+  { id: "esophagus", name: "食道", image: "assets/organs/esophagus.png", width: 7, height: 16 },
   { id: "stomach", name: "胃", image: "assets/organs/stomach.png", width: 18 },
-  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.png", width: 23 },
+  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.png", width: 20 },
   { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.png", width: 26 },
 ];
 
 const CLOUD_ENV = "fishing-classroom-d5dzcz19db484d";
 const CLOUD_COLLECTION = "food-journey-groups";
+const LOCAL_CLEAR_SIGNAL_KEY = "foodJourneyClassLocalClear";
 const params = new URLSearchParams(location.search);
 const mode = params.get("mode") === "teacher" ? "teacher" : "student";
 const parsedGroup = Number(params.get("group"));
@@ -41,6 +42,11 @@ let history = [];
 let cloudDatabase = null;
 let cloudLoginPromise = null;
 let draftSaveTimer = null;
+let dashboardRecords = [];
+let dashboardPage = 0;
+let resetCheckInProgress = false;
+let pendingSubmissionSync = false;
+let discardDraftOnExit = false;
 
 function createModel() {
   return {
@@ -103,6 +109,10 @@ function renderPlacedOrgans() {
     button.style.left = `${position.x}%`;
     button.style.top = `${position.y}%`;
     button.style.width = `${organ.width}%`;
+    if (organ.height) {
+      button.classList.add(`placed-organ--${organ.id}`);
+      button.style.height = `${organ.height}%`;
+    }
     placedLayer.append(button);
   });
 }
@@ -135,7 +145,12 @@ function beginOrganDrag(event) {
   const ghost = document.createElement("img");
   ghost.className = "organ-drag-ghost";
   ghost.src = organ.image;
-  ghost.style.width = `${Math.max(54, stage.clientWidth * organ.width / 100)}px`;
+   ghost.style.width = `${Math.max(30, stage.clientWidth * organ.width / 100)}px`;
+  if (organ.height) {
+    ghost.style.height = `${stage.clientHeight * organ.height / 100}px`;
+    ghost.style.maxHeight = "none";
+    ghost.style.objectFit = "cover";
+  }
   document.body.append(ghost);
   dragState = {
     organId,
@@ -318,7 +333,7 @@ async function saveLocal(record) {
 }
 
 async function saveDraftNow() {
-  if (mode !== "student") return;
+  if (mode !== "student" || discardDraftOnExit) return;
   clearTimeout(draftSaveTimer);
   const record = buildRecord();
   record.updatedAt = Date.now();
@@ -394,8 +409,12 @@ async function syncRecord(record) {
       const result = await reference.get();
       current = Array.isArray(result?.data) ? result.data[0] || {} : result?.data || {};
     } catch {}
+    const submittedRecord = clone(record);
+    if (!submittedRecord.v1?.completedAt) submittedRecord.v1 = null;
+    if (!submittedRecord.v2?.completedAt) submittedRecord.v2 = null;
+    submittedRecord.pendingSync = false;
     const records = Array.isArray(current.records) ? current.records.filter((item) => item.id !== record.id) : [];
-    records.push(record);
+    records.push(submittedRecord);
     const payload = { id: groupId, records: records.slice(-20), updatedAt: Date.now() };
     try {
       await reference.update(payload);
@@ -403,10 +422,12 @@ async function syncRecord(record) {
       await reference.set(payload);
     }
     record.pendingSync = false;
+    pendingSubmissionSync = false;
     await saveLocal(record);
     document.querySelector("#connection-status").textContent = "已上传教师端";
     return true;
   } catch (error) {
+    pendingSubmissionSync = true;
     console.error("同步失败，记录已保存在本机", error);
     document.querySelector("#connection-status").textContent = "本机已保存";
     return false;
@@ -421,7 +442,7 @@ function buildRecord() {
     resetId: activeResetId,
     createdAt: v1.startedAt,
     updatedAt: Date.now(),
-    pendingSync: true,
+    pendingSync: pendingSubmissionSync,
     v1,
     v2,
   };
@@ -431,12 +452,12 @@ function showSavedTransition(record) {
   studentView.hidden = true;
   transitionPanel.hidden = false;
   if (!record.v2?.completedAt) {
-    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已保存</p><h1>初始想法已保留</h1><p>完成观察后，再回来看一看。</p><div class="saved-model-preview">${miniModel(record.v1, "已保存模型")}</div><div class="transition-actions"><button id="start-v2-button" class="submit-model-button" type="button">观察完成，开始修正</button></div>`;
+    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已提交</p><h1>初始想法已提交</h1><p>${record.pendingSync ? "已保存在本机，尚未提交给老师；联网后重试。" : "已同步给老师，教师端可以查看。"}</p><div class="saved-model-preview">${miniModel(record.v1, "已保存模型")}</div><div class="transition-actions"><button id="start-v2-button" class="submit-model-button" type="button">观察完成，开始修正</button></div>`;
     document.querySelector("#start-v2-button").addEventListener("click", startRevision);
     return;
   }
   const changed = compareModels(record.v1, record.v2);
-  transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已保存</p><h1>模型修正完成</h1><p>你们调整了 <strong>${changed.organs.length}</strong> 个器官，并${changed.routeChanged ? "重新思考了" : "保留了"}食物路线。前后两版已保存。</p>`;
+  transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已提交</p><h1>模型修正已提交</h1><p>你们调整了 <strong>${changed.organs.length}</strong> 个器官，并${changed.routeChanged ? "重新思考了" : "保留了"}食物路线。${record.pendingSync ? "已保存在本机，尚未提交给老师；联网后重试。" : "已同步给老师，教师端可以查看。"}</p>`;
 }
 
 function applyRevisionView() {
@@ -447,7 +468,7 @@ function applyRevisionView() {
   document.querySelector("#phase-v1").classList.remove("active");
   document.querySelector("#phase-v1").classList.add("done");
   document.querySelector("#phase-v2").classList.add("active");
-  submitButton.textContent = "保存 V2 修正模型";
+  submitButton.textContent = "确认提交 V2 修正";
 }
 
 async function submitModel() {
@@ -460,17 +481,18 @@ async function submitModel() {
     return;
   }
   activeModel().completedAt = Date.now();
+  pendingSubmissionSync = true;
   const record = buildRecord();
   await saveLocal(record);
   document.querySelector("#connection-status").textContent = "本机已保存";
-  syncRecord(record);
+  await syncRecord(record);
   studentView.hidden = true;
   transitionPanel.hidden = false;
   if (phase === "v1") {
     showSavedTransition(record);
   } else {
     const changed = compareModels(v1, v2);
-    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已保存</p><h1>模型修正完成</h1><p>你们调整了 <strong>${changed.organs.length}</strong> 个器官，并${changed.routeChanged ? "重新思考了" : "保留了"}食物路线。系统已经把前后两版一起交给老师。</p>`;
+    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已提交</p><h1>模型修正已提交</h1><p>你们调整了 <strong>${changed.organs.length}</strong> 个器官，并${changed.routeChanged ? "重新思考了" : "保留了"}食物路线。${record.pendingSync ? "已保存在本机，尚未提交给老师；联网后重试。" : "已同步给老师，教师端可以查看。"}</p>`;
   }
 }
 
@@ -508,15 +530,17 @@ function formatDuration(model) {
   return seconds >= 60 ? `${Math.floor(seconds / 60)}分${seconds % 60}秒` : `${seconds}秒`;
 }
 
-function miniModel(model, label) {
+function miniModel(model, label, options = {}) {
   if (!model) return `<div class="mini-empty"><strong>${label}</strong><span>尚未提交</span></div>`;
-  const polyline = model.routePoints.map((point) => `${point.x},${point.y}`).join(" ");
+  const polyline = (model.routePoints || []).map((point) => `${point.x},${point.y}`).join(" ");
   const pieces = organs.map((organ) => {
-    const position = model.positions[organ.id];
+    const position = model.positions?.[organ.id];
     if (!position) return "";
-    return `<img src="${organ.image}" alt="${organ.name}" title="${organ.name}" style="left:${position.x}%;top:${position.y}%;width:${organ.width}%">`;
+    return `<img class="organ-${organ.id}" src="${organ.image}" alt="${organ.name}" title="${organ.name}" style="left:${position.x}%;top:${position.y}%;width:${organ.width}%;${organ.height ? `height:${organ.height}%;` : ""}">`;
   }).join("");
-  return `<div><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.png?v=20261022-5" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}"/></svg>${pieces}</div></div>`;
+  const interactive = Number.isInteger(options.groupId);
+  const attributes = interactive ? ` data-group-id="${options.groupId}" data-model-phase="${options.phase}" role="button" tabindex="0" aria-label="放大第 ${options.groupId} 组${label}"` : "";
+  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.png?v=20261022-7" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}"/></svg>${pieces}</div></div>`;
 }
 
 function latestRecord(records, id) {
@@ -524,18 +548,31 @@ function latestRecord(records, id) {
 }
 
 function renderDashboard(records) {
-  const completedV1 = records.filter((record) => record.v1?.completedAt).length;
-  const completedV2 = records.filter((record) => record.v2?.completedAt).length;
-  document.querySelector("#teacher-summary").innerHTML = `<div><strong>${completedV1}</strong><span>组完成 V1</span></div><div><strong>${completedV2}</strong><span>组完成 V2</span></div><div><strong>${records.length}</strong><span>本次记录</span></div>`;
-  document.querySelector("#group-dashboard").innerHTML = Array.from({ length: 12 }, (_, index) => {
-    const id = index + 1;
-    const record = latestRecord(records, id);
+  dashboardRecords = records.filter((record) => record.lesson === "food-journey" && (record.v1?.completedAt || record.v2?.completedAt));
+  const latestRecords = Array.from({ length: 12 }, (_, index) => latestRecord(dashboardRecords, index + 1));
+  const participatingGroups = latestRecords.filter(Boolean).length;
+  const completedV1 = latestRecords.filter((record) => record?.v1?.completedAt).length;
+  const completedV2 = latestRecords.filter((record) => record?.v2?.completedAt).length;
+  document.querySelector("#teacher-summary").innerHTML = `<div><strong>${participatingGroups}</strong><span>组已提交</span></div><div><strong>${completedV1}</strong><span>组完成观察前模型</span></div><div><strong>${completedV2}</strong><span>组完成观察后修正</span></div>`;
+  const pageSize = 6;
+  const pageCount = Math.ceil(12 / pageSize);
+  dashboardPage = Math.min(dashboardPage, pageCount - 1);
+  const firstGroup = dashboardPage * pageSize + 1;
+  const groups = Array.from({ length: pageSize }, (_, index) => firstGroup + index);
+  document.querySelector("#dashboard-page-label").textContent = `第 ${firstGroup}–${firstGroup + pageSize - 1} 组 · 共 12 组`;
+  document.querySelector("#dashboard-prev").disabled = dashboardPage === 0;
+  document.querySelector("#dashboard-next").disabled = dashboardPage === pageCount - 1;
+  document.querySelector("#group-dashboard").innerHTML = groups.map((id) => {
+    const record = latestRecord(dashboardRecords, id);
     if (!record) return `<article class="group-model-card is-empty"><header><h2>第 ${id} 组</h2><span>等待提交</span></header></article>`;
     const difference = compareModels(record.v1, record.v2);
-    const placement = record.v1.placementOrder.map((organId) => organById(organId)?.name).filter(Boolean).join(" → ") || "未记录";
-    const route = record.v1.routeOrder.map((organId) => organById(organId)?.name).filter(Boolean).join(" → ") || "未画路线";
-    const status = record.v2?.completedAt ? "V2 已完成" : record.v1?.completedAt ? "V1 已完成" : "进行中";
-    return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${status}</span></header><div class="mini-compare">${miniModel(record.v1, "V1 初始")}${miniModel(record.v2, "V2 修正")}</div><dl><div><dt>初次摆放</dt><dd>${placement}</dd></div><div><dt>初始路线</dt><dd>${route}</dd></div><div><dt>完成时间</dt><dd>V1 ${formatDuration(record.v1)}${record.v2 ? ` · V2 ${formatDuration(record.v2)}` : ""}</dd></div><div><dt>修正证据</dt><dd>${record.v2 ? `移动 ${difference.organs.length} 个器官：${difference.organs.join("、") || "未移动"}；路线${difference.routeChanged ? "有变化" : "未变化"}` : "等待 AR 后修正"}</dd></div></dl></article>`;
+    const status = record.pendingSync ? "本机已提交·待同步" : record.v2?.completedAt ? "已提交观察后修正" : "已提交观察前想法";
+    const before = record.v1 ? miniModel({ ...record.v1, _paired: Boolean(record.v2?.completedAt) }, "观察前想法", { groupId: id, phase: "v1" }) : "";
+    const after = record.v2?.completedAt ? miniModel(record.v2, "观察后修正", { groupId: id, phase: "v2" }) : "";
+    const analysis = record.v2?.completedAt
+      ? `${difference.organs.length ? `位置有变化：${difference.organs.join("、")}` : "器官位置未见明显变化"}；${difference.routeChanged ? "食物路线有变化" : "食物路线保持原样"}`
+      : "等待小组完成观察后修正";
+    return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${status}</span></header><div class="mini-compare ${after ? "has-revision" : "single-model"}">${before}${after}</div><p class="group-model-analysis">${analysis}</p></article>`;
   }).join("");
 }
 
@@ -543,7 +580,9 @@ async function loadCloudRecords() {
   const database = await initializeCloud();
   const result = await database.collection(CLOUD_COLLECTION).get();
   const documents = Array.isArray(result?.data) ? result.data : [];
-  return documents.flatMap((document) => Array.isArray(document.records) ? document.records : []);
+  return documents.flatMap((document) => Array.isArray(document.records)
+    ? document.records.filter((record) => Number(record.groupId) === Number(document.id))
+    : []);
 }
 
 async function refreshDashboard() {
@@ -564,8 +603,11 @@ async function refreshDashboard() {
   const currentLocalRecords = activeResetId
     ? localRecords.filter((record) => record.lesson !== "food-journey" || record.resetId === activeResetId)
     : localRecords;
-  const merged = new Map([...currentLocalRecords, ...cloudRecords].map((record) => [record.id, record]));
-  const visibleRecords = [...merged.values()].filter((record) => record.lesson !== "food-journey" || !activeResetId || record.resetId === activeResetId);
+  const merged = new Map();
+  [...currentLocalRecords, ...cloudRecords]
+    .sort((first, second) => Number(first.updatedAt) - Number(second.updatedAt))
+    .forEach((record) => merged.set(record.id, record));
+  const visibleRecords = [...merged.values()].filter((record) => record.lesson === "food-journey" && (record.v1?.completedAt || record.v2?.completedAt) && (!activeResetId || record.resetId === activeResetId));
   renderDashboard(visibleRecords);
   button.disabled = false;
   button.textContent = "刷新数据";
@@ -574,32 +616,74 @@ async function refreshDashboard() {
 async function clearAllClassData() {
   const button = document.querySelector("#clear-data-button");
   const status = document.querySelector("#clear-data-status");
-  const confirmed = window.confirm("确定清除本课 12 个小组的全部记录吗？操作不可撤销。学生设备下次联网打开本课时，也会清除旧记录并重新开始。");
-  if (!confirmed) return;
-  if (window.prompt("请键入“清除全部记录”以确认。") !== "清除全部记录") return;
+  const resetId = `reset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  let localCleared = false;
+  status.hidden = false;
   button.disabled = true;
   button.textContent = "正在清除…";
-  status.textContent = "正在清除 12 组记录…";
+  status.textContent = "正在清除当前浏览器记录…";
+  try {
+    await updateLocalLessonRecords(() => true);
+    localCleared = true;
+  } catch (error) {
+    console.error("清除本机课堂记录失败", error);
+  }
+  discardDraftOnExit = true;
+  clearTimeout(draftSaveTimer);
+  try {
+    localStorage.setItem(LOCAL_CLEAR_SIGNAL_KEY, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
+  } catch {}
+  renderDashboard([]);
+  status.textContent = "本机记录已清除，正在连接云端…";
   try {
     const database = await initializeCloud();
-    const resetId = `reset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     await database.collection(CLOUD_COLLECTION).doc("class-reset").set({ id: "class-reset", resetId, updatedAt: Date.now() });
     activeResetId = resetId;
+    renderDashboard([]);
     const removals = await Promise.allSettled(Array.from({ length: 12 }, (_, index) => database.collection(CLOUD_COLLECTION).doc(`group-${index + 1}`).remove()));
     const failedRemovals = removals.filter((result) => result.status === "rejected").length;
-    await updateLocalLessonRecords(() => true);
     await refreshDashboard();
     status.textContent = failedRemovals
       ? `已开启新一轮；${failedRemovals} 组云端旧记录未能彻底删除，请再次清除。`
       : "12 组记录已清除，可以重新开始。";
+    window.alert(failedRemovals
+      ? `本机记录${localCleared ? "已" : "未能完全"}清除；已开启新一轮，但有 ${failedRemovals} 组云端旧记录未能删除。`
+      : `本机记录${localCleared ? "已" : "未能完全"}清除，云端课堂数据已清除。学生设备联网后会自动清除旧记录。`);
   } catch (error) {
     console.error("清除课堂记录失败", error);
-    status.textContent = "清除未完成，请检查网络后重试。";
+    status.textContent = localCleared ? "本机记录已清除；云端清除未完成。" : "本机和云端清除均未完成。";
+    window.alert(localCleared
+      ? "本机浏览器记录已清除；云端连接失败，因此平板等其他设备的数据尚未清除。联网后请再点一次清除。"
+      : "本机记录未能清除，云端连接也失败。请检查网络后重试。");
   } finally {
     button.disabled = false;
     button.textContent = "清除全部记录";
   }
 }
+
+async function checkClassReset() {
+  if (mode !== "student" || resetCheckInProgress) return;
+  resetCheckInProgress = true;
+  try {
+    const latestResetId = await loadClassResetId();
+    if (latestResetId && latestResetId !== activeResetId) {
+      discardDraftOnExit = true;
+      clearTimeout(draftSaveTimer);
+      location.reload();
+    }
+  } catch (error) {
+    console.warn("暂时无法检查课堂重置状态", error);
+  } finally {
+    resetCheckInProgress = false;
+  }
+}
+
+window.addEventListener("storage", (event) => {
+  if (mode !== "student" || event.key !== LOCAL_CLEAR_SIGNAL_KEY || !event.newValue) return;
+  discardDraftOnExit = true;
+  clearTimeout(draftSaveTimer);
+  void updateLocalLessonRecords(() => true).finally(() => location.reload());
+});
 
 async function exportRecords() {
   const records = await loadLocalRecords();
@@ -611,6 +695,16 @@ async function exportRecords() {
   URL.revokeObjectURL(url);
 }
 
+function openModelPreview(groupId, phaseName) {
+  const record = latestRecord(dashboardRecords, groupId);
+  const model = phaseName === "v2" ? record?.v2 : record?.v1;
+  if (!model) return;
+  const label = phaseName === "v2" ? "观察后修正" : "观察前想法";
+  document.querySelector("#preview-model-title").textContent = `第 ${groupId} 组 · ${label}`;
+  document.querySelector("#preview-model-content").innerHTML = `<div class="preview-model-image">${miniModel(model, label)}</div>`;
+  document.querySelector("#model-preview-dialog").showModal();
+}
+
 async function initialize() {
   document.querySelector("#group-badge").textContent = mode === "teacher" ? "教师端" : `第 ${groupId} 组`;
   document.querySelector(".model-back").href = `index.html?group=${groupId}`;
@@ -619,9 +713,13 @@ async function initialize() {
     studentView.hidden = true;
     teacherView.hidden = false;
     refreshDashboard();
-    setInterval(refreshDashboard, 15000);
+    setInterval(refreshDashboard, 30000);
     return;
   }
+  setInterval(checkClassReset, 60000);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") void checkClassReset();
+  });
   const savedRecords = await loadLocalRecords().catch(() => []);
   try {
     activeResetId = await loadClassResetId();
@@ -641,6 +739,12 @@ async function initialize() {
     v1 = savedRecord.v1 ? clone(savedRecord.v1) : createModel();
     v2 = savedRecord.v2 ? clone(savedRecord.v2) : null;
     if (v2) applyRevisionView();
+    pendingSubmissionSync = Boolean(savedRecord.pendingSync && (savedRecord.v1?.completedAt || savedRecord.v2?.completedAt));
+    if (pendingSubmissionSync) await syncRecord(savedRecord);
+    else if (savedRecord.pendingSync) {
+      savedRecord.pendingSync = false;
+      await saveLocal(savedRecord);
+    }
   }
   if (v2?.completedAt) {
     studentView.hidden = true;
@@ -660,7 +764,7 @@ async function initialize() {
 document.addEventListener("pointermove", moveOrganDrag);
 document.addEventListener("pointerup", endOrganDrag);
 document.addEventListener("pointercancel", endOrganDrag);
-window.addEventListener("pagehide", () => { void saveDraftNow(); });
+window.addEventListener("pagehide", () => { if (!discardDraftOnExit) void saveDraftNow(); });
 canvas.addEventListener("pointerdown", startRoute);
 canvas.addEventListener("pointermove", moveRoute);
 canvas.addEventListener("pointerup", finishRoute);
@@ -672,5 +776,25 @@ submitButton.addEventListener("click", submitModel);
 document.querySelector("#refresh-dashboard").addEventListener("click", refreshDashboard);
 document.querySelector("#export-button").addEventListener("click", exportRecords);
 document.querySelector("#clear-data-button").addEventListener("click", clearAllClassData);
+document.querySelector("#dashboard-prev").addEventListener("click", () => {
+  dashboardPage = Math.max(0, dashboardPage - 1);
+  renderDashboard(dashboardRecords);
+});
+document.querySelector("#dashboard-next").addEventListener("click", () => {
+  dashboardPage = Math.min(1, dashboardPage + 1);
+  renderDashboard(dashboardRecords);
+});
+document.querySelector("#group-dashboard").addEventListener("click", (event) => {
+  const model = event.target.closest(".mini-model-clickable");
+  if (model) openModelPreview(Number(model.dataset.groupId), model.dataset.modelPhase);
+});
+document.querySelector("#group-dashboard").addEventListener("keydown", (event) => {
+  if ((event.key === "Enter" || event.key === " ") && event.target.matches(".mini-model-clickable")) {
+    event.preventDefault();
+    openModelPreview(Number(event.target.dataset.groupId), event.target.dataset.modelPhase);
+  }
+});
+document.querySelector("#preview-dialog-close").addEventListener("click", () => document.querySelector("#model-preview-dialog").close());
+document.querySelector("#teacher-fullscreen-button").addEventListener("click", () => document.documentElement.requestFullscreen?.());
 document.querySelector("#model-fullscreen-button").addEventListener("click", () => document.documentElement.requestFullscreen?.());
 initialize();
