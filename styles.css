@@ -124,6 +124,9 @@ a { color: inherit; }
 .teacher-model-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 18px 4px 8px; }
 .teacher-model-heading > div:last-child { display: flex; gap: 8px; }
 .teacher-note { margin: 0 4px 16px; color: #6e8285; }
+.tool-button--danger { color: #9a3e35; background: #fdebe8; }
+.tool-button--danger:hover { background: #f9d8d3; }
+.clear-data-status { min-height: 1.4em; margin: -8px 4px 12px; color: #526e72; font-size: 13px; }
 .teacher-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
 .teacher-summary div { display: flex; align-items: baseline; gap: 9px; padding: 15px 18px; border-radius: 18px; background: #fff; box-shadow: 0 8px 22px rgba(45,85,82,.07); }
 .teacher-summary strong { color: #277c76; font-size: 30px; }

@@ -13,6 +13,7 @@ const mode = params.get("mode") === "teacher" ? "teacher" : "student";
 const parsedGroup = Number(params.get("group"));
 const groupId = Number.isInteger(parsedGroup) && parsedGroup >= 1 && parsedGroup <= 12 ? parsedGroup : 1;
 let sessionId = `group-${groupId}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+let activeResetId = null;
 
 const studentView = document.querySelector("#student-view");
 const teacherView = document.querySelector("#teacher-view");
@@ -344,6 +345,30 @@ async function loadLocalRecords() {
   });
 }
 
+async function updateLocalLessonRecords(shouldDelete) {
+  const database = await openDatabase();
+  await new Promise((resolve, reject) => {
+    const transaction = database.transaction("learningRecords", "readwrite");
+    const request = transaction.objectStore("learningRecords").openCursor();
+    request.onsuccess = () => {
+      const cursor = request.result;
+      if (!cursor) return;
+      if (cursor.value.lesson === "food-journey" && shouldDelete(cursor.value)) cursor.delete();
+      cursor.continue();
+    };
+    request.onerror = () => reject(request.error);
+    transaction.oncomplete = resolve;
+    transaction.onerror = () => reject(transaction.error);
+  });
+}
+
+async function loadClassResetId() {
+  const database = await initializeCloud();
+  const result = await database.collection(CLOUD_COLLECTION).doc("class-reset").get();
+  const resetRecord = Array.isArray(result?.data) ? result.data[0] || {} : result?.data || {};
+  return typeof resetRecord.resetId === "string" ? resetRecord.resetId : null;
+}
+
 async function initializeCloud() {
   if (cloudDatabase) return cloudDatabase;
   if (!window.cloudbase) throw new Error("CloudBase SDK unavailable");
@@ -393,6 +418,7 @@ function buildRecord() {
     id: sessionId,
     groupId,
     lesson: "food-journey",
+    resetId: activeResetId,
     createdAt: v1.startedAt,
     updatedAt: Date.now(),
     pendingSync: true,
@@ -527,16 +553,52 @@ async function refreshDashboard() {
   const localRecords = await loadLocalRecords().catch(() => []);
   let cloudRecords = [];
   try {
+    activeResetId = await loadClassResetId();
+    if (activeResetId) await updateLocalLessonRecords((record) => record.resetId !== activeResetId);
     cloudRecords = await loadCloudRecords();
     document.querySelector("#connection-status").textContent = "教师端已连接";
   } catch (error) {
     console.error("教师端云端读取失败", error);
     document.querySelector("#connection-status").textContent = "仅显示本机记录";
   }
-  const merged = new Map([...localRecords, ...cloudRecords].map((record) => [record.id, record]));
-  renderDashboard([...merged.values()]);
+  const currentLocalRecords = activeResetId
+    ? localRecords.filter((record) => record.lesson !== "food-journey" || record.resetId === activeResetId)
+    : localRecords;
+  const merged = new Map([...currentLocalRecords, ...cloudRecords].map((record) => [record.id, record]));
+  const visibleRecords = [...merged.values()].filter((record) => record.lesson !== "food-journey" || !activeResetId || record.resetId === activeResetId);
+  renderDashboard(visibleRecords);
   button.disabled = false;
   button.textContent = "刷新数据";
+}
+
+async function clearAllClassData() {
+  const button = document.querySelector("#clear-data-button");
+  const status = document.querySelector("#clear-data-status");
+  const confirmed = window.confirm("确定清除本课 12 个小组的全部记录吗？操作不可撤销。学生设备下次联网打开本课时，也会清除旧记录并重新开始。");
+  if (!confirmed) return;
+  if (window.prompt("请键入“清除全部记录”以确认。") !== "清除全部记录") return;
+  button.disabled = true;
+  button.textContent = "正在清除…";
+  status.textContent = "正在清除 12 组记录…";
+  try {
+    const database = await initializeCloud();
+    const resetId = `reset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await database.collection(CLOUD_COLLECTION).doc("class-reset").set({ id: "class-reset", resetId, updatedAt: Date.now() });
+    activeResetId = resetId;
+    const removals = await Promise.allSettled(Array.from({ length: 12 }, (_, index) => database.collection(CLOUD_COLLECTION).doc(`group-${index + 1}`).remove()));
+    const failedRemovals = removals.filter((result) => result.status === "rejected").length;
+    await updateLocalLessonRecords(() => true);
+    await refreshDashboard();
+    status.textContent = failedRemovals
+      ? `已开启新一轮；${failedRemovals} 组云端旧记录未能彻底删除，请再次清除。`
+      : "12 组记录已清除，可以重新开始。";
+  } catch (error) {
+    console.error("清除课堂记录失败", error);
+    status.textContent = "清除未完成，请检查网络后重试。";
+  } finally {
+    button.disabled = false;
+    button.textContent = "清除全部记录";
+  }
 }
 
 async function exportRecords() {
@@ -561,7 +623,17 @@ async function initialize() {
     return;
   }
   const savedRecords = await loadLocalRecords().catch(() => []);
-  const savedRecord = savedRecords
+  try {
+    activeResetId = await loadClassResetId();
+    if (activeResetId) await updateLocalLessonRecords((record) => record.resetId !== activeResetId);
+  } catch (error) {
+    activeResetId = null;
+    console.warn("暂时无法读取课堂重置状态", error);
+  }
+  const currentRecords = activeResetId
+    ? (await loadLocalRecords().catch(() => [])).filter((record) => record.resetId === activeResetId)
+    : savedRecords;
+  const savedRecord = currentRecords
     .filter((record) => Number(record.groupId) === groupId)
     .sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))[0];
   if (savedRecord) {
@@ -599,5 +671,6 @@ document.querySelector("#clear-route-button").addEventListener("click", clearRou
 submitButton.addEventListener("click", submitModel);
 document.querySelector("#refresh-dashboard").addEventListener("click", refreshDashboard);
 document.querySelector("#export-button").addEventListener("click", exportRecords);
+document.querySelector("#clear-data-button").addEventListener("click", clearAllClassData);
 document.querySelector("#model-fullscreen-button").addEventListener("click", () => document.documentElement.requestFullscreen?.());
 initialize();

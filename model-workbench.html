@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f3f8f6" />
     <title>消化模型工作台｜食物在身体里的旅行</title>
-    <link rel="stylesheet" href="styles.css?v=20261022-6" />
+    <link rel="stylesheet" href="styles.css?v=20261022-7" />
     <script defer src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script defer src="model-workbench.js?v=20261022-4"></script>
+    <script defer src="model-workbench.js?v=20261022-5"></script>
   </head>
   <body class="model-page student-page">
     <main class="model-app">
@@ -65,9 +65,10 @@
       <section id="teacher-view" class="teacher-model-view" hidden>
         <div class="teacher-model-heading">
           <div><p class="model-eyebrow">教师端 · 实时数据</p><h1>12 个小组的模型变化</h1></div>
-          <div><button id="refresh-dashboard" class="tool-button" type="button">刷新数据</button><button id="export-button" class="tool-button" type="button">导出本机记录</button></div>
+          <div><button id="refresh-dashboard" class="tool-button" type="button">刷新数据</button><button id="export-button" class="tool-button" type="button">导出本机记录</button><button id="clear-data-button" class="tool-button tool-button--danger" type="button">清除全部记录</button></div>
         </div>
         <p class="teacher-note">每张图保留学生真实摆放位置与所画路线；系统只呈现变化，不替学生判分。</p>
+        <p id="clear-data-status" class="clear-data-status" role="status" aria-live="polite"></p>
         <div id="teacher-summary" class="teacher-summary"></div>
         <div id="group-dashboard" class="group-dashboard"></div>
       </section>
