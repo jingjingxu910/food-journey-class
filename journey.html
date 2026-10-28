@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>跟着饼干去旅行｜食物在身体里的旅行</title>
+  <link rel="stylesheet" href="journey.css?v=20261028-1">
+  <script defer src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
+  <script type="module" src="journey.js?v=20261028-1"></script>
+  <script defer src="watermark.js?v=20261028-1"></script>
+</head>
+<body>
+<main class="game" id="game">
+  <header class="game-bar">
+    <a id="back-link" href="index.html">← 课堂首页</a>
+    <span id="group-label"></span>
+    <button id="fullscreen" type="button">全屏</button>
+  </header>
+  <section class="game-view" id="game-view" aria-label="食物在身体里的旅行">
+    <div class="scene-image" id="scene-image"></div>
+    <div class="stomach-arrival" id="stomach-arrival" hidden aria-hidden="true"></div>
+    <div class="scene-3d" id="scene-3d" hidden aria-label="可拖动环顾的消化道三维教学模型"></div>
+    <div class="micrograph" id="micrograph" hidden><img src="assets/journey/villi-micrograph.jpg" alt="小肠绒毛的真实显微照片"><span>显微镜下的小肠绒毛</span></div>
+    <div class="scene-motion" id="scene-motion" aria-hidden="true"></div>
+    <div class="effects" id="effects" aria-hidden="true"></div>
+    <div class="food-wrap" id="food-wrap" aria-label="这块正在旅行的饼干"><div class="food" id="food"></div><span class="food-label" id="food-label"></span></div>
+    <div class="scene-hotspots" id="scene-hotspots"></div>
+    <div class="scene-caption" id="scene-caption" aria-live="polite"></div>
+    <button class="view-mode" id="view-mode" type="button" hidden>360° 环顾</button>
+    <button class="location-button" id="location-button" type="button" hidden>我到哪儿了？</button>
+    <div class="location-panel" id="location-panel" hidden>
+      <div class="location-map"><div class="anatomy-art" id="location-art"><span id="location-marker"></span></div></div>
+      <div class="location-copy">
+        <p class="location-name" id="location-name"></p>
+        <button id="location-close" type="button">继续观察</button>
+      </div>
+    </div>
+    <div class="dialog" id="dialog" hidden><p id="dialog-text"></p><button id="dialog-ok" type="button">知道了</button></div>
+    <div class="identify" id="identify" hidden><h2>这里是哪里？</h2><p id="identify-clue"></p><div id="identify-options"></div><p id="identify-feedback" aria-live="polite"></p></div>
+    <div class="organ-reveal" id="organ-reveal" hidden>
+      <div class="body-map" id="body-map" aria-label="人体消化器官位置图">
+        <div class="map-art anatomy-art" id="reveal-art"><span id="map-marker"></span></div>
+      </div>
+      <img id="organ-image" alt="" hidden>
+      <div><h2 id="organ-name"></h2><p id="organ-fact"></p><button id="reveal-close" type="button" hidden>继续旅行 →</button></div>
+    </div>
+    <div class="opening" id="opening"><h1>跟着一块饼干，去身体里看看</h1><p>先找到入口。</p><button id="start" type="button">出发</button></div>
+    <div class="ending" id="ending" hidden><div class="ending-card"><div class="ending-badge" aria-hidden="true">✦</div><p class="ending-eyebrow">第 <span id="ending-group"></span> 组 · 食物在身体里的旅行</p><h1 id="ending-title"></h1><p id="ending-text"></p><div class="ending-start" id="ending-start" hidden><i class="food-stage stage-whole" aria-hidden="true"></i><span>出发前：整块饼干</span></div><div class="award-track" id="award-track" hidden><span>口腔<small>磨碎·湿润</small></span><span>食管<small>蠕动运输</small></span><span>胃<small>搅拌·消化</small></span><span>小肠<small>吸收营养</small></span><span>大肠<small>吸收水分</small></span></div><div class="ending-foods" id="ending-foods" hidden><div class="food-change"><div class="stage-pair"><i class="food-stage stage-crumbs" aria-hidden="true"></i><i class="food-stage stage-bolus" aria-hidden="true"></i></div><span>碎屑变成湿润食团</span></div><div class="food-change"><i class="food-stage stage-bolus" aria-hidden="true"></i><span>食团向胃移动</span></div><div class="food-change"><i class="food-stage stage-soft" aria-hidden="true"></i><span>搅拌后更细软</span></div><div class="food-change"><i class="food-stage stage-absorbed" aria-hidden="true"></i><span>部分营养被吸收</span></div><div class="food-change"><i class="food-stage stage-residue" aria-hidden="true"></i><span>水分减少，留下残余</span></div></div><div class="ending-feedback" id="ending-feedback" hidden><strong>本组发现</strong><p id="ending-feedback-text"></p></div><div class="ending-actions"><button id="ending-button" type="button"></button><button id="ending-home" class="ending-home" type="button" hidden>返回课堂</button></div></div></div>
+  </section>
+  <nav class="travel-controls" aria-label="食物移动">
+    <button id="forward" type="button"><span>↑</span> 前进</button>
+    <button id="backward" type="button"><span>↓</span> 后退</button>
+  </nav>
+  <div class="game-footer"><span id="step-indicator"></span><div class="progress"><span id="progress-fill"></span></div><span id="game-status" role="status"></span></div>
+</main>
+</body>
+</html>

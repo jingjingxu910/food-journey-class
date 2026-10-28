@@ -1,0 +1,27 @@
+# Local tools and model experiments; keep them on this computer.
+inspect_anatomy.py
+modify_models.py
+raycheck.py
+render_anatomy.py
+review_meshes.py
+model-output/
+model-review/
+
+# Local credentials and generated files.
+.env
+.env.*
+*.key
+*.pem
+node_modules/
+__pycache__/
+*.pyc
+
+# Local diagnostics and 3D print experiments.
+model-study/
+*-check.cjs
+*-preview.png
+neck-repair/
+*.blend
+*.blend1
+*.stl
+*.3mf

@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#176a8c" />
     <title>食物在身体里的旅行</title>
-    <link rel="stylesheet" href="styles.css?v=20261022-6" />
-  </head>
+    <link rel="stylesheet" href="styles.css?v=20261028-1" />
+    <script defer src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
+    <script defer src="watermark.js?v=20261028-1"></script>
+</head>
   <body class="home-page student-page">
     <main class="app-shell">
       <nav class="site-topbar" aria-label="课程导航">
@@ -34,7 +36,7 @@
       </div>
 
       <section class="module-grid" aria-label="课堂模块">
-        <a class="module-card module-card--active" href="model-workbench.html">
+        <a class="module-card module-card--active" data-step="0" href="model-workbench.html">
           <span class="module-number">任务 1</span>
           <span class="module-icon module-icon--orange">↝</span>
           <h2>初始模型</h2>
@@ -42,39 +44,39 @@
           <span class="module-action">开始建模 →</span>
         </a>
 
-        <article class="module-card module-card--locked">
+        <a class="module-card module-card--active" data-step="1" href="observation.html" hidden>
           <span class="module-number">任务 2</span>
           <span class="module-icon module-icon--violet">◎</span>
           <h2>AR 观察</h2>
           <p>观察消化器官的位置和连接。</p>
-          <span class="module-action">待开启</span>
-        </article>
+          <span class="module-action">开始观察 →</span>
+        </a>
 
-        <article class="module-card module-card--locked">
+        <a class="module-card module-card--active" data-step="2" href="model-workbench.html?phase=v2" hidden>
           <span class="module-number">任务 3</span>
           <span class="module-icon module-icon--mint">◌</span>
           <h2>修正模型</h2>
           <p>根据观察到的证据修改模型。</p>
-          <span class="module-action">即将解锁</span>
-        </article>
+          <span class="module-action">继续修正 →</span>
+        </a>
 
-        <article class="module-card module-card--locked">
+        <a class="module-card module-card--active" data-step="3" href="assembly.html" hidden>
           <span class="module-number">任务 4</span>
           <span class="module-icon module-icon--blue">◒</span>
           <h2>实体拼装</h2>
           <p>合作完成消化系统模型。</p>
-          <span class="module-action">即将解锁</span>
-        </article>
+          <span class="module-action">记录拼装 →</span>
+        </a>
 
-        <article class="module-card module-card--locked">
+        <a class="module-card module-card--active" data-step="4" href="journey.html" hidden>
           <span class="module-number">任务 5</span>
           <span class="module-icon module-icon--violet">◒</span>
           <h2>食物的旅行</h2>
           <p>从第一人称体验食物的旅行。</p>
-          <span class="module-action">即将解锁</span>
-        </article>
+          <span class="module-action">进入旅程 →</span>
+        </a>
       </section>
     </main>
-    <script type="module" src="app.js?v=20261022-3"></script>
+    <script type="module" src="app.js?v=20261028-1"></script>
   </body>
 </html>
