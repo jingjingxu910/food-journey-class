@@ -1,0 +1,68 @@
+/* Large child-facing controls. Aspect ratio belongs to the body plane, not the screen. */
+[hidden]{display:none!important}
+.prepare-link{font-size:18px;font-weight:800;color:#175b65;margin-right:14px}
+.model-page.student-page:not(.teacher-mode){overflow:auto}
+.model-page.student-page:not(.teacher-mode) .model-app{width:calc(100% - 20px);max-width:1440px;height:100vh;height:100svh;min-height:560px;padding:6px 0}
+.model-page.student-page:not(.teacher-mode) .model-topbar{min-height:48px;flex-shrink:0;font-size:18px}
+.model-page.student-page:not(.teacher-mode) .model-identity strong,
+.model-page.student-page:not(.teacher-mode) .model-fullscreen-button{font-size:18px;min-height:44px}
+.model-page.student-page:not(.teacher-mode) .model-heading{min-height:76px;padding:4px 6px 10px;flex-shrink:0}
+.model-page.student-page:not(.teacher-mode) .model-heading h1{font-size:clamp(26px,3vw,36px)}
+.model-page.student-page:not(.teacher-mode) .model-heading>div>p:last-child{font-size:20px;line-height:1.4}
+.model-page.student-page:not(.teacher-mode) .model-eyebrow{font-size:16px}
+.model-page.student-page:not(.teacher-mode) .anatomy-workspace{display:grid;grid-template-columns:180px minmax(0,1fr) 180px;grid-template-rows:minmax(0,1fr);min-height:0;flex:1;border-radius:18px;box-shadow:none}
+.model-page.student-page:not(.teacher-mode) .organ-shelf{border-bottom:0;border-right:1px solid #e1ebe8;gap:8px;padding:12px}
+.model-page.student-page:not(.teacher-mode) .organ-shelf h2{display:block;font-size:22px}
+.model-page.student-page:not(.teacher-mode) .organ-palette{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(72px,1fr);align-content:start;gap:6px;flex:1;min-height:0}
+.model-page.student-page:not(.teacher-mode) .palette-organ{width:100%;min-height:0;padding:2px;gap:4px}
+.model-page.student-page:not(.teacher-mode) .palette-organ img{width:100%;height:clamp(44px,10vh,100px);filter:none}
+.model-page.student-page:not(.teacher-mode) .palette-organ span{font-size:20px}
+.model-page.student-page:not(.teacher-mode) .body-stage-wrap{height:auto;min-height:0;padding:4px;overflow:hidden}
+.model-page.student-page:not(.teacher-mode) .body-stage{max-width:none;flex:none;aspect-ratio:2/3}
+.model-page.student-page:not(.teacher-mode) .placed-organ img{max-height:none}
+.model-page.student-page:not(.teacher-mode) .model-tools{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:12px;padding:12px;border-top:0;border-left:1px solid #e1ebe8}
+.model-page.student-page:not(.teacher-mode) .task-card{display:block;padding:10px;text-align:center}
+.model-page.student-page:not(.teacher-mode) .task-card span{font-size:32px}
+.model-page.student-page:not(.teacher-mode) .task-card strong{font-size:18px}
+.model-page.student-page:not(.teacher-mode) .tool-button{font-size:20px;min-height:54px;padding:10px 8px}
+.model-page.student-page:not(.teacher-mode) .model-footer{min-height:64px;flex-shrink:0;padding:8px 12px;margin-top:6px;gap:8px}
+.model-page.student-page:not(.teacher-mode) .model-footer strong{font-size:18px;white-space:normal;line-height:1.4}
+.model-page.student-page:not(.teacher-mode) .submit-model-button{font-size:20px;min-height:50px;padding:10px 14px}
+.model-page.student-page:not(.teacher-mode) .draw-tip{font-size:18px}
+.model-page.student-page:not(.teacher-mode) .saved-model-preview{width:min(65vw,54vh,480px)}
+.flow-topbar,.game-bar{font-size:18px;min-height:48px}
+.flow-fullscreen,#fullscreen{font-size:18px;min-height:44px}
+.flow-primary,.flow-secondary{font-size:20px;min-height:50px}
+.ar-page .organ-detail p{font-size:20px;line-height:1.5}
+.ar-page .organ-detail img{max-height:32vh}
+.ar-page .observe-organ-list button{font-size:20px;min-height:50px}
+.ar-page .camera-actions span{font-size:18px}
+.game .hint,.game .scene-hint{font-size:clamp(21px,2.4vw,30px)}
+.game button{font-size:clamp(18px,2vw,25px)}
+.game .scene-caption,.game .dialog p,.game .organ-reveal p,.game .identify p{font-size:clamp(22px,2.3vw,30px);line-height:1.5}
+.game .food-label{font-size:20px}
+.home-page .hero h1{font-size:clamp(32px,4.5vw,52px)}
+.home-page .intro,.home-page .module-action,.home-page .module-card--active p{font-size:20px}
+.home-page .module-card--active h2{font-size:26px}
+@media(orientation:portrait){
+ .model-page.student-page:not(.teacher-mode) .anatomy-workspace{grid-template-columns:minmax(100px,22%) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto}
+ .model-page.student-page:not(.teacher-mode) .organ-palette{grid-template-columns:1fr;grid-auto-rows:minmax(60px,1fr)}
+ .model-page.student-page:not(.teacher-mode) .model-tools{grid-column:1/-1;flex-direction:row;gap:8px;border-left:0;border-top:1px solid #e1ebe8;padding:8px;align-items:center}
+ .model-page.student-page:not(.teacher-mode) .model-tools .task-card{display:none}
+ .model-page.student-page:not(.teacher-mode) .model-tools button{flex:1}
+ .ar-page .observation-layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr) auto}
+ .ar-page .observe-panel{max-height:36vh;min-height:0;overflow:auto}
+ .ar-page .observe-organ-list{display:flex;flex-wrap:wrap}
+}
+@media(max-width:1000px) and (orientation:landscape){
+ .model-page.student-page:not(.teacher-mode) .anatomy-workspace{grid-template-columns:155px minmax(0,1fr) 155px}
+ .model-page.student-page:not(.teacher-mode) .organ-palette{gap:4px}
+ .model-page.student-page:not(.teacher-mode) .model-tools{padding:8px}
+ .model-page.student-page:not(.teacher-mode) .model-heading h1{font-size:26px}
+}
+@media(max-width:500px){
+ .model-page.student-page:not(.teacher-mode) .model-identity{gap:3px}
+ .model-page.student-page:not(.teacher-mode) .model-identity strong,.model-page.student-page:not(.teacher-mode) .model-fullscreen-button{font-size:15px;padding:5px}
+ .model-page.student-page:not(.teacher-mode) .model-footer{flex-wrap:wrap}
+ .model-page.student-page:not(.teacher-mode) .submit-model-button{flex:1}
+}

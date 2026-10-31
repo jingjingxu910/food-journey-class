@@ -1,0 +1,18 @@
+.ar-page{height:100vh;height:100svh;overflow:hidden}
+.ar-page .flow-shell{height:100vh;height:100svh;min-height:0}
+.ar-organ{left:0;top:0;transform-origin:50% 50%;will-change:transform;contain:layout style}
+.ar-organ img{filter:drop-shadow(0 2px 2px #15303670);pointer-events:none;user-select:none}
+.ar-organs[hidden],.ar-organ[hidden]{display:none!important}
+.ar-organ.is-selected{outline:none}.ar-organ.is-selected img{filter:drop-shadow(0 0 5px #fff7a2)}
+.camera-stage video{position:absolute;inset:0;display:block}
+.camera-stage{aspect-ratio:auto}.camera-actions{flex-shrink:0;min-height:54px}
+.camera-actions span{font-size:15px;line-height:1.35}
+#ar-metrics:empty{display:none}#ar-metrics{font-size:12px}
+.observe-organ-list{flex-shrink:0;gap:5px}.observe-organ-list button{font-size:16px;min-height:50px}.observe-organ-list img{width:42px;height:42px}
+.organ-detail{background:#f3f8f5;padding:8px;overflow:auto}.organ-detail img{flex:1;min-height:50px;width:100%;max-height:27vh;object-fit:contain}
+.organ-detail p{font-size:clamp(16px,1.6vw,21px);line-height:1.5}.organ-question{font-weight:750;color:#38635e}
+.organ-detail strong{font-size:24px}.observe-panel{padding:12px;gap:8px}.observe-panel>.flow-status:empty{display:none}
+.organ-dialog{width:min(94vw,900px);height:min(90vh,820px);overflow:auto}.organ-dialog #organ-3d{height:calc(100% - 160px);min-height:180px}
+.organ-dialog canvas{display:block;touch-action:none}.organ-dialog footer{display:flex;justify-content:center;align-items:center;gap:20px;margin-top:8px}.organ-dialog p{font-size:18px;color:#244d4b}
+.ar-credit{display:block;margin-top:8px;text-align:center;font-size:12px;color:#506b64}.model-fallback-image{max-width:100%;height:80%;object-fit:contain}
+@media(max-width:700px){.observation-layout{grid-template-columns:minmax(0,1.3fr) minmax(170px,.8fr);gap:6px}.camera-stage{min-height:0}.observe-panel{min-height:0;padding:7px}.observe-organ-list{grid-template-columns:1fr}.observe-organ-list button{min-height:35px}.observe-organ-list img{width:28px;height:28px}.organ-detail p{font-size:15px}.flow-heading h1{font-size:22px}}

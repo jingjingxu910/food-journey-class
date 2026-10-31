@@ -409,7 +409,7 @@ function restart(){
 }
 function successFeedback(){
   const notes=[];
-  if(log.attempts.some(item=>item.reason==='trachea'))notes.push('咽部曾选到气管；再次尝试后，食团找到了食道。');
+  if(log.attempts.some(item=>item.reason==='trachea'))notes.push('咽部曾选到气管；再次尝试后，食团找到了食管。');
   if(log.attempts.some(item=>item.reason==='vomit')||log.events.some(item=>item.type==='backward_try'&&item.scene==='stomach'))notes.push('胃里尝试过后退；贲门通常会阻止胃内容物倒流。');
   if(notes.length<2&&log.events.some(item=>item.type==='identify_choice'&&organs[item.organId]&&item.choice!==organs[item.organId].name))notes.push('辨认器官时重新核对过线索；还可以比较它们的外形和作用。');
   return notes.length?notes.slice(0,2).join(' '):'这次完成了整条路线。再走一次，看看饼干在哪些位置发生了变化。';

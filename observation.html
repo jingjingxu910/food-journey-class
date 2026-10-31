@@ -4,13 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>观察身体里的器官｜食物在身体里的旅行</title>
-  <link rel="stylesheet" href="styles.css?v=20261028-1">
-  <link rel="stylesheet" href="student-flow.css?v=20261028-1">
-  <script defer src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-  <script type="module" src="observation.js?v=20261028-1"></script>
-  <script defer src="watermark.js?v=20261028-1"></script>
+  <link rel="stylesheet" href="styles.css?v=20261031-1">
+  <link rel="stylesheet" href="student-flow.css?v=20261031-1">
+  <script defer src="cloud-loader.js?v=20261031-1"></script>
+  <link rel="stylesheet" href="ar-observation.css?v=20261031-1">
+  <script type="module" src="observation.js?v=20261031-1"></script>
+  <script defer src="watermark.js?v=20261031-1"></script>
+<link rel="stylesheet" href="tablet.css?v=20261031-1">
+<script defer src="tablet-runtime.js?v=20261031-1"></script>
 </head>
-<body class="flow-page">
+<body class="flow-page ar-page">
   <main class="flow-shell">
     <header class="flow-topbar"><a id="back-link" href="index.html">← 课堂首页</a><span id="group-label">第 1 组</span><button class="flow-fullscreen" type="button">全屏</button></header>
     <div class="flow-heading"><span>观察</span><h1>身体里的器官在哪里？</h1></div>
@@ -21,7 +24,7 @@
           <div id="ar-organs" class="ar-organs" aria-label="人体器官叠加"></div>
           <div id="camera-placeholder" class="camera-placeholder"><span>◉</span><p>请一位同学站到镜头前</p></div>
         </div>
-        <div class="camera-actions"><button id="start-camera" class="flow-primary" type="button">开启后置相机</button><span id="camera-status" role="status">等待开启</span></div>
+        <div class="camera-actions"><button id="start-camera" class="flow-primary" type="button" disabled>开启后置相机</button><span id="camera-status" role="status">等待开启</span></div><output id="ar-metrics"></output>
       </div>
       <aside class="observe-panel">
         <p class="observe-prompt">我的发现</p>
@@ -33,6 +36,6 @@
       </aside>
     </section>
   </main>
-  <dialog id="organ-dialog" class="organ-dialog"><header><h2 id="organ-dialog-title"></h2><button id="close-organ-dialog" type="button">关闭</button></header><div id="organ-3d"></div><p>拖动可以转动观察</p></dialog>
+  <dialog id="organ-dialog" class="organ-dialog"><header><h2 id="organ-dialog-title"></h2><button id="close-organ-dialog" type="button">关闭</button></header><div id="organ-3d"></div><p id="organ-dialog-note"></p><footer><span>拖动模型，转动观察</span><button id="reset-organ-view" class="flow-secondary" type="button">回到正面</button></footer><a class="ar-credit" href="ar-sources.html" target="_blank" rel="noopener">模型来源：BodyParts3D · DBCLS</a></dialog>
 </body>
 </html>

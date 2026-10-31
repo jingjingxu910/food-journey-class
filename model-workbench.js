@@ -1,9 +1,9 @@
 const organs = [
   { id: "mouth", name: "口腔", image: "assets/organs/mouth-gentle.svg", width: 12 },
-  { id: "esophagus", name: "食道", image: "assets/organs/esophagus.png", width: 7, height: 16 },
-  { id: "stomach", name: "胃", image: "assets/organs/stomach.png", width: 18 },
-  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.png", width: 20 },
-  { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.png", width: 26 },
+  { id: "esophagus", name: "食管", image: "assets/organs/esophagus.webp", width: 7, height: 16 },
+  { id: "stomach", name: "胃", image: "assets/organs/stomach.webp", width: 18 },
+  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.webp", width: 20 },
+  { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.webp", width: 26 },
 ];
 
 const CLOUD_ENV = "motionless-harrier-d7cuz0659ef1a";
@@ -97,16 +97,18 @@ function createOrganButton(organ, placed = false) {
 }
 
 function renderPalette() {
-  palette.replaceChildren();
-  organs.filter((organ) => !activeModel().positions[organ.id]).forEach((organ) => palette.append(createOrganButton(organ)));
+  if (!palette.children.length) organs.forEach((organ) => palette.append(createOrganButton(organ)));
+  for (const button of palette.children) button.hidden = Boolean(activeModel().positions[button.dataset.organ]);
 }
 
 function renderPlacedOrgans() {
-  placedLayer.replaceChildren();
+
   organs.forEach((organ) => {
     const position = activeModel().positions[organ.id];
+    let button = placedLayer.querySelector(`[data-organ="${organ.id}"]`);
+    if (!button) { button = createOrganButton(organ, true); placedLayer.append(button); }
+    button.hidden = !position;
     if (!position) return;
-    const button = createOrganButton(organ, true);
     button.style.left = `${position.x}%`;
     button.style.top = `${position.y}%`;
     button.style.width = `${organ.width}%`;
@@ -114,7 +116,7 @@ function renderPlacedOrgans() {
       button.classList.add(`placed-organ--${organ.id}`);
       button.style.height = `${organ.height}%`;
     }
-    placedLayer.append(button);
+
   });
 }
 
@@ -150,7 +152,7 @@ function beginOrganDrag(event) {
   if (organ.height) {
     ghost.style.height = `${stage.clientHeight * organ.height / 100}px`;
     ghost.style.maxHeight = "none";
-    ghost.style.objectFit = "cover";
+    ghost.style.objectFit = "contain";
   }
   document.body.append(ghost);
   dragState = {
@@ -243,6 +245,7 @@ function startRoute(event) {
   drawRoute();
 }
 
+let routePaint = 0;
 function moveRoute(event) {
   if (!drawing) return;
   event.preventDefault();
@@ -250,7 +253,7 @@ function moveRoute(event) {
   const points = activeModel().routePoints;
   const previous = points[points.length - 1];
   if (Math.hypot(point.x - previous.x, point.y - previous.y) >= .45) points.push(point);
-  drawRoute();
+  if (!routePaint) routePaint = requestAnimationFrame(() => { routePaint = 0; drawRoute(); });
 }
 
 function finishRoute(event) {
@@ -378,15 +381,23 @@ async function updateLocalLessonRecords(shouldDelete) {
   });
 }
 
+function withCloudDeadline(work, ms) {
+  let timer;
+  return Promise.race([work, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error("云端连接超时")), ms); })]).finally(() => clearTimeout(timer));
+}
+
 async function loadClassResetId() {
-  const database = await initializeCloud();
-  const result = await database.collection(CLOUD_COLLECTION).doc("class-reset").get();
+  const result = await withCloudDeadline((async () => {
+    const database = await initializeCloud();
+    return database.collection(CLOUD_COLLECTION).doc("class-reset").get();
+  })(), 2500);
   const resetRecord = Array.isArray(result?.data) ? result.data[0] || {} : result?.data || {};
   return typeof resetRecord.resetId === "string" ? resetRecord.resetId : null;
 }
 
 async function initializeCloud() {
-  if (cloudDatabase) return cloudDatabase;
+  if (cloudDatabase) { await cloudLoginPromise; return cloudDatabase; }
+  if (window.loadClassCloud) await window.loadClassCloud();
   if (!window.cloudbase) throw new Error("CloudBase SDK unavailable");
   const app = window.cloudbase.init({ env: CLOUD_ENV, region: "ap-shanghai" });
   cloudDatabase = app.database();
@@ -417,10 +428,9 @@ async function syncRecord(record) {
     const records = Array.isArray(current.records) ? current.records.filter((item) => item.id !== record.id) : [];
     records.push(submittedRecord);
     const payload = { id: groupId, records: records.slice(-20), updatedAt: Date.now() };
-    try {
-      await reference.update(payload);
-    } catch {
-      await reference.set(payload);
+    const written = await reference.set(payload);
+    if (written?.code || !(written?.updated > 0 || written?.upsertedId || written?.id)) {
+      throw new Error(written?.message || "云端未确认保存");
     }
     record.pendingSync = false;
     pendingSubmissionSync = false;
@@ -537,7 +547,7 @@ function miniModel(model, label, options = {}) {
   }).join("");
   const interactive = Number.isInteger(options.groupId);
   const attributes = interactive ? ` data-group-id="${options.groupId}" data-model-phase="${options.phase}" role="button" tabindex="0" aria-label="放大第 ${options.groupId} 组${label}"` : "";
-  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.png?v=20261022-7" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}"/></svg>${pieces}</div></div>`;
+  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.webp?v=20261022-7" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}"/></svg>${pieces}</div></div>`;
 }
 
 function latestRecord(records, id) {
@@ -723,6 +733,11 @@ async function initialize() {
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") void checkClassReset();
   });
+  render(); // Local interaction and images must not wait for a remote service.
+  stage.style.pointerEvents = 'none';
+  studentView.style.pointerEvents = 'none';
+  submitButton.disabled = true;
+  resizeCanvas();
   const savedRecords = await loadLocalRecords().catch(() => []);
   try {
     activeResetId = await loadClassResetId();
@@ -744,7 +759,7 @@ async function initialize() {
     v2 = savedRecord.v2 ? clone(savedRecord.v2) : null;
     if (v2) applyRevisionView();
     pendingSubmissionSync = Boolean(savedRecord.pendingSync && (savedRecord.v1?.completedAt || savedRecord.v2?.completedAt));
-    if (pendingSubmissionSync) await syncRecord(savedRecord);
+    if (pendingSubmissionSync) void syncRecord(savedRecord);
     else if (savedRecord.pendingSync) {
       savedRecord.pendingSync = false;
       await saveLocal(savedRecord);
@@ -773,7 +788,10 @@ async function initialize() {
 
 document.addEventListener("pointermove", moveOrganDrag);
 document.addEventListener("pointerup", endOrganDrag);
-document.addEventListener("pointercancel", endOrganDrag);
+document.addEventListener("pointercancel", () => {
+  dragState?.ghost.remove(); dragState = null;
+  document.querySelectorAll(".is-moving").forEach(e => e.classList.remove("is-moving"));
+});
 window.addEventListener("pagehide", () => { if (!discardDraftOnExit) void saveDraftNow(); });
 canvas.addEventListener("pointerdown", startRoute);
 canvas.addEventListener("pointermove", moveRoute);
@@ -818,4 +836,4 @@ document.querySelector("#group-dashboard").addEventListener("keydown", (event) =
 document.querySelector("#preview-dialog-close").addEventListener("click", () => document.querySelector("#model-preview-dialog").close());
 document.querySelector("#teacher-fullscreen-button").addEventListener("click", () => document.documentElement.requestFullscreen?.());
 document.querySelector("#model-fullscreen-button").addEventListener("click", () => document.documentElement.requestFullscreen?.());
-initialize();
+initialize().finally(() => { studentView.style.pointerEvents = ''; stage.style.pointerEvents = ''; submitButton.disabled = false; });

@@ -42,8 +42,11 @@ export async function currentRecord() {
   const records = await allRecords();
   let resetId = null;
   try {
-    const db = await cloudDb();
-    const result = await db.collection(collectionName).doc('class-reset').get();
+    let resetTimer;
+    const result = await Promise.race([
+      (async () => { const db = await cloudDb(); return db.collection(collectionName).doc('class-reset').get(); })(),
+      new Promise((_, reject) => { resetTimer=setTimeout(() => reject(new Error('课堂轮次读取超时')),2500); })
+    ]).finally(()=>clearTimeout(resetTimer));
     const data = Array.isArray(result.data) ? result.data[0] : result.data;
     resetId = typeof data?.resetId === 'string' ? data.resetId : null;
   } catch { /* Keep the local draft available while offline. */ }
@@ -59,6 +62,7 @@ export async function currentRecord() {
 let cloudReady;
 async function cloudDb() {
   if (!cloudReady) cloudReady = (async () => {
+    if (window.loadClassCloud) await window.loadClassCloud();
     if (!window.cloudbase) throw new Error('CloudBase SDK unavailable');
     const app = window.cloudbase.init({ env: environment, region: 'ap-shanghai' });
     const auth = app.auth();
@@ -84,7 +88,10 @@ export async function submitRecord(record, {saveLocal=true}={}) {
     if (submitted.assembly) delete submitted.assembly.photoLocal;
     records.push(submitted);
     const payload = { id: groupId, records: records.slice(-12), updatedAt: Date.now() };
-    try { await ref.update(payload); } catch { await ref.set(payload); }
+    const written = await ref.set(payload);
+    if (written?.code || !(written?.updated > 0 || written?.upsertedId || written?.id)) {
+      throw new Error(written?.message || '云端未确认保存');
+    }
     return true;
   } catch (error) {
     console.warn('课堂记录暂未同步', error);

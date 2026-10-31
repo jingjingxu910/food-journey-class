@@ -5,10 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#f3f8f6" />
     <title>消化模型工作台｜食物在身体里的旅行</title>
-    <link rel="stylesheet" href="styles.css?v=20261028-1" />
-    <script defer src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
-    <script defer src="model-workbench.js?v=20261028-1"></script>
-    <script defer src="watermark.js?v=20261028-1"></script>
+    <link rel="stylesheet" href="styles.css?v=20261031-1" />
+    <script defer src="cloud-loader.js?v=20261031-1"></script>
+    <script defer src="model-workbench.js?v=20261031-1"></script>
+    <script defer src="watermark.js?v=20261031-1"></script>
+<link rel="stylesheet" href="tablet.css?v=20261031-1">
+<script defer src="tablet-runtime.js?v=20261031-1"></script>
 </head>
   <body class="model-page student-page">
     <main class="model-app">
@@ -17,7 +19,7 @@
         <div class="model-identity">
           <span id="connection-status" class="connection-status">本机记录</span>
           <strong id="group-badge">第 1 组</strong>
-          <button id="model-fullscreen-button" class="model-fullscreen-button" type="button">全屏</button>
+          <button id="portrait-button" class="model-fullscreen-button" type="button">尝试竖屏</button><button id="model-fullscreen-button" class="model-fullscreen-button" type="button">全屏</button>
         </div>
       </header>
 
@@ -41,7 +43,7 @@
 
           <div class="body-stage-wrap">
             <div id="body-stage" class="body-stage" aria-label="人体消化模型画布">
-              <img class="body-outline" src="assets/anatomy/body-outline-generated.png?v=20261022-5" alt="儿童正面人体轮廓" draggable="false" />
+              <img class="body-outline" src="assets/anatomy/body-outline-generated.webp?v=20261022-5" alt="儿童正面人体轮廓" draggable="false" />
               <canvas id="route-canvas" aria-label="食物旅行路线画布"></canvas>
               <div id="placed-organs" class="placed-organs"></div>
               <div id="draw-tip" class="draw-tip" hidden>画出食物的路线</div>
