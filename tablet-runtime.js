@@ -15,7 +15,7 @@
   document.querySelector('#portrait-button')?.addEventListener('click', async () => {
     const button = document.querySelector('#portrait-button');
     try {
-      if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+      if (!document.fullscreenElement) await window.requestLessonFullscreen?.();
       if (!screen.orientation?.lock) throw new Error('unsupported');
       await screen.orientation.lock('portrait');
       button.textContent = '竖屏';

@@ -446,7 +446,7 @@ async function init(){
   scene=order.includes(log.phase)?log.phase:'outside';view3D=scene==='esophagus';
   started=false;await loadSceneImage(scene);render();
 }
-$('fullscreen').onclick=()=>document.documentElement.requestFullscreen?.();
+$('fullscreen').onclick=()=>window.requestLessonFullscreen?.();
 $('location-button').onclick=()=>{
   $('location-marker').dataset.organ=scene;
   $('location-marker').dataset.label=log.identified.includes(scene)?organs[scene]?.name||'':'';

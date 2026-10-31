@@ -834,6 +834,6 @@ document.querySelector("#group-dashboard").addEventListener("keydown", (event) =
   }
 });
 document.querySelector("#preview-dialog-close").addEventListener("click", () => document.querySelector("#model-preview-dialog").close());
-document.querySelector("#teacher-fullscreen-button").addEventListener("click", () => document.documentElement.requestFullscreen?.());
-document.querySelector("#model-fullscreen-button").addEventListener("click", () => document.documentElement.requestFullscreen?.());
+document.querySelector("#teacher-fullscreen-button").addEventListener("click", () => window.requestLessonFullscreen?.());
+document.querySelector("#model-fullscreen-button").addEventListener("click", () => window.requestLessonFullscreen?.());
 initialize().finally(() => { studentView.style.pointerEvents = ''; stage.style.pointerEvents = ''; submitButton.disabled = false; });

@@ -1,10 +1,10 @@
 self.LESSON_RESOURCES = {
-  "version": "20261031-tablet-1",
-  "bytes": 50642965,
+  "version": "20261031-tablet-2",
+  "bytes": 50646553,
   "files": [
     {
       "path": "app.js",
-      "bytes": 2104
+      "bytes": 2146
     },
     {
       "path": "ar-observation.css",
@@ -20,7 +20,7 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-prepare.html",
-      "bytes": 1205
+      "bytes": 1257
     },
     {
       "path": "ar-prepare.js",
@@ -32,11 +32,11 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "assembly.html",
-      "bytes": 1854
+      "bytes": 1905
     },
     {
       "path": "assembly.js",
-      "bytes": 3304
+      "bytes": 3357
     },
     {
       "path": "assets/anatomy/body-outline-generated.png",
@@ -227,8 +227,12 @@ self.LESSON_RESOURCES = {
       "bytes": 2167
     },
     {
+      "path": "frame-entry.js",
+      "bytes": 827
+    },
+    {
       "path": "index.html",
-      "bytes": 3896
+      "bytes": 3947
     },
     {
       "path": "journey-3d.js",
@@ -244,27 +248,35 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "journey.html",
-      "bytes": 5538
+      "bytes": 5589
     },
     {
       "path": "journey.js",
-      "bytes": 28722
+      "bytes": 29205
+    },
+    {
+      "path": "lesson-shell.html",
+      "bytes": 627
+    },
+    {
+      "path": "lesson-shell.js",
+      "bytes": 1164
     },
     {
       "path": "model-workbench.html",
-      "bytes": 5355
+      "bytes": 5406
     },
     {
       "path": "model-workbench.js",
-      "bytes": 38852
+      "bytes": 38828
     },
     {
       "path": "observation.html",
-      "bytes": 2853
+      "bytes": 2904
     },
     {
       "path": "observation.js",
-      "bytes": 13296
+      "bytes": 13385
     },
     {
       "path": "organ-drag.js",
@@ -284,7 +296,7 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "tablet-runtime.js",
-      "bytes": 1347
+      "bytes": 1367
     },
     {
       "path": "tablet.css",

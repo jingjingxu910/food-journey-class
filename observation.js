@@ -14,7 +14,7 @@ let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,
 let workerReady=false,starting=false,saveTimer,viewerDispose,viewerGeneration=0,captureWidth=384,interval=100,meanCost=0,lastPaint=0;
 const metrics={samples:0,totalMs:0,maxMs:0,losses:0,mode:null};
 $('#group-label').textContent=`第 ${groupId} 组`;$('#back-link').href=homeUrl();
-$('.flow-fullscreen').onclick=()=>document.documentElement.requestFullscreen?.();
+$('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
 const status=message=>$('#observation-status').textContent=message;
 function freshObservation(){return {startedAt:Date.now(),completedAt:null,views:[],local3dEntries:[],cameraStarted:false};}
 function saveSoon(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{if(record)void saveRecord(record);},500);}

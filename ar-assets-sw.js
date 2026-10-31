@@ -1,5 +1,5 @@
 // Only public lesson files, never CloudBase requests, camera frames or records.
-importScripts('./resource-manifest.js');
+importScripts('./resource-manifest.js?v=20261031-2');
 const CACHE=`food-lesson-${self.LESSON_RESOURCES.version}`;
 const ROOT=new URL('./',self.location.href);
 const ALLOWED=new Set(self.LESSON_RESOURCES.files.map(item=>new URL(item.path,ROOT).href));

@@ -3,7 +3,7 @@ const $=(selector)=>document.querySelector(selector);
 $('#group-label').textContent=`第 ${groupId} 组`;
 $('#back-link').href=homeUrl();
 $('#journey-link').href=`journey.html?group=${groupId}`;
-$('.flow-fullscreen').onclick=()=>document.documentElement.requestFullscreen?.();
+$('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
 let record;
 
 function photoData(file, maxSide, quality) {

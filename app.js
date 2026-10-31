@@ -18,7 +18,7 @@ if (Number.isInteger(groupId) && groupId >= 1 && groupId <= 12) {
 
 console.info(`食物在身体里的旅行 v${appVersion}`);
 
-document.querySelector("#fullscreen-button")?.addEventListener("click", () => document.documentElement.requestFullscreen?.());
+document.querySelector("#fullscreen-button")?.addEventListener("click", () => window.requestLessonFullscreen?.());
 
 function nextStep(record) {
   if (!record.v1?.completedAt) return 0;
