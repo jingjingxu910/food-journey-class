@@ -1,4 +1,4 @@
-importScripts('./resource-manifest.js?v=20261102-chunk-cache-1','./resource-store.js?v=20261102-chunk-cache-1');
+importScripts('./resource-manifest.js?v=20261103-camera-entry-1','./resource-store.js?v=20261103-camera-entry-1');
 const ROOT=new URL('./',self.location.href);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));
 self.addEventListener('install',()=>self.skipWaiting());

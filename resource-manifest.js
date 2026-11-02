@@ -1,11 +1,16 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-eccfc6d44c90ea61",
-  "bytes": 46849909,
+  "version": "20261102-chunks-ea1d9449a3873522",
+  "bytes": 46851532,
   "files": [
     {
       "path": "app.js",
       "bytes": 2092,
       "hash": "dbc9717a05e31627f327cf5db584bd39f8d4b470de8ef5a12c3ee6250c54e200"
+    },
+    {
+      "path": "ar-entry.js",
+      "bytes": 756,
+      "hash": "6ba2d7cb75a49cca7d397bf5382d1481cc19cb3a261dd85aed41ede1c33f7835"
     },
     {
       "path": "ar-observation.css",
@@ -633,13 +638,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "observation.html",
-      "bytes": 2955,
-      "hash": "ba1f877788bfca68e3e0750157272221ae037f44f6f57aec7a792333074813aa"
+      "bytes": 2944,
+      "hash": "935439951eaa2e08987178c05bfef2702f41702354e8ca31fa9c4fce234518f2"
     },
     {
       "path": "observation.js",
-      "bytes": 15882,
-      "hash": "38da89333913f184b39dc313907a67be275e6abbe0c6d400db487f434a94d355"
+      "bytes": 16760,
+      "hash": "8c4ce16240e9bc9cf9ced7c0bcc41357555cf50fbe4e8926fdf62215b3286424"
     },
     {
       "path": "organ-drag.js",
@@ -1022,7 +1027,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-eccfc6d44c90ea61"
+      "hash": "manifest-20261102-chunks-ea1d9449a3873522"
     }
   ]
 };
