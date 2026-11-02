@@ -15,7 +15,7 @@
     if (current) return current;
     if (item.path === 'resource-manifest.js' || item.path.startsWith('resource-chunks/')) return null;
     // Older versions used canonical URLs. Validate content before migrating them.
-    for (const name of await (legacyNames ||= caches.keys())) {
+    for (const name of await (legacyNames || (legacyNames = caches.keys()))) {
       if (name === CACHE || !/^(food-lesson-|food-ar-assets-)/.test(name)) continue;
       const old = await (await caches.open(name)).match(new URL(item.path,base).href,{ignoreSearch:true});
       if (!old || !old.ok) continue;

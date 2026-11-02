@@ -1,6 +1,5 @@
 import {BodyTracker,mapOverlay} from './ar-tracking.js';
 import {groupId,currentRecord,saveRecord,submitRecord,homeUrl} from './student-data.js';
-import {preparePoseResources} from './pose-resources.js';
 const organs=[
  {id:'mouth',name:'口腔',question:'食物在这里怎样变小？',note:'牙齿咀嚼食物，舌帮助搅拌，唾液润湿食物。',feature:'局部模型：舌与上下颌牙龈。牙齿、嘴唇未包含在这个局部模型中。'},
  {id:'esophagus',name:'食管',question:'食物怎样沿着这条管道前进？',note:'食管连接咽和胃，管壁蠕动，把食物送向胃。',feature:'转动观察这条细长管道。'},
@@ -107,6 +106,7 @@ async function startCamera(){
   if(startupController.signal.aborted){stream.getTracks().forEach(t=>t.stop());throw new DOMException('已取消','AbortError');}
   $('#camera-video').srcObject=stream;await waitStartup($('#camera-video').play(),15000,'相机画面未就绪，请重新开启');$('#camera-placeholder').hidden=true;
   $('#camera-status').textContent='正在检查本机人体识别资源…';
+  const {preparePoseResources}=await waitStartup(import('./pose-resources.js'),30000,'识别资源程序未加载完成，请检查网络后重试');
   await preparePoseResources(startupController.signal,message=>{$('#camera-status').textContent=message;});
   if(startupController.signal.aborted)throw new DOMException('已取消','AbortError');
   $('#camera-status').textContent='资源已就绪，正在启动人体识别…';await initDetector();

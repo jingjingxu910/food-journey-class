@@ -14,6 +14,7 @@ files.push(...fs.readdirSync(root).filter(p=>/\.(js|css)$/.test(p)&&!['ar-assets
 const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);
 files.push(...walk(path.join(root,'assets')).filter(p=>/\.(png|jpg|webp|svg|glb|json|md)$/.test(p)));
 files.push(...['three.module.js','GLTFLoader.js','BufferGeometryUtils.js','pose_landmarker_lite.task','package/vision_bundle.mjs','package/wasm/vision_wasm_internal.js','package/wasm/vision_wasm_internal.wasm','package/wasm/vision_wasm_nosimd_internal.js','package/wasm/vision_wasm_nosimd_internal.wasm'].map(p=>path.join(root,'vendor',p)));
+require('./verify-module-dependencies.cjs')(root,files,content);
 const hash=s=>crypto.createHash('sha256').update(s).digest('hex');
 const chunkSize=512*1024,chunkDir=path.join(root,'resource-chunks');fs.mkdirSync(chunkDir,{recursive:true});
 const items=[...new Set(files)].sort().filter(p=>!excluded.has(path.relative(root,p).split(path.sep).join('/'))).map(p=>{

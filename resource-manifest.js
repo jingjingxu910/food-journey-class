@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-ea1d9449a3873522",
-  "bytes": 46851532,
+  "version": "20261102-chunks-d9bd87a4ed739e4d",
+  "bytes": 46853227,
   "files": [
     {
       "path": "app.js",
@@ -9,8 +9,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-entry.js",
-      "bytes": 756,
-      "hash": "6ba2d7cb75a49cca7d397bf5382d1481cc19cb3a261dd85aed41ede1c33f7835"
+      "bytes": 853,
+      "hash": "c959ace810f06401e45ce6fe37cd3f00ae67d92e380bbd9ccbe584c6138ad67b"
     },
     {
       "path": "ar-observation.css",
@@ -639,12 +639,12 @@ self.LESSON_RESOURCES = {
     {
       "path": "observation.html",
       "bytes": 2944,
-      "hash": "935439951eaa2e08987178c05bfef2702f41702354e8ca31fa9c4fce234518f2"
+      "hash": "7d608a7ddff0b4a25fa7178b4fabe167f89a6b245c6e3ba522941f09925aea2e"
     },
     {
       "path": "observation.js",
-      "bytes": 16760,
-      "hash": "8c4ce16240e9bc9cf9ced7c0bcc41357555cf50fbe4e8926fdf62215b3286424"
+      "bytes": 16852,
+      "hash": "dff3a2d1dff1d24f940e57ede70e86d2701ed9df366965df80017490c20320ac"
     },
     {
       "path": "organ-drag.js",
@@ -652,14 +652,19 @@ self.LESSON_RESOURCES = {
       "hash": "c636e18b661d6140f5bd869fb48a5a5a391359a57678445043fc4d6ff62f4652"
     },
     {
+      "path": "pose-resources.js",
+      "bytes": 1457,
+      "hash": "0ac03dc9c16a7b93fe87cc08c88088c8be7b6f86eb88498c9b83ef3172804c72"
+    },
+    {
       "path": "resource-selection.js",
-      "bytes": 712,
-      "hash": "eaa0317c7cc870da24dd99b1f256bd4e2fea29237555b54db9248bcd1e81037d"
+      "bytes": 746,
+      "hash": "7bcbe18fecc74ea25ea30cdc99ed1ac52bc2fc2be6557e2974c01a4a4f8d20b2"
     },
     {
       "path": "resource-store.js",
-      "bytes": 5111,
-      "hash": "d6702e879ef29add95e2ff12b81ce89226d21ded8e2e7eac1f33b2253dc22f3d"
+      "bytes": 5126,
+      "hash": "7f9cb2c4826e7b58018043369fc1c68d1ddd487c819287bb712d6f1dd0aa1e2b"
     },
     {
       "path": "stomach-sample.css",
@@ -1027,7 +1032,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-ea1d9449a3873522"
+      "hash": "manifest-20261102-chunks-d9bd87a4ed739e4d"
     }
   ]
 };
