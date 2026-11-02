@@ -1,4 +1,4 @@
-importScripts('./resource-manifest.js?v=20261102-esophagus-v10','./resource-store.js?v=20261031-3');
+importScripts('./resource-manifest.js?v=20261102-ar-cache-2','./resource-store.js?v=20261102-ar-cache-2');
 const ROOT=new URL('./',self.location.href);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));
 self.addEventListener('install',()=>self.skipWaiting());
@@ -9,5 +9,7 @@ self.addEventListener('fetch',event=>{
  const url=new URL(event.request.url);if(url.origin!==ROOT.origin||url.searchParams.has('__lessonHash'))return;
  url.search='';url.hash='';if(url.pathname.endsWith('/'))url.pathname+='index.html';
  const item=files.get(url.href);if(!item)return;
- event.respondWith(self.LessonResourceStore.obtain(item));
+ event.respondWith(self.LessonResourceStore.obtain(item).catch(async error=>{
+  const response=await fetch(event.request);if(response.ok)return response;throw error;
+ }));
 });

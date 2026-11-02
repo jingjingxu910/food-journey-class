@@ -15,14 +15,25 @@ async function prepare(kind){
  if(working)return;working=true;controller=new AbortController();$('#prepare').disabled=first.disabled=true;pause.hidden=false;
  try{
   if(!store||!('serviceWorker'in navigator))throw new Error('请用 Chrome 或 Edge，通过 HTTPS 打开');
+  fileStatus.textContent='正在检查本机已有文件…';
   const items=await selectedResources(kind),result=await inspection(items);show(result,items);
   await navigator.serviceWorker.register('./ar-assets-sw.js',{updateViaCache:'none'});
   try{await navigator.storage?.persist?.();}catch{}
-  for(const item of result.missing){
-   if(controller.signal.aborted)throw new DOMException('已暂停','AbortError');fileStatus.textContent=`正在准备：${label(item)}`;
-   await store.obtain(item,{signal:controller.signal,onProgress:bytes=>{fileStatus.textContent=`${label(item)} · ${mb(bytes)} / ${mb(item.bytes)} MB`;}});
-   result.count++;result.bytes+=item.bytes;show(result,items);
+  let next=0;const active=new Map();
+  const update=()=>{fileStatus.textContent=`正在下载 ${active.size} 项 · 已接收 ${mb([...active.values()].reduce((n,v)=>n+v,0))} MB`;};
+  async function download(){
+   while(next<result.missing.length){
+    if(controller.signal.aborted)throw new DOMException('已暂停','AbortError');
+    const item=result.missing[next++];active.set(item.path,0);
+    for(let attempt=0;;attempt++){
+     try{await store.obtain(item,{signal:controller.signal,onProgress:bytes=>{active.set(item.path,bytes);update();}});break;}
+     catch(error){if(controller.signal.aborted||attempt>=1)throw error;fileStatus.textContent=`正在重试：${label(item)}`;}
+    }
+    active.delete(item.path);result.count++;result.bytes+=item.bytes;show(result,items);
+   }
   }
+  const results=await Promise.allSettled([download(),download()]);
+  const failed=results.find(x=>x.status==='rejected');if(failed)throw failed.reason;
   $('#progress').textContent=`${kind==='ar'?'人体识别所需资源':'本版本课堂资源'}已备齐，共 ${items.length} 项。`;
   fileStatus.textContent='已保存到这个浏览器，可进入课堂。';
  }catch(error){fileStatus.textContent=error.name==='AbortError'?'已暂停。完成的文件已保留，下次继续。':`准备未完成：${error.message}。完成的文件已保留。`;}

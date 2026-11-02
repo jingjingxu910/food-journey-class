@@ -1,9 +1,9 @@
 const organs = [
   { id: "mouth", name: "口腔", image: "assets/organs/mouth-gentle.svg", width: 12 },
   { id: "esophagus", name: "食管", image: "assets/organs/esophagus.webp", width: 7, height: 16 },
-  { id: "stomach", name: "胃", image: "assets/organs/stomach.webp", width: 18 },
-  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.webp", width: 20 },
-  { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.webp", width: 26 },
+  { id: "stomach", name: "胃", image: "assets/organs/stomach.webp", width: 17, angle: 16 },
+  { id: "small-intestine", name: "小肠", image: "assets/organs/small-intestine.webp", width: 17.5 },
+  { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.webp", width: 23.5 },
 ];
 
 const CLOUD_ENV = "motionless-harrier-d7cuz0659ef1a";
@@ -37,6 +37,7 @@ let v1 = createModel();
 let v2 = null;
 let dragState = null;
 let drawMode = false;
+let drawingKind="route", selectedOrgan=null;
 let drawing = false;
 let history = [];
 let cloudDatabase = null;
@@ -52,6 +53,7 @@ let lessonExtras = {};
 function createModel() {
   return {
     startedAt: Date.now(),
+    visualStyle: Object.fromEntries(organs.map(o => [o.id, {width:o.width, height:o.height, angle:o.angle || 0}])),
     completedAt: null,
     positions: {},
     placementOrder: [],
@@ -76,6 +78,13 @@ function organById(id) {
   return organs.find((organ) => organ.id === id);
 }
 
+function appearanceFor(organ, model) {
+  if (model.visualStyle?.[organ.id]) return model.visualStyle[organ.id];
+  // Old submitted records keep their original appearance for V1/V2 comparison.
+  if (model.completedAt) return {width:({stomach:18,'small-intestine':20,'large-intestine':26})[organ.id] || organ.width, height:organ.height, angle:organ.id==='stomach'?-8:0};
+  return {width:organ.width, height:organ.height, angle:organ.angle || 0};
+}
+
 function allOrgansPlaced() {
   return organs.every((organ) => activeModel().positions[organ.id]);
 }
@@ -90,14 +99,15 @@ function createOrganButton(organ, placed = false) {
   button.type = "button";
   button.className = placed ? "placed-organ" : "palette-organ";
   button.dataset.organ = organ.id;
-  button.setAttribute("aria-label", organ.name);
-  button.innerHTML = `<img src="${organ.image}" alt="" draggable="false"><span>${organ.name}</span>`;
+  const label=phase === "v1" && organ.id === "large-intestine" ? "" : organ.name;
+  button.setAttribute("aria-label", label || "未命名器官");
+  button.innerHTML = `<img src="${organ.image}" alt="" draggable="false"><span>${label}</span>`;
   button.addEventListener("pointerdown", beginOrganDrag);
   return button;
 }
 
 function renderPalette() {
-  if (!palette.children.length) organs.forEach((organ) => palette.append(createOrganButton(organ)));
+  palette.replaceChildren(...organs.filter(o => phase !== "v1" || o.id !== "esophagus").map(o=>createOrganButton(o)));
   for (const button of palette.children) button.hidden = Boolean(activeModel().positions[button.dataset.organ]);
 }
 
@@ -105,16 +115,19 @@ function renderPlacedOrgans() {
 
   organs.forEach((organ) => {
     const position = activeModel().positions[organ.id];
+    const appearance = appearanceFor(organ, activeModel());
     let button = placedLayer.querySelector(`[data-organ="${organ.id}"]`);
     if (!button) { button = createOrganButton(organ, true); placedLayer.append(button); }
     button.hidden = !position;
+    button.querySelector("span").textContent = phase === "v1" && organ.id === "large-intestine" ? "" : organ.name;
     if (!position) return;
     button.style.left = `${position.x}%`;
     button.style.top = `${position.y}%`;
-    button.style.width = `${organ.width}%`;
-    if (organ.height) {
+    button.style.width = `${appearance.width}%`;
+    button.querySelector('img').style.transform = `rotate(${appearance.angle}deg)`;
+    if (appearance.height) {
       button.classList.add(`placed-organ--${organ.id}`);
-      button.style.height = `${organ.height}%`;
+      button.style.height = `${appearance.height}%`;
     }
 
   });
@@ -125,10 +138,11 @@ function render() {
   renderPlacedOrgans();
   drawRoute();
   const count = Object.keys(activeModel().positions).length;
-  placementCount.textContent = `${count} / ${organs.length}`;
-  drawButton.disabled = count !== organs.length;
-  taskHint.textContent = count === organs.length ? "位置还可以调整，再画出路线。" : "把 5 个器官放在你认为合适的位置。";
-  const order = activeModel().routeOrder.map((id) => organById(id).name);
+  placementCount.textContent = `${count} 个`;
+  document.querySelector("#organ-size-controls").hidden = !selectedOrgan || !activeModel().positions[selectedOrgan] || drawMode;
+  drawButton.disabled = false;
+  taskHint.textContent = phase === "v1" ? "按我们的想法摆放，也可以补画。" : "根据观察修正，并补画鼻腔、气管和肺。";
+  const order = [];
   routeSummary.textContent = order.length ? `你的路线：${order.join(" → ")}` : "等待画路线";
 }
 
@@ -144,15 +158,19 @@ function beginOrganDrag(event) {
   if (drawMode) return;
   event.preventDefault();
   const organId = event.currentTarget.dataset.organ;
+  selectedOrgan = organId;
   const organ = organById(organId);
-  const ghost = document.createElement("img");
-  ghost.className = "organ-drag-ghost";
-  ghost.src = organ.image;
-   ghost.style.width = `${Math.max(30, stage.clientWidth * organ.width / 100)}px`;
-  if (organ.height) {
-    ghost.style.height = `${stage.clientHeight * organ.height / 100}px`;
-    ghost.style.maxHeight = "none";
-    ghost.style.objectFit = "contain";
+  const appearance = appearanceFor(organ, activeModel());
+  const ghost = createOrganButton(organ, true);
+  ghost.classList.add('organ-drag-ghost');
+  ghost.querySelector('span').remove();
+  ghost.querySelector('img').style.transform = `rotate(${appearance.angle}deg)`;
+  ghost.style.width = `${stage.clientWidth * appearance.width / 100}px`;
+  ghost.style.maxHeight = 'none';
+  ghost.style.pointerEvents = 'none';
+  if (appearance.height) {
+    ghost.classList.add(`placed-organ--${organ.id}`);
+    ghost.style.height = `${stage.clientHeight * appearance.height / 100}px`;
   }
   document.body.append(ghost);
   dragState = {
@@ -207,26 +225,37 @@ function drawRoute() {
   const rect = stage.getBoundingClientRect();
   context.clearRect(0, 0, rect.width, rect.height);
   const points = activeModel().routePoints;
+  const paint=(points,color)=>{
   if (points.length < 2) return;
   context.beginPath();
   context.moveTo(points[0].x * rect.width / 100, points[0].y * rect.height / 100);
   points.slice(1).forEach((point) => context.lineTo(point.x * rect.width / 100, point.y * rect.height / 100));
   context.lineCap = "round";
   context.lineJoin = "round";
-  context.strokeStyle = "rgba(24, 129, 117, .92)";
+  context.strokeStyle = color;
   context.lineWidth = Math.max(5, rect.width * .012);
   context.shadowColor = "rgba(255,255,255,.9)";
   context.shadowBlur = 3;
   context.stroke();
   context.shadowBlur = 0;
+  };
+  for(const stroke of activeModel().structureStrokes || []) paint(stroke,"#2878cf");
+  paint(points,"#17824d");
 }
 
 function setDrawMode(enabled) {
-  drawMode = enabled && allOrgansPlaced();
+  drawMode = enabled;
+  document.querySelector(".anatomy-workspace").classList.toggle("drawing-expanded",drawMode);
   stage.classList.toggle("is-drawing", drawMode);
-  drawButton.classList.toggle("is-active", drawMode);
-  drawButton.textContent = drawMode ? "完成画线" : "✎ 画食物路线";
+  drawButton.classList.toggle("is-active", drawMode && drawingKind === "route");
+  drawButton.setAttribute("aria-pressed",String(drawMode && drawingKind === "route"));
+  drawButton.textContent = drawMode && drawingKind === "route" ? "✓ 结束画路线" : "✎ 画食物路线";
+  document.querySelector("#structure-button").textContent = drawMode && drawingKind === "structure" ? "✓ 结束补画" : "✎ 补画结构";
   drawTip.hidden = !drawMode;
+  drawTip.textContent=drawingKind === "structure" ? "蓝色：补画结构" : "绿色：食物路线";
+  document.querySelector("#structure-button").classList.toggle("is-active",drawMode && drawingKind === "structure");
+  document.querySelector("#structure-button").setAttribute("aria-pressed",String(drawMode && drawingKind === "structure"));
+  requestAnimationFrame(resizeCanvas);
   if (drawMode) saveStatus.textContent = "";
 }
 
@@ -235,10 +264,14 @@ function startRoute(event) {
   event.preventDefault();
   snapshot();
   const model = activeModel();
+  if(drawingKind === "structure") {
+    model.structureStrokes ||= []; model.structureStrokes.push([pointerPosition(event)]);
+  } else {
   if (model.routePoints.length) model.routeAttempts.push({ points: model.routePoints, order: model.routeOrder, at: Date.now() });
   model.routePoints = [pointerPosition(event)];
   model.routeOrder = [];
   model.routeDistances = {};
+  }
   model.modificationCount += 1;
   drawing = true;
   canvas.setPointerCapture?.(event.pointerId);
@@ -250,7 +283,7 @@ function moveRoute(event) {
   if (!drawing) return;
   event.preventDefault();
   const point = pointerPosition(event);
-  const points = activeModel().routePoints;
+  const points = drawingKind === "structure" ? activeModel().structureStrokes.slice(-1)[0] : activeModel().routePoints;
   const previous = points[points.length - 1];
   if (Math.hypot(point.x - previous.x, point.y - previous.y) >= .45) points.push(point);
   if (!routePaint) routePaint = requestAnimationFrame(() => { routePaint = 0; drawRoute(); });
@@ -260,8 +293,7 @@ function finishRoute(event) {
   if (!drawing) return;
   event.preventDefault();
   drawing = false;
-  calculateRouteOrder();
-  setDrawMode(false);
+  if(drawingKind === "route") calculateRouteOrder();
   saveStatus.textContent = "";
   render();
   queueDraftSave();
@@ -269,7 +301,7 @@ function finishRoute(event) {
 
 function calculateRouteOrder() {
   const model = activeModel();
-  const ranked = organs.map((organ) => {
+  const ranked = organs.filter(o=>model.positions[o.id]).map((organ) => {
     const position = model.positions[organ.id];
     let closestIndex = 0;
     let closestDistance = Infinity;
@@ -477,8 +509,8 @@ function showSavedTransition(record) {
 function applyRevisionView() {
   phase = "v2";
   document.querySelector("#phase-label").textContent = "V2 · 证据修正";
-  document.querySelector("#model-title").textContent = "用观察证据修正模型";
-  document.querySelector("#model-prompt").textContent = "看看初始模型，想一想要不要调整。";
+  document.querySelector("#model-title").textContent = "我们修正";
+  document.querySelector("#model-prompt").textContent = "根据观察修正，并补画鼻腔、气管和肺。";
   document.querySelector("#phase-v1").classList.remove("active");
   document.querySelector("#phase-v1").classList.add("done");
   document.querySelector("#phase-v2").classList.add("active");
@@ -486,14 +518,15 @@ function applyRevisionView() {
 }
 
 async function submitModel() {
-  if (!allOrgansPlaced()) {
-    saveStatus.textContent = "先放好 5 个器官。";
+  if (!Object.keys(activeModel().positions).length && !activeModel().structureStrokes?.length) {
+    saveStatus.textContent = "先摆放或补画我们的想法。";
     return;
   }
   if (activeModel().routePoints.length < 8) {
     saveStatus.textContent = "在人体上画出食物的路线。";
     return;
   }
+  activeModel().visualStyle ||= Object.fromEntries(organs.map(o=>[o.id,appearanceFor(o,activeModel())]));
   activeModel().completedAt = Date.now();
   pendingSubmissionSync = true;
   const record = buildRecord();
@@ -506,6 +539,7 @@ async function submitModel() {
 function startRevision() {
   if (!v2) {
     v2 = clone(v1);
+    v2.visualStyle ||= Object.fromEntries(organs.map(o => [o.id, appearanceFor(o,v1)]));
     v2.startedAt = Date.now();
     v2.completedAt = null;
     v2.moves = [];
@@ -526,7 +560,7 @@ function compareModels(first, second) {
   const changedOrgans = organs.filter((organ) => {
     const a = first.positions[organ.id];
     const b = second.positions[organ.id];
-    return !a || !b || Math.hypot(a.x - b.x, a.y - b.y) > 2.5;
+    return Boolean(a) !== Boolean(b) || (a && b && (Math.hypot(a.x-b.x,a.y-b.y)>2.5 || JSON.stringify(appearanceFor(organ,first)) !== JSON.stringify(appearanceFor(organ,second))));
   }).map((organ) => organ.name);
   return { organs: changedOrgans, routeChanged: first.routeOrder.join(",") !== second.routeOrder.join(",") || second.routeAttempts.length > 0 };
 }
@@ -543,11 +577,12 @@ function miniModel(model, label, options = {}) {
   const pieces = organs.map((organ) => {
     const position = model.positions?.[organ.id];
     if (!position) return "";
-    return `<img class="organ-${organ.id}" src="${organ.image}" alt="${organ.name}" title="${organ.name}" style="left:${position.x}%;top:${position.y}%;width:${organ.width}%;${organ.height ? `height:${organ.height}%;` : ""}">`;
+    const appearance = appearanceFor(organ,model);
+    return `<img class="organ-${organ.id}" src="${organ.image}" alt="${organ.name}" title="${organ.name}" style="left:${position.x}%;top:${position.y}%;width:${appearance.width}%;${appearance.height ? `height:${appearance.height}%;` : ""}transform:translate(-50%,-50%) rotate(${appearance.angle}deg)">`;
   }).join("");
   const interactive = Number.isInteger(options.groupId);
   const attributes = interactive ? ` data-group-id="${options.groupId}" data-model-phase="${options.phase}" role="button" tabindex="0" aria-label="放大第 ${options.groupId} 组${label}"` : "";
-  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.webp?v=20261022-7" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}"/></svg>${pieces}</div></div>`;
+  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.webp?v=20261022-7" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}" style="stroke:#17824d"/>${(model.structureStrokes || []).map(stroke => `<polyline points="${stroke.map(p=>`${p.x},${p.y}`).join(" ")}" style="stroke:#2878cf"/>`).join("")}</svg>${pieces}</div></div>`;
 }
 
 function latestRecord(records, id) {
@@ -797,7 +832,13 @@ canvas.addEventListener("pointerdown", startRoute);
 canvas.addEventListener("pointermove", moveRoute);
 canvas.addEventListener("pointerup", finishRoute);
 canvas.addEventListener("pointercancel", finishRoute);
-drawButton.addEventListener("click", () => setDrawMode(!drawMode));
+drawButton.addEventListener("click", () => { const was=drawMode && drawingKind==="route"; drawingKind="route"; setDrawMode(!was); });
+document.querySelector('#structure-button').addEventListener('click',()=>{const was=drawMode && drawingKind==="structure";drawingKind="structure";setDrawMode(!was);});
+for(const [id,factor] of [['organ-smaller',.9],['organ-larger',1.1]]) document.querySelector('#'+id).addEventListener('click',()=>{
+ if(!selectedOrgan) return; snapshot(); const model=activeModel(), organ=organById(selectedOrgan), from=clone(appearanceFor(organ,model));
+ const ratio=Math.max(.6,Math.min(1.6,from.width/organ.width*factor)), to={...from,width:organ.width*ratio}; if(organ.height)to.height=organ.height*ratio;
+ model.visualStyle ||= {};model.visualStyle[selectedOrgan]=to;model.sizeChanges ||= [];model.sizeChanges.push({organId:selectedOrgan,from,to:clone(to),at:Date.now()});model.modificationCount++;render();queueDraftSave();
+});
 document.querySelector("#undo-button").addEventListener("click", undo);
 document.querySelector("#clear-route-button").addEventListener("click", clearRoute);
 submitButton.addEventListener("click", submitModel);

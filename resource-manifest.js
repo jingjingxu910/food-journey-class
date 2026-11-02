@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261101-567e6ec8f1ff3635",
-  "bytes": 61871704,
+  "version": "20261101-7b328999888c7e29",
+  "bytes": 61871932,
   "files": [
     {
       "path": "app.js",
@@ -19,8 +19,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-pose-worker.js",
-      "bytes": 2178,
-      "hash": "4692c4121822be698aad8d6904e4fbaa2fa8d57f405ea0c9148b637a79258591"
+      "bytes": 2376,
+      "hash": "c60c6c421a4afd8abb0ebdb96c1fe37979a08c15b56d804468fe1b088e595ac3"
     },
     {
       "path": "ar-prepare.html",
@@ -29,8 +29,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-prepare.js",
-      "bytes": 3161,
-      "hash": "e9cbe9514eacbfa8dab5dc41ac9c5a8d69cfa1e2557b46359ab5444257f697d0"
+      "bytes": 3767,
+      "hash": "9e1ca197675961297ca03f8bd0fcbc4956005936f75589ffdd73e0a4ca5ebd85"
     },
     {
       "path": "ar-sources.html",
@@ -259,8 +259,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "assets/models/journey/ATTRIBUTION.md",
-      "bytes": 7430,
-      "hash": "b337cd3b008af2b12fc7e7383fafb20434d4dad8a23eee22e62cce2ce6820091"
+      "bytes": 2263,
+      "hash": "9cfcad4ebeefbb4c23d6b33b739cdd4231f4be19d5f2d55aa1c932b579ff237d"
     },
     {
       "path": "assets/models/journey/mouth-hra.glb",
@@ -474,8 +474,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "journey-sources.html",
-      "bytes": 5120,
-      "hash": "9c04ae4b0b4edcff27c25915115c111c4d238a51209d93109fa927f58a6c67fb"
+      "bytes": 1258,
+      "hash": "f9316485f0a0572a3bca85b70074aba706cf6aff1710dce5d86a78a754eefd8b"
     },
     {
       "path": "journey.css",
@@ -503,24 +503,29 @@ self.LESSON_RESOURCES = {
       "hash": "5ce1ac63cfa54c7d4f71d68ee8ef45934ce884e96afd7fe08470cc7c00c7a66c"
     },
     {
+      "path": "model-learning.css",
+      "bytes": 832,
+      "hash": "bbd25b5aab6693dd716fe2dad0df2c3b013c8073a034a9501fe3dd4ea217ff7e"
+    },
+    {
       "path": "model-workbench.html",
-      "bytes": 5314,
-      "hash": "6d7a4926ed345a50c847b3d475c445bfdddb5cf09dd0af507d744cf325343c99"
+      "bytes": 5709,
+      "hash": "95a03e86dd39e9d7c13ebbd76567b3ff9359f405d0793631163c7420b9c6dae8"
     },
     {
       "path": "model-workbench.js",
-      "bytes": 37989,
-      "hash": "d95c67b5db2f86732e87f60551e13ad5c8dfd8b1f7151c1a3935e529d60dcb19"
+      "bytes": 41971,
+      "hash": "f85d6418ca6b29ddab2a0e90916969fd5e4aa6de4c2d2f8afc0b569829077c4c"
     },
     {
       "path": "observation.html",
-      "bytes": 2863,
-      "hash": "463d09c50ebc20362cb20d298210b427ed427b1c39ca4e37a9d77a64e74bb95a"
+      "bytes": 2955,
+      "hash": "ba1f877788bfca68e3e0750157272221ae037f44f6f57aec7a792333074813aa"
     },
     {
       "path": "observation.js",
-      "bytes": 13284,
-      "hash": "0f9e734c29341ed7933fcf44bfca57c792af6db83a5e9abee89616c4ddfb4c7c"
+      "bytes": 15882,
+      "hash": "38da89333913f184b39dc313907a67be275e6abbe0c6d400db487f434a94d355"
     },
     {
       "path": "organ-drag.js",
@@ -534,8 +539,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "resource-store.js",
-      "bytes": 2765,
-      "hash": "572a2308be14d7f43e4dd30f3587bcb1204a35c2027509bfe8f14f64a328e49f"
+      "bytes": 3319,
+      "hash": "dadf9fb1311973157342d254a61ab2589bb4d72b8f2070dcf5c7511913360d6c"
     },
     {
       "path": "stomach-sample.css",
@@ -630,7 +635,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261101-567e6ec8f1ff3635"
+      "hash": "manifest-20261101-7b328999888c7e29"
     }
   ]
 };

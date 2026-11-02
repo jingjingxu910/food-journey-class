@@ -1,5 +1,6 @@
 import {BodyTracker,mapOverlay} from './ar-tracking.js';
 import {groupId,currentRecord,saveRecord,submitRecord,homeUrl} from './student-data.js';
+import {preparePoseResources} from './pose-resources.js';
 const organs=[
  {id:'mouth',name:'口腔',question:'食物在这里怎样变小？',note:'牙齿咀嚼食物，舌帮助搅拌，唾液润湿食物。',feature:'局部模型：舌与上下颌牙龈。牙齿、嘴唇未包含在这个局部模型中。'},
  {id:'esophagus',name:'食管',question:'食物怎样沿着这条管道前进？',note:'食管连接咽和胃，管壁蠕动，把食物送向胃。',feature:'转动观察这条细长管道。'},
@@ -12,6 +13,7 @@ const tracker=new BodyTracker(),buttons=new Map(),displayed=new Map();
 let record,observation,selected=null,selectedAt=0,stream,worker,mainDetector;
 let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,lastSent=0,lastPose=0,targets=null;
 let workerReady=false,starting=false,saveTimer,viewerDispose,viewerGeneration=0,captureWidth=384,interval=100,meanCost=0,lastPaint=0;
+let startupController;
 const metrics={samples:0,totalMs:0,maxMs:0,losses:0,mode:null};
 $('#group-label').textContent=`第 ${groupId} 组`;$('#back-link').href=homeUrl();
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
@@ -45,18 +47,39 @@ function receivePose(data){
  else{targets=null;metrics.losses++;$('#ar-organs').hidden=true;$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';}
  if(new URLSearchParams(location.search).has('diagnostics'))$('#ar-metrics').textContent=`识别上限 ${(1000/Math.max(interval,meanCost)).toFixed(1)} 次/秒 · 平均 ${Math.round(meanCost)} ms · ${metrics.mode}${data.delegate?' / '+data.delegate:''}`;
 }
+function waitStartup(promise,ms,label,onLate){
+ const signal=startupController.signal;
+ return new Promise((resolve,reject)=>{
+  let settled=false;const finish=(error,value)=>{if(settled)return;settled=true;clearTimeout(timer);signal.removeEventListener('abort',cancel);error?reject(error):resolve(value);};
+  const cancel=()=>finish(new DOMException('已取消','AbortError'));
+  const timer=setTimeout(()=>finish(new Error(label)),ms);
+  signal.addEventListener('abort',cancel,{once:true});if(signal.aborted)cancel();
+  promise.then(value=>{if(settled)onLate?.(value);else finish(null,value);},error=>finish(error));
+ });
+}
 async function initMainDetector(){
  const {FilesetResolver,PoseLandmarker}=await import('./vendor/package/vision_bundle.mjs');
  const wasm=await FilesetResolver.forVisionTasks(new URL('./vendor/package/wasm',location.href).href);
- mainDetector=await PoseLandmarker.createFromOptions(wasm,{baseOptions:{modelAssetPath:new URL('./vendor/pose_landmarker_lite.task',location.href).href,delegate:'CPU'},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.6,minPosePresenceConfidence:.6,minTrackingConfidence:.65});metrics.mode='main';interval=160;
+ const creation=PoseLandmarker.createFromOptions(wasm,{baseOptions:{modelAssetPath:new URL('./vendor/pose_landmarker_lite.task',location.href).href,delegate:'CPU'},runningMode:'VIDEO',numPoses:1,minPoseDetectionConfidence:.6,minPosePresenceConfidence:.6,minTrackingConfidence:.65});
+ mainDetector=await waitStartup(creation,30000,'人体识别初始化超时，请重新开启',detector=>detector.close());
+ if(startupController?.signal.aborted){mainDetector?.close();mainDetector=null;throw new DOMException('已取消','AbortError');}metrics.mode='main';interval=160;
 }
 async function initDetector(){
  if(typeof Worker==='undefined'||typeof OffscreenCanvas==='undefined'||!window.createImageBitmap)return initMainDetector();
  try{
   worker=new Worker(new URL('./ar-pose-worker.js',import.meta.url));
-  await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('人体识别加载超时')),25000);worker.onmessage=({data})=>{if(data.type==='ready'){clearTimeout(timer);workerReady=true;resolve();}else if(data.type==='error'){clearTimeout(timer);reject(new Error(data.message));}};worker.onerror=e=>{clearTimeout(timer);reject(new Error(e.message||'后台识别不可用'));};worker.postMessage({type:'init'});});
+  await new Promise((resolve,reject)=>{
+   const signal=startupController.signal;
+   const done=(error)=>{clearTimeout(timer);signal.removeEventListener('abort',cancel);error?reject(error):resolve();};
+   const cancel=()=>done(new DOMException('已取消','AbortError'));
+   const timer=setTimeout(()=>done(new Error('后台识别启动超时')),35000);
+   signal.addEventListener('abort',cancel,{once:true});
+   worker.onmessage=({data})=>{if(data.type==='progress')$('#camera-status').textContent=data.message;
+    else if(data.type==='ready'){workerReady=true;done();}else if(data.type==='error')done(new Error(data.message));};
+   worker.onerror=e=>done(new Error(e.message||'后台识别不可用'));worker.postMessage({type:'init'});
+  });
   metrics.mode='worker';worker.onmessage=({data})=>{if(data.type==='pose')receivePose(data);else if(data.type==='error'){busy=false;stopCamera();$('#camera-status').textContent='人体识别中断，请重新开启相机';}};
- }catch(error){worker?.terminate();worker=null;workerReady=false;console.info('Using compatible pose mode',error.message);await initMainDetector();}
+ }catch(error){worker?.terminate();worker=null;workerReady=false;if(startupController.signal.aborted)throw error;$('#camera-status').textContent='正在切换兼容识别模式…';console.info('Using compatible pose mode',error.message);await initMainDetector();}
 }
 async function sendFrame(now){
  const video=$('#camera-video');if(busy||video.readyState<2||video.currentTime===lastFrame)return;
@@ -73,16 +96,23 @@ function paint(now){
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
   }
  }else{$('#ar-organs').hidden=true;if(age>800&&lastPose)$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';}
+ lastPaint=now;if(busy && now-lastSent>15000){stopCamera();$('#camera-status').textContent='识别暂时没有响应，请重新开启相机';return;}
  lastPaint=now;if(now-lastSent>=interval)void sendFrame(now);
 }
 function stopCamera(){running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
 async function startCamera(){
- if(starting||running||!record)return;starting=true;$('#start-camera').disabled=true;
+ if(starting||running||!record)return;starting=true;startupController=new AbortController();$('#cancel-camera').hidden=false;$('#start-camera').disabled=true;
  try{$('#camera-status').textContent='正在开启后置相机…';if(!navigator.mediaDevices?.getUserMedia)throw new Error('请使用支持网页相机的浏览器，并通过 HTTPS 打开课件');
-  stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:'environment'},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}}});
-  $('#camera-video').srcObject=stream;await $('#camera-video').play();$('#camera-placeholder').hidden=true;$('#camera-status').textContent='正在准备人体识别…';await initDetector();
+  stream=await waitStartup(navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:'environment'},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}}}),45000,'相机开启等待较久，请检查浏览器相机权限',late=>late.getTracks().forEach(t=>t.stop()));
+  if(startupController.signal.aborted){stream.getTracks().forEach(t=>t.stop());throw new DOMException('已取消','AbortError');}
+  $('#camera-video').srcObject=stream;await waitStartup($('#camera-video').play(),15000,'相机画面未就绪，请重新开启');$('#camera-placeholder').hidden=true;
+  $('#camera-status').textContent='正在检查本机人体识别资源…';
+  await preparePoseResources(startupController.signal,message=>{$('#camera-status').textContent=message;});
+  if(startupController.signal.aborted)throw new DOMException('已取消','AbortError');
+  $('#camera-status').textContent='资源已就绪，正在启动人体识别…';await initDetector();
+  if(startupController.signal.aborted)throw new DOMException('已取消','AbortError');
   running=true;observation.cameraStarted=true;observation.cameraFacing='environment';saveSoon();$('#start-camera').textContent='相机已开启';$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';lastPose=0;lastSent=0;lastFrame=-1;frame=requestAnimationFrame(paint);
- }catch(error){stopCamera();$('#camera-status').textContent=error.name==='NotAllowedError'?'请允许浏览器使用相机':error.name==='OverconstrainedError'?'没有找到可用的后置相机':`开启未完成：${error.message}`;$('#start-camera').textContent='重新开启';}finally{starting=false;}
+ }catch(error){stopCamera();$('#camera-status').textContent=error.name==='AbortError'?'已取消开启，下载完成的资源已保留':error.name==='NotAllowedError'?'请允许浏览器使用相机':error.name==='OverconstrainedError'?'没有找到可用的后置相机':`开启未完成：${error.message}`;$('#start-camera').textContent='重新开启';}finally{starting=false;$('#cancel-camera').hidden=true;}
 }
 async function openViewer(){
  if(!selected)return;closeSelected();const id=selected,o=organs.find(o=>o.id===id),generation=++viewerGeneration;
@@ -92,10 +122,11 @@ async function openViewer(){
  catch(error){if(generation===viewerGeneration)mount.innerHTML=`<img class="model-fallback-image" src="${asset(id,'png')}" alt="${o.name}"><p>模型加载未完成，请关闭后重试。</p>`;console.warn('Organ model failed',error);}
 }
 async function finishObservation(){if(!observation.cameraStarted||!observation.views.length)return;$('#finish-observation').disabled=true;closeSelected();selected=null;stopCamera();observation.completedAt=Date.now();observation.performance={...metrics,averageMs:metrics.samples?Math.round(metrics.totalMs/metrics.samples):null};status('正在保存…');const uploaded=await submitRecord(record);status(uploaded?'观察完成。':'已保存到本机，联网后可重试提交。');$('#finish-observation').disabled=false;$('#finish-observation').textContent='去修正模型 →';$('#finish-observation').onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;}
+$('#cancel-camera').onclick=()=>{startupController?.abort();stopCamera();$('#camera-status').textContent='已取消开启，下载完成的资源已保留';};
 $('#start-camera').onclick=startCamera;$('#open-local-3d').onclick=openViewer;$('#close-organ-dialog').onclick=()=>$('#organ-dialog').close();
 $('#organ-dialog').addEventListener('close',()=>{viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;selectedAt=performance.now();tracker.reset();targets=null;});
 document.addEventListener('visibilitychange',()=>{hidden=document.hidden;if(hidden)closeSelected();else{selectedAt=performance.now();targets=null;tracker.reset();}});
-window.addEventListener('pagehide',()=>{closeSelected();clearTimeout(saveTimer);if(record)void saveRecord(record);stopCamera();viewerDispose?.();});
+window.addEventListener('pagehide',()=>{startupController?.abort();closeSelected();clearTimeout(saveTimer);if(record)void saveRecord(record);stopCamera();viewerDispose?.();});
 async function initialize(){record=await currentRecord();observation=record.observation||freshObservation();record.observation=observation;renderList();$('#start-camera').disabled=false;if(observation.completedAt){$('#finish-observation').disabled=false;$('#finish-observation').textContent='去修正模型 →';$('#finish-observation').onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;}else $('#finish-observation').onclick=finishObservation;}
 initialize().catch(error=>status(`记录无法读取：${error.message}`));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./ar-assets-sw.js').catch(error=>console.info('Resource cache unavailable',error));
