@@ -13,7 +13,7 @@
   async function find(item) {
     const cache = await caches.open(CACHE), current = await cache.match(key(item));
     if (current) return current;
-    if (item.path === 'resource-manifest.js') return null;
+    if (item.path === 'resource-manifest.js' || item.path.startsWith('resource-chunks/')) return null;
     // Older versions used canonical URLs. Validate content before migrating them.
     for (const name of await (legacyNames ||= caches.keys())) {
       if (name === CACHE || !/^(food-lesson-|food-ar-assets-)/.test(name)) continue;
@@ -26,10 +26,39 @@
     }
     return null;
   }
+  async function partialBytes(item) {
+    if(!item.chunks)return 0;
+    const cache=await caches.open(CACHE);let bytes=0;
+    for(const chunk of item.chunks)if(await cache.match(key(chunk)))bytes+=chunk.bytes;
+    return bytes;
+  }
+  async function assemble(item,{signal,onProgress}) {
+    const joined=new Uint8Array(item.bytes);let offset=0;
+    const cache=await caches.open(CACHE);
+    for(const chunk of item.chunks){
+      if(signal?.aborted)throw new DOMException('已暂停','AbortError');
+      const response=await obtain(chunk,{signal,onProgress:n=>onProgress?.(offset+n,item.bytes)});
+      const bytes=new Uint8Array(await response.arrayBuffer());
+      if(bytes.length!==chunk.bytes || await digest(bytes)!==chunk.hash){await cache.delete(key(chunk));throw new Error('下载片段校验未通过，请重试');}
+      joined.set(bytes,offset);offset+=bytes.length;onProgress?.(offset,item.bytes);
+    }
+    if(offset!==item.bytes || await digest(joined)!==item.hash){
+      for(const chunk of item.chunks)await cache.delete(key(chunk));
+      throw new Error('资源完整性校验未通过，请重试');
+    }
+    const ext=item.path.split('.').pop();
+    const mime={js:'application/javascript',mjs:'application/javascript',wasm:'application/wasm',png:'image/png',jpg:'image/jpeg',webp:'image/webp',glb:'model/gltf-binary'}[ext]||'application/octet-stream';
+    const complete=new Response(joined,{headers:{'Content-Type':mime}});
+    await cache.put(key(item),complete.clone());
+    // Only remove fragments after the verified complete file is durable.
+    for(const chunk of item.chunks)await cache.delete(key(chunk));
+    return complete;
+  }
   async function obtain(item, {signal,onProgress}={}) {
     const prior = await find(item);if(prior)return prior;
     if (inflight.has(item.path)) return (await inflight.get(item.path)).clone();
     const work = (async()=>{
+      if(item.chunks?.length)return assemble(item,{signal,onProgress});
       const request=new AbortController(),cancel=()=>request.abort();signal?.addEventListener('abort',cancel,{once:true});if(signal?.aborted)request.abort();
       let timer;const tick=()=>{clearTimeout(timer);timer=setTimeout(()=>request.abort(),45000);};tick();
       try {
@@ -50,5 +79,5 @@
     inflight.set(item.path,work);
     try{return (await work).clone();}finally{inflight.delete(item.path);}
   }
-  self.LessonResourceStore={CACHE,key,find,obtain};
+  self.LessonResourceStore={CACHE,key,find,obtain,partialBytes};
 })();

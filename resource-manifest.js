@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261101-7b328999888c7e29",
-  "bytes": 61871932,
+  "version": "20261102-chunks-eccfc6d44c90ea61",
+  "bytes": 46849909,
   "files": [
     {
       "path": "app.js",
@@ -29,8 +29,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-prepare.js",
-      "bytes": 3767,
-      "hash": "9e1ca197675961297ca03f8bd0fcbc4956005936f75589ffdd73e0a4ca5ebd85"
+      "bytes": 3878,
+      "hash": "10812f25b6e40f39591a108eabc55eed3102fdd7aa17c1f7f1709193544d8672"
     },
     {
       "path": "ar-sources.html",
@@ -53,11 +53,6 @@ self.LESSON_RESOURCES = {
       "hash": "d7c6469dc33ebcacbf1be4fd7c10b4fde796d26932854e3e765c9a8426bf4488"
     },
     {
-      "path": "assets/anatomy/body-outline-generated.png",
-      "bytes": 1129517,
-      "hash": "2691d54bf2e0fd810e5f5405bf703e79f89f822fc811d77c6905ffb3daa8c036"
-    },
-    {
       "path": "assets/anatomy/body-outline-generated.webp",
       "bytes": 82092,
       "hash": "470a6aeeecfd217f8dd01d8a041c1c1d3a29cc85565f66461632ea728636dcf1"
@@ -75,17 +70,56 @@ self.LESSON_RESOURCES = {
     {
       "path": "assets/journey/biscuit-stages.png",
       "bytes": 2447730,
-      "hash": "65a0dc9fe0e06c12bb3d500d5cfa36ecf03429c44eda92eb0cefe0a9bd3f3d2d"
+      "hash": "65a0dc9fe0e06c12bb3d500d5cfa36ecf03429c44eda92eb0cefe0a9bd3f3d2d",
+      "chunks": [
+        {
+          "path": "resource-chunks/38e53b373c693e5bba5379d09baccb6c1b6c5429f4773793f790da786fe84986.bin",
+          "bytes": 524288,
+          "hash": "38e53b373c693e5bba5379d09baccb6c1b6c5429f4773793f790da786fe84986"
+        },
+        {
+          "path": "resource-chunks/0ba8f23a9223961023952f52a9f2bad302888d04c71a999d09530c7c10c30e65.bin",
+          "bytes": 524288,
+          "hash": "0ba8f23a9223961023952f52a9f2bad302888d04c71a999d09530c7c10c30e65"
+        },
+        {
+          "path": "resource-chunks/ca1ad84c5d9680cb98ef38cdb7414313b59bad566d8e9bcd4ef9104c58ac8dd7.bin",
+          "bytes": 524288,
+          "hash": "ca1ad84c5d9680cb98ef38cdb7414313b59bad566d8e9bcd4ef9104c58ac8dd7"
+        },
+        {
+          "path": "resource-chunks/e27c0e5e121dff9ec76b18eefe0c68780d07efe70a7f7443eecc25f4c62a567e.bin",
+          "bytes": 524288,
+          "hash": "e27c0e5e121dff9ec76b18eefe0c68780d07efe70a7f7443eecc25f4c62a567e"
+        },
+        {
+          "path": "resource-chunks/61b77b79c024aa535aed5303264e5ea35400c2f735b04799f747d4bdea6172da.bin",
+          "bytes": 350578,
+          "hash": "61b77b79c024aa535aed5303264e5ea35400c2f735b04799f747d4bdea6172da"
+        }
+      ]
     },
     {
       "path": "assets/journey/digestive-system-clean.png",
       "bytes": 1262843,
-      "hash": "a6d261f1b524cfe8612ad1cd7f8d400a0522161b988db0d6a0409c9ac57d6f4e"
-    },
-    {
-      "path": "assets/journey/digestive-system-niddk.jpg",
-      "bytes": 1472045,
-      "hash": "d0630d0872926437059ea993fce38ce54bd89448def06ebc4f41d36f4d8b9531"
+      "hash": "a6d261f1b524cfe8612ad1cd7f8d400a0522161b988db0d6a0409c9ac57d6f4e",
+      "chunks": [
+        {
+          "path": "resource-chunks/0f325856d87e4ee0c4000a910585eeed63305615eb23daa60fa22b39ed51b2c2.bin",
+          "bytes": 524288,
+          "hash": "0f325856d87e4ee0c4000a910585eeed63305615eb23daa60fa22b39ed51b2c2"
+        },
+        {
+          "path": "resource-chunks/4eb4da356c6d20048a3333b8d0ce4ad0dd271c8223ca66736c272e805a3950e2.bin",
+          "bytes": 524288,
+          "hash": "4eb4da356c6d20048a3333b8d0ce4ad0dd271c8223ca66736c272e805a3950e2"
+        },
+        {
+          "path": "resource-chunks/36caa9cffb27203ce4690d9b0454bfff64707d29bf1f27e78b18745602eee4d8.bin",
+          "bytes": 214267,
+          "hash": "36caa9cffb27203ce4690d9b0454bfff64707d29bf1f27e78b18745602eee4d8"
+        }
+      ]
     },
     {
       "path": "assets/journey/esophagus-wall-v9.webp",
@@ -175,7 +209,34 @@ self.LESSON_RESOURCES = {
     {
       "path": "assets/journey/stomach-entry.png",
       "bytes": 2253707,
-      "hash": "167b93d91b4d4b8574dd810f5fcf08bd83d376bd15b340963a715bdac09b4396"
+      "hash": "167b93d91b4d4b8574dd810f5fcf08bd83d376bd15b340963a715bdac09b4396",
+      "chunks": [
+        {
+          "path": "resource-chunks/f11f56856182d964d959207dd9f80bb4966fe6def7424fbd71d52b8eed0631b0.bin",
+          "bytes": 524288,
+          "hash": "f11f56856182d964d959207dd9f80bb4966fe6def7424fbd71d52b8eed0631b0"
+        },
+        {
+          "path": "resource-chunks/42a566a57cb847850e870aec2aa89dad3cabe8129563d93a70fb7eb9094b26eb.bin",
+          "bytes": 524288,
+          "hash": "42a566a57cb847850e870aec2aa89dad3cabe8129563d93a70fb7eb9094b26eb"
+        },
+        {
+          "path": "resource-chunks/bae1072211f8ee5fbb4c394aad437dfd7b1658c324c95c9da3ed927febe94bfe.bin",
+          "bytes": 524288,
+          "hash": "bae1072211f8ee5fbb4c394aad437dfd7b1658c324c95c9da3ed927febe94bfe"
+        },
+        {
+          "path": "resource-chunks/ee3472015663940833c3c52fe50ca7f1fdc1e961dc4733645d1311521763a84f.bin",
+          "bytes": 524288,
+          "hash": "ee3472015663940833c3c52fe50ca7f1fdc1e961dc4733645d1311521763a84f"
+        },
+        {
+          "path": "resource-chunks/f0b6092ce956f5fdea37b8f1744f831b57f8ce13d0b437182491e242da671cd5.bin",
+          "bytes": 156555,
+          "hash": "f0b6092ce956f5fdea37b8f1744f831b57f8ce13d0b437182491e242da671cd5"
+        }
+      ]
     },
     {
       "path": "assets/journey/stomach-food-sample.webp",
@@ -253,19 +314,9 @@ self.LESSON_RESOURCES = {
       "hash": "1c7d7184e2f7a119d9f2619aa3b3a5cfb49df8c52b16484f714f7a0c92da447c"
     },
     {
-      "path": "assets/models/intestines.glb",
-      "bytes": 3280868,
-      "hash": "801245d4294178971a290f724f428fa5d8b313b5978faffaca5e8d7decbe864e"
-    },
-    {
       "path": "assets/models/journey/ATTRIBUTION.md",
       "bytes": 2263,
       "hash": "9cfcad4ebeefbb4c23d6b33b739cdd4231f4be19d5f2d55aa1c932b579ff237d"
-    },
-    {
-      "path": "assets/models/journey/mouth-hra.glb",
-      "bytes": 4104548,
-      "hash": "3aa4f05d7b3c56f2ea8dfd773f881976c97730b71b9756a4c8c6ccf0c1651222"
     },
     {
       "path": "assets/models/journey/mouth-hra.glb.json",
@@ -273,19 +324,9 @@ self.LESSON_RESOURCES = {
       "hash": "e9587e044c0989ac4ca6c791271f253a7ac1e871a81d93f75b87453e13f68200"
     },
     {
-      "path": "assets/models/journey/pharynx-bp3d.glb",
-      "bytes": 3234520,
-      "hash": "c9a3d27bf7e6cb12b3f0f7d7c85790b671bfe9e2e27e51dc1acfbe01e01a81c7"
-    },
-    {
       "path": "assets/models/journey/pharynx-bp3d.glb.json",
       "bytes": 3193,
       "hash": "20de7b090f40f5f1671bb848c51334a9aaa2789ed2e0d68468234a17ad6d17f2"
-    },
-    {
-      "path": "assets/models/stomach.glb",
-      "bytes": 1802428,
-      "hash": "1c9916ce4a22035dc3fa65986321f33e38adb207aaea5613ca1da60e66f575eb"
     },
     {
       "path": "assets/organs/esophagus.png",
@@ -305,7 +346,24 @@ self.LESSON_RESOURCES = {
     {
       "path": "assets/organs/large-intestine.png",
       "bytes": 1209258,
-      "hash": "2b18c3acddae48481b31040e2992d3dac5de66cded8366175bf6e3723e998452"
+      "hash": "2b18c3acddae48481b31040e2992d3dac5de66cded8366175bf6e3723e998452",
+      "chunks": [
+        {
+          "path": "resource-chunks/3311b992e786194a0bae9ba6b6e277def2d56d33c7dacba7413da562ff0df650.bin",
+          "bytes": 524288,
+          "hash": "3311b992e786194a0bae9ba6b6e277def2d56d33c7dacba7413da562ff0df650"
+        },
+        {
+          "path": "resource-chunks/a6f3ac0d1f31140290cc807431134f49e25bd27ac035e691bba8381ac3708892.bin",
+          "bytes": 524288,
+          "hash": "a6f3ac0d1f31140290cc807431134f49e25bd27ac035e691bba8381ac3708892"
+        },
+        {
+          "path": "resource-chunks/d27a6cdf450d764b185e597d3b7f3b7a132e380daf0e4f41619a23cd1ad1da4e.bin",
+          "bytes": 160682,
+          "hash": "d27a6cdf450d764b185e597d3b7f3b7a132e380daf0e4f41619a23cd1ad1da4e"
+        }
+      ]
     },
     {
       "path": "assets/organs/large-intestine.svg",
@@ -325,7 +383,29 @@ self.LESSON_RESOURCES = {
     {
       "path": "assets/organs/mouth.png",
       "bytes": 1609488,
-      "hash": "5509eb90682e5ca0cd4c5ded0cd3a40b4fc0098273136ef3536339d3ff07b861"
+      "hash": "5509eb90682e5ca0cd4c5ded0cd3a40b4fc0098273136ef3536339d3ff07b861",
+      "chunks": [
+        {
+          "path": "resource-chunks/b7152439f81d54c48821a0cf648cb75693ef9037f2b9f2809ed1166e09a86d8e.bin",
+          "bytes": 524288,
+          "hash": "b7152439f81d54c48821a0cf648cb75693ef9037f2b9f2809ed1166e09a86d8e"
+        },
+        {
+          "path": "resource-chunks/a0e571c0427cb0d1d5636021cea9c40c8b06af89e7dc09ce790470540ed1d307.bin",
+          "bytes": 524288,
+          "hash": "a0e571c0427cb0d1d5636021cea9c40c8b06af89e7dc09ce790470540ed1d307"
+        },
+        {
+          "path": "resource-chunks/2e69e264cc955c1514f8facaab13d2bca2e54d75c98aec5319a58551c646e5ed.bin",
+          "bytes": 524288,
+          "hash": "2e69e264cc955c1514f8facaab13d2bca2e54d75c98aec5319a58551c646e5ed"
+        },
+        {
+          "path": "resource-chunks/3aa65163b2bde5f2459764172ac1833a4ab2b38ac9710322270cd5b71e084121.bin",
+          "bytes": 36624,
+          "hash": "3aa65163b2bde5f2459764172ac1833a4ab2b38ac9710322270cd5b71e084121"
+        }
+      ]
     },
     {
       "path": "assets/organs/mouth.svg",
@@ -335,7 +415,24 @@ self.LESSON_RESOURCES = {
     {
       "path": "assets/organs/small-intestine.png",
       "bytes": 1564756,
-      "hash": "088b4df9971432856cc62f152dc33e69920d05e5d844a9b7b7efe2fbc8c43181"
+      "hash": "088b4df9971432856cc62f152dc33e69920d05e5d844a9b7b7efe2fbc8c43181",
+      "chunks": [
+        {
+          "path": "resource-chunks/7ab55fc62c6fe87e0ceb4a5901962848c80b074dc28b1e23d0019b833aefe96e.bin",
+          "bytes": 524288,
+          "hash": "7ab55fc62c6fe87e0ceb4a5901962848c80b074dc28b1e23d0019b833aefe96e"
+        },
+        {
+          "path": "resource-chunks/c067e0c9c9e9265f696e0b35311104fa71c8419527ac10a4fb705b9063709be8.bin",
+          "bytes": 524288,
+          "hash": "c067e0c9c9e9265f696e0b35311104fa71c8419527ac10a4fb705b9063709be8"
+        },
+        {
+          "path": "resource-chunks/5dbdb12ffec24ef6401c713cea575d4a11e5de981d14e3fb5f19377daace4992.bin",
+          "bytes": 516180,
+          "hash": "5dbdb12ffec24ef6401c713cea575d4a11e5de981d14e3fb5f19377daace4992"
+        }
+      ]
     },
     {
       "path": "assets/organs/small-intestine.svg",
@@ -350,7 +447,24 @@ self.LESSON_RESOURCES = {
     {
       "path": "assets/organs/stomach.png",
       "bytes": 1111002,
-      "hash": "793022e2fbb033b19feecef640a2ed4349d8b0d056a9e5d7b0352e25fc44057e"
+      "hash": "793022e2fbb033b19feecef640a2ed4349d8b0d056a9e5d7b0352e25fc44057e",
+      "chunks": [
+        {
+          "path": "resource-chunks/434e1337c89c8521100f60bf0d1ae4948c0313eadb966596d134f39384090c9b.bin",
+          "bytes": 524288,
+          "hash": "434e1337c89c8521100f60bf0d1ae4948c0313eadb966596d134f39384090c9b"
+        },
+        {
+          "path": "resource-chunks/407ef3105ce77b270ecf58c50e53a5eb956619dfafc28cbd477c8d25469c4daf.bin",
+          "bytes": 524288,
+          "hash": "407ef3105ce77b270ecf58c50e53a5eb956619dfafc28cbd477c8d25469c4daf"
+        },
+        {
+          "path": "resource-chunks/59bf73ae5b1b9f1af6259f36aa3ab3056b67c671ffe049f6465822f02692c24b.bin",
+          "bytes": 62426,
+          "hash": "59bf73ae5b1b9f1af6259f36aa3ab3056b67c671ffe049f6465822f02692c24b"
+        }
+      ]
     },
     {
       "path": "assets/organs/stomach.svg",
@@ -539,8 +653,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "resource-store.js",
-      "bytes": 3319,
-      "hash": "dadf9fb1311973157342d254a61ab2589bb4d72b8f2070dcf5c7511913360d6c"
+      "bytes": 5111,
+      "hash": "d6702e879ef29add95e2ff12b81ce89226d21ded8e2e7eac1f33b2253dc22f3d"
     },
     {
       "path": "stomach-sample.css",
@@ -605,7 +719,104 @@ self.LESSON_RESOURCES = {
     {
       "path": "vendor/package/wasm/vision_wasm_internal.wasm",
       "bytes": 9574032,
-      "hash": "f00ec4731faa23b3e714d00e88d4d10e2df5c0a427d3a2b4ae6e3526fdd14ef7"
+      "hash": "f00ec4731faa23b3e714d00e88d4d10e2df5c0a427d3a2b4ae6e3526fdd14ef7",
+      "chunks": [
+        {
+          "path": "resource-chunks/d29684d6194225fb8e1afeb71ad7afcd86bf7ed82b713dfd3703a03d9c621ac2.bin",
+          "bytes": 524288,
+          "hash": "d29684d6194225fb8e1afeb71ad7afcd86bf7ed82b713dfd3703a03d9c621ac2"
+        },
+        {
+          "path": "resource-chunks/8eb22f240fa2ed969d7261e88970a9875d3e93bbec162faa59ba8282c9edaddd.bin",
+          "bytes": 524288,
+          "hash": "8eb22f240fa2ed969d7261e88970a9875d3e93bbec162faa59ba8282c9edaddd"
+        },
+        {
+          "path": "resource-chunks/d271720a7dbca980688cf6fc6c3071f4059351c5d45e5cd1a3fa6dac836a047c.bin",
+          "bytes": 524288,
+          "hash": "d271720a7dbca980688cf6fc6c3071f4059351c5d45e5cd1a3fa6dac836a047c"
+        },
+        {
+          "path": "resource-chunks/9fdb963eb255ed15df37df60b1fcc667472cb767c9076aa4ad893aeb59d1903c.bin",
+          "bytes": 524288,
+          "hash": "9fdb963eb255ed15df37df60b1fcc667472cb767c9076aa4ad893aeb59d1903c"
+        },
+        {
+          "path": "resource-chunks/34c19eda442f7e9e123e2ac7a2fb5f57a04c99b17416fa9ff6d9bf9a017cfd52.bin",
+          "bytes": 524288,
+          "hash": "34c19eda442f7e9e123e2ac7a2fb5f57a04c99b17416fa9ff6d9bf9a017cfd52"
+        },
+        {
+          "path": "resource-chunks/1a077d1585d1a7e47dba6f072e968048a5ac61c42406f287ab30408d9479176c.bin",
+          "bytes": 524288,
+          "hash": "1a077d1585d1a7e47dba6f072e968048a5ac61c42406f287ab30408d9479176c"
+        },
+        {
+          "path": "resource-chunks/6931e4d77e334ca782ddda822916acd3edf33370af5c93c4d8de3b55654b1337.bin",
+          "bytes": 524288,
+          "hash": "6931e4d77e334ca782ddda822916acd3edf33370af5c93c4d8de3b55654b1337"
+        },
+        {
+          "path": "resource-chunks/dc7f8f2633d96b1e6090db28fddeffa09b934d8a1f6e754dc27ff8ae53c88424.bin",
+          "bytes": 524288,
+          "hash": "dc7f8f2633d96b1e6090db28fddeffa09b934d8a1f6e754dc27ff8ae53c88424"
+        },
+        {
+          "path": "resource-chunks/4b0183be7d7906f7eaa4c2261b45d8b33bba5d67f5911bf1027983c3d26eea36.bin",
+          "bytes": 524288,
+          "hash": "4b0183be7d7906f7eaa4c2261b45d8b33bba5d67f5911bf1027983c3d26eea36"
+        },
+        {
+          "path": "resource-chunks/ad3fbf8b680095133df99eec20caff217cdb7b0c46fbb6ec659d9475bebc747d.bin",
+          "bytes": 524288,
+          "hash": "ad3fbf8b680095133df99eec20caff217cdb7b0c46fbb6ec659d9475bebc747d"
+        },
+        {
+          "path": "resource-chunks/2e93d54afbb63cc6bb54b2c8ca8816d58002d8cbbdf7c41c6d66644ca70164da.bin",
+          "bytes": 524288,
+          "hash": "2e93d54afbb63cc6bb54b2c8ca8816d58002d8cbbdf7c41c6d66644ca70164da"
+        },
+        {
+          "path": "resource-chunks/856fea95521e41147cb8f57aa185f020097839290fba98fb364a3cd22b4f0787.bin",
+          "bytes": 524288,
+          "hash": "856fea95521e41147cb8f57aa185f020097839290fba98fb364a3cd22b4f0787"
+        },
+        {
+          "path": "resource-chunks/516f017cc0ed874d9a5a2f74035e699f63ae2d4053883e49cbb2155766234101.bin",
+          "bytes": 524288,
+          "hash": "516f017cc0ed874d9a5a2f74035e699f63ae2d4053883e49cbb2155766234101"
+        },
+        {
+          "path": "resource-chunks/6ec177c02f6fa0d180ef6471dcc1789ce573872c600ef816c4233c5221b89be1.bin",
+          "bytes": 524288,
+          "hash": "6ec177c02f6fa0d180ef6471dcc1789ce573872c600ef816c4233c5221b89be1"
+        },
+        {
+          "path": "resource-chunks/f1905f5b3e2b28e6db046045d18e6e28aeab8ccd6847369bc978642607b77773.bin",
+          "bytes": 524288,
+          "hash": "f1905f5b3e2b28e6db046045d18e6e28aeab8ccd6847369bc978642607b77773"
+        },
+        {
+          "path": "resource-chunks/409bb01e1c23e1aaf9ef9df6f8adaff4d975f4938358c619892773a4e555a27c.bin",
+          "bytes": 524288,
+          "hash": "409bb01e1c23e1aaf9ef9df6f8adaff4d975f4938358c619892773a4e555a27c"
+        },
+        {
+          "path": "resource-chunks/415bc530f5cf79e5585d158b924f864b39a10d695be872c1089e47d36e9fd89c.bin",
+          "bytes": 524288,
+          "hash": "415bc530f5cf79e5585d158b924f864b39a10d695be872c1089e47d36e9fd89c"
+        },
+        {
+          "path": "resource-chunks/a58cbc6ce04ff237740dd333e7b5c64c13c959f016646eb32cfb88ba6eb486b2.bin",
+          "bytes": 524288,
+          "hash": "a58cbc6ce04ff237740dd333e7b5c64c13c959f016646eb32cfb88ba6eb486b2"
+        },
+        {
+          "path": "resource-chunks/ef1fda792a970602ad7a5a1cd8a70a5f26ce8d489b7bdeed6cf818041b8a016f.bin",
+          "bytes": 136848,
+          "hash": "ef1fda792a970602ad7a5a1cd8a70a5f26ce8d489b7bdeed6cf818041b8a016f"
+        }
+      ]
     },
     {
       "path": "vendor/package/wasm/vision_wasm_nosimd_internal.js",
@@ -615,17 +826,193 @@ self.LESSON_RESOURCES = {
     {
       "path": "vendor/package/wasm/vision_wasm_nosimd_internal.wasm",
       "bytes": 9448638,
-      "hash": "3821ea9b1f7fb8c549ef2a064ef5c85750bf375c545a49fd6eea0df44a95f1f4"
+      "hash": "3821ea9b1f7fb8c549ef2a064ef5c85750bf375c545a49fd6eea0df44a95f1f4",
+      "chunks": [
+        {
+          "path": "resource-chunks/c6ee5eded4144392e5bd4f53f97d9c9ff5fb3f81a8e8a0456a6ab2a99089dc4b.bin",
+          "bytes": 524288,
+          "hash": "c6ee5eded4144392e5bd4f53f97d9c9ff5fb3f81a8e8a0456a6ab2a99089dc4b"
+        },
+        {
+          "path": "resource-chunks/1882c852773885381125c9beaa5e83716584b827fa47b0cefb12dbb2ba00daf6.bin",
+          "bytes": 524288,
+          "hash": "1882c852773885381125c9beaa5e83716584b827fa47b0cefb12dbb2ba00daf6"
+        },
+        {
+          "path": "resource-chunks/3b93cbb14c3ba61894e464e6d50ef26fd5330f470257eceba6b88f11c0a18e1f.bin",
+          "bytes": 524288,
+          "hash": "3b93cbb14c3ba61894e464e6d50ef26fd5330f470257eceba6b88f11c0a18e1f"
+        },
+        {
+          "path": "resource-chunks/9fee7b022926389cf199b354b7152584deb8f30ad2afa1aa27c2eda2bdc62fb5.bin",
+          "bytes": 524288,
+          "hash": "9fee7b022926389cf199b354b7152584deb8f30ad2afa1aa27c2eda2bdc62fb5"
+        },
+        {
+          "path": "resource-chunks/8309e9052da8aa417c0610165091593a0c3f453c29608c03884e30a9db87f124.bin",
+          "bytes": 524288,
+          "hash": "8309e9052da8aa417c0610165091593a0c3f453c29608c03884e30a9db87f124"
+        },
+        {
+          "path": "resource-chunks/cb492b2d0ad365aa68f3449150a6433d4e24e79d0ee04eefb31a27c4db1a78f8.bin",
+          "bytes": 524288,
+          "hash": "cb492b2d0ad365aa68f3449150a6433d4e24e79d0ee04eefb31a27c4db1a78f8"
+        },
+        {
+          "path": "resource-chunks/e538dc6f114a96ee07a29809404001b8eb82b7c94c0be6545a1e271116cbcf81.bin",
+          "bytes": 524288,
+          "hash": "e538dc6f114a96ee07a29809404001b8eb82b7c94c0be6545a1e271116cbcf81"
+        },
+        {
+          "path": "resource-chunks/5f28406b0221e03a27d34195483da9a5c34595c15b3feb7f7714d789e314f5ce.bin",
+          "bytes": 524288,
+          "hash": "5f28406b0221e03a27d34195483da9a5c34595c15b3feb7f7714d789e314f5ce"
+        },
+        {
+          "path": "resource-chunks/198a55a2b53e4a7e2052d3242c7c79d9a66bb9ca8c6e1c9e4fed52077632d893.bin",
+          "bytes": 524288,
+          "hash": "198a55a2b53e4a7e2052d3242c7c79d9a66bb9ca8c6e1c9e4fed52077632d893"
+        },
+        {
+          "path": "resource-chunks/895073ca55fab4ec3f978ebf968ea6337f5f6a672cf121cd7b7420ee6dde79aa.bin",
+          "bytes": 524288,
+          "hash": "895073ca55fab4ec3f978ebf968ea6337f5f6a672cf121cd7b7420ee6dde79aa"
+        },
+        {
+          "path": "resource-chunks/698a30554e94ca658e95d757f824b7ca6a2e38bb8940882ad97aed0374a186d3.bin",
+          "bytes": 524288,
+          "hash": "698a30554e94ca658e95d757f824b7ca6a2e38bb8940882ad97aed0374a186d3"
+        },
+        {
+          "path": "resource-chunks/5706084b1814628efc9e6d7ca1e5504292aee9d41a59253d28b714b18e47921e.bin",
+          "bytes": 524288,
+          "hash": "5706084b1814628efc9e6d7ca1e5504292aee9d41a59253d28b714b18e47921e"
+        },
+        {
+          "path": "resource-chunks/733f8eae3ad03556070307cb74220bb339cd0611bf90bb31b2943f6967ae82e3.bin",
+          "bytes": 524288,
+          "hash": "733f8eae3ad03556070307cb74220bb339cd0611bf90bb31b2943f6967ae82e3"
+        },
+        {
+          "path": "resource-chunks/3e3ccf7603d2bb76aff3d4e44071b42ad03f4db2315e16f7ae64288760b4153f.bin",
+          "bytes": 524288,
+          "hash": "3e3ccf7603d2bb76aff3d4e44071b42ad03f4db2315e16f7ae64288760b4153f"
+        },
+        {
+          "path": "resource-chunks/09000c88cb921a1e572691f83a36be1c552165543ed3fc8bdd5791e29a96eacc.bin",
+          "bytes": 524288,
+          "hash": "09000c88cb921a1e572691f83a36be1c552165543ed3fc8bdd5791e29a96eacc"
+        },
+        {
+          "path": "resource-chunks/5952150f0fbbf61eaf7d89fa0f66e75e5aa7a8a6d3899dfe63cb16a61481e2ed.bin",
+          "bytes": 524288,
+          "hash": "5952150f0fbbf61eaf7d89fa0f66e75e5aa7a8a6d3899dfe63cb16a61481e2ed"
+        },
+        {
+          "path": "resource-chunks/4b715b0a1fd1c25f5ad2e30887ba0c02e7cfb1ece08095c9a9b575e09090eedc.bin",
+          "bytes": 524288,
+          "hash": "4b715b0a1fd1c25f5ad2e30887ba0c02e7cfb1ece08095c9a9b575e09090eedc"
+        },
+        {
+          "path": "resource-chunks/245e48b5a5abc586cf2b55a8be454e8b5dcd1764237fc6143e8d7efbe478bb9e.bin",
+          "bytes": 524288,
+          "hash": "245e48b5a5abc586cf2b55a8be454e8b5dcd1764237fc6143e8d7efbe478bb9e"
+        },
+        {
+          "path": "resource-chunks/c915be725e73f3c9327b306e5dac98b815bcf90e0e811eea3b0374818d162721.bin",
+          "bytes": 11454,
+          "hash": "c915be725e73f3c9327b306e5dac98b815bcf90e0e811eea3b0374818d162721"
+        }
+      ]
     },
     {
       "path": "vendor/pose_landmarker_lite.task",
       "bytes": 5777746,
-      "hash": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a"
+      "hash": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a",
+      "chunks": [
+        {
+          "path": "resource-chunks/f1cd368847d0114922bc4e5dce74392ce6dfc9ea673e9b7d3f4e93b954314a72.bin",
+          "bytes": 524288,
+          "hash": "f1cd368847d0114922bc4e5dce74392ce6dfc9ea673e9b7d3f4e93b954314a72"
+        },
+        {
+          "path": "resource-chunks/1949c9c8e099794df5353379caaa0b05883114b3d5a9ae46bd5d5ef442d645fd.bin",
+          "bytes": 524288,
+          "hash": "1949c9c8e099794df5353379caaa0b05883114b3d5a9ae46bd5d5ef442d645fd"
+        },
+        {
+          "path": "resource-chunks/56e3e5d7d81b09043f06207a1360c2ce5bd7c6a398e42cbac1f925020fd3ec27.bin",
+          "bytes": 524288,
+          "hash": "56e3e5d7d81b09043f06207a1360c2ce5bd7c6a398e42cbac1f925020fd3ec27"
+        },
+        {
+          "path": "resource-chunks/167139457494d1f87b4c006c8021bc321b60810b8b0f73f3a6b5c91669dadcff.bin",
+          "bytes": 524288,
+          "hash": "167139457494d1f87b4c006c8021bc321b60810b8b0f73f3a6b5c91669dadcff"
+        },
+        {
+          "path": "resource-chunks/7a54f7844727308a31f596e11c45be2ae5f192211711162ea591c4bdea7072da.bin",
+          "bytes": 524288,
+          "hash": "7a54f7844727308a31f596e11c45be2ae5f192211711162ea591c4bdea7072da"
+        },
+        {
+          "path": "resource-chunks/359a70d1f3642b21ebc91d7449520d67d840de6565b2a857540524dcd7ee44bb.bin",
+          "bytes": 524288,
+          "hash": "359a70d1f3642b21ebc91d7449520d67d840de6565b2a857540524dcd7ee44bb"
+        },
+        {
+          "path": "resource-chunks/8e43b5631a35cc09fe681349f7cbb50aa38a49e85f971f6b99c5b4bdf4c3e139.bin",
+          "bytes": 524288,
+          "hash": "8e43b5631a35cc09fe681349f7cbb50aa38a49e85f971f6b99c5b4bdf4c3e139"
+        },
+        {
+          "path": "resource-chunks/b84fcb8af5a7554388eba285d253a571c74fca033a23bc01296105746e07f68c.bin",
+          "bytes": 524288,
+          "hash": "b84fcb8af5a7554388eba285d253a571c74fca033a23bc01296105746e07f68c"
+        },
+        {
+          "path": "resource-chunks/2672c8d10a63b0b103a4fb5bf3a54063426a5cd67848fb126e25657f1235f57f.bin",
+          "bytes": 524288,
+          "hash": "2672c8d10a63b0b103a4fb5bf3a54063426a5cd67848fb126e25657f1235f57f"
+        },
+        {
+          "path": "resource-chunks/6b3d114b420260311ff077bf743c1dcb0cafc3cce3bf0e25a0a3e9c8d743731d.bin",
+          "bytes": 524288,
+          "hash": "6b3d114b420260311ff077bf743c1dcb0cafc3cce3bf0e25a0a3e9c8d743731d"
+        },
+        {
+          "path": "resource-chunks/4deb93bc88d956ea17582c14baa39133723a659fb87b99dcd7e992145eabe8c2.bin",
+          "bytes": 524288,
+          "hash": "4deb93bc88d956ea17582c14baa39133723a659fb87b99dcd7e992145eabe8c2"
+        },
+        {
+          "path": "resource-chunks/414aa12231d400eb114cf29fd82aa8eff35245d5122864a4a83d8c0146f87caa.bin",
+          "bytes": 10578,
+          "hash": "414aa12231d400eb114cf29fd82aa8eff35245d5122864a4a83d8c0146f87caa"
+        }
+      ]
     },
     {
       "path": "vendor/three.module.js",
       "bytes": 1272972,
-      "hash": "76dea8151bc9352aef3528b4262e249b2604f62543828328db978d060d61a495"
+      "hash": "76dea8151bc9352aef3528b4262e249b2604f62543828328db978d060d61a495",
+      "chunks": [
+        {
+          "path": "resource-chunks/6af89ab5099d3725bc79d0b915985436ce6f4a4daf93b1af7b4fe02955921e42.bin",
+          "bytes": 524288,
+          "hash": "6af89ab5099d3725bc79d0b915985436ce6f4a4daf93b1af7b4fe02955921e42"
+        },
+        {
+          "path": "resource-chunks/f15da81157a65c8ab1cd09df7c1011a47cd94d078679c82e85c99ea0816223d7.bin",
+          "bytes": 524288,
+          "hash": "f15da81157a65c8ab1cd09df7c1011a47cd94d078679c82e85c99ea0816223d7"
+        },
+        {
+          "path": "resource-chunks/db48ef8022064777ea9fbf0253c860f014bce1ae353efe637bafa056b58b228a.bin",
+          "bytes": 224396,
+          "hash": "db48ef8022064777ea9fbf0253c860f014bce1ae353efe637bafa056b58b228a"
+        }
+      ]
     },
     {
       "path": "watermark.js",
@@ -635,7 +1022,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261101-7b328999888c7e29"
+      "hash": "manifest-20261102-chunks-eccfc6d44c90ea61"
     }
   ]
 };
