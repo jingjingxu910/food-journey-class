@@ -1,0 +1,13 @@
+#anatomy .anatomy-picture,#anatomy .anatomy-picture.zoom{height:56vh;max-height:590px;aspect-ratio:auto;background:#fff;}
+#anatomy #body-diagram{display:block;opacity:1;transform:scale(1);transform-origin:var(--organ-focus,62% 61.7%);transition:transform 1s cubic-bezier(.2,.65,.2,1),opacity .68s ease .25s;}
+#anatomy .zoom #body-diagram{display:block;transform:scale(3.3);opacity:0;}
+#anatomy #organ-detail{display:block;visibility:visible;z-index:2;padding:12px;object-fit:contain;background:transparent;animation:none;opacity:0;transform:scale(.48);transition:transform 1s cubic-bezier(.2,.65,.2,1),opacity .68s ease .22s;}
+#anatomy #organ-detail[hidden]{display:none!important;}
+#anatomy .zoom #organ-detail{opacity:1;transform:scale(1);}
+@media(orientation:portrait){#anatomy .anatomy-picture,#anatomy .anatomy-picture.zoom{height:42vh;max-height:540px;}}
+#passage-view{position:absolute;inset:0;width:100%;height:100%;z-index:13;pointer-events:none;}
+.in-passage #chapter,.in-passage #hint,.in-passage #observation,.in-passage #detail,.in-passage #passages{visibility:hidden;}
+#stage[data-scene="pharynx"] #hint{left:24px;top:74px;transform:none;width:265px;max-width:29%;font-size:22px;padding:15px 17px;}
+#fork-side .side-cut{height:56vh;background:#fffbee;}
+#fork-side p{margin:8px 0 14px;}
+@media(orientation:portrait){#stage[data-scene="pharynx"] #hint{left:14px;top:65px;width:220px;max-width:30%;font-size:19px;padding:12px;}#fork-side .side-cut{height:48vh;}}

@@ -15,5 +15,11 @@
     try { if (parent.lessonShell) root = parent.document.documentElement; } catch {}
     const owner = root.ownerDocument;
     if (!owner.fullscreenElement) await root.requestFullscreen?.();
+    // Lock the stable outer document so changing activities cannot unlock it.
+    const teacher = new URLSearchParams(location.search).get('mode') === 'teacher';
+    if (!teacher) {
+      try { await root.ownerDocument.defaultView.screen.orientation?.lock('portrait'); }
+      catch { /* Keep the usable responsive layout when this device disallows locking. */ }
+    }
   };
 })();

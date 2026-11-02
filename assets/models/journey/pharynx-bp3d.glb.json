@@ -1,0 +1,129 @@
+{
+  "sourceFile": "pharynx-source.glb",
+  "sourceSha256": "70d3992cc103ab18f1e9598582cf84c21cc4cbc4d1e65f3853a78efc2961202d",
+  "sourceBytes": 7148788,
+  "outputBytes": 3234520,
+  "outputSha256": "c9a3d27bf7e6cb12b3f0f7d7c85790b671bfe9e2e27e51dc1acfbe01e01a81c7",
+  "structures": [
+    {
+      "name": "superior-constrictor",
+      "before": 21404,
+      "after": 10470,
+      "maxErrorInSourceUnits": 0.0006585412857467721
+    },
+    {
+      "name": "middle-constrictor",
+      "before": 11816,
+      "after": 8410,
+      "maxErrorInSourceUnits": 0.0004022817700730999
+    },
+    {
+      "name": "inferior-constrictor",
+      "before": 14870,
+      "after": 7686,
+      "maxErrorInSourceUnits": 0.0006354401729399134
+    },
+    {
+      "name": "pharyngeal-raphe",
+      "before": 12968,
+      "after": 5684,
+      "maxErrorInSourceUnits": 0.0002888712329962989
+    },
+    {
+      "name": "stylopharyngeus",
+      "before": 29020,
+      "after": 12768,
+      "maxErrorInSourceUnits": 0.00022196750168995
+    },
+    {
+      "name": "palatopharyngeus",
+      "before": 82800,
+      "after": 36432,
+      "maxErrorInSourceUnits": 0.00011695398523999673
+    },
+    {
+      "name": "salpingopharyngeus",
+      "before": 18304,
+      "after": 8052,
+      "maxErrorInSourceUnits": 0.00021777151483161686
+    },
+    {
+      "name": "levator-veli-palatini",
+      "before": 24630,
+      "after": 10836,
+      "maxErrorInSourceUnits": 0.0003026581348259498
+    },
+    {
+      "name": "tensor-veli-palatini",
+      "before": 27744,
+      "after": 12206,
+      "maxErrorInSourceUnits": 0.00024251035711728153
+    },
+    {
+      "name": "musculus-uvulae",
+      "before": 1632,
+      "after": 1480,
+      "maxErrorInSourceUnits": 0.00009152261210684798
+    },
+    {
+      "name": "tongue",
+      "before": 524,
+      "after": 516,
+      "maxErrorInSourceUnits": 0.0005217121785889497
+    },
+    {
+      "name": "epiglottis",
+      "before": 3602,
+      "after": 2390,
+      "maxErrorInSourceUnits": 0.0002879703912120127
+    },
+    {
+      "name": "hyoid-bone",
+      "before": 1196,
+      "after": 1176,
+      "maxErrorInSourceUnits": 0.0003561698776071154
+    },
+    {
+      "name": "thyroid-cartilage",
+      "before": 2610,
+      "after": 2550,
+      "maxErrorInSourceUnits": 0.0003934734858840605
+    },
+    {
+      "name": "cricoid-cartilage",
+      "before": 1702,
+      "after": 1676,
+      "maxErrorInSourceUnits": 0.00022324224406069723
+    },
+    {
+      "name": "arytenoid-cartilages",
+      "before": 1076,
+      "after": 1066,
+      "maxErrorInSourceUnits": 0.00012891457470007306
+    },
+    {
+      "name": "ascending-pharyngeal-artery",
+      "before": 1404,
+      "after": 616,
+      "maxErrorInSourceUnits": 0.0005014319875349532
+    },
+    {
+      "name": "pharyngeal-venous-plexus",
+      "before": 5932,
+      "after": 2610,
+      "maxErrorInSourceUnits": 0.0007509281067511614
+    },
+    {
+      "name": "glossopharyngeal-nerves",
+      "before": 14026,
+      "after": 6170,
+      "maxErrorInSourceUnits": 0.0002571145733008817
+    },
+    {
+      "name": "pharyngeal-nerves",
+      "before": 2256,
+      "after": 1144,
+      "maxErrorInSourceUnits": 0.00039288364732974895
+    }
+  ]
+}

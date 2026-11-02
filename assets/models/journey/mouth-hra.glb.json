@@ -1,0 +1,93 @@
+{
+  "sourceFile": "mouth-male-source.glb",
+  "sourceSha256": "aa5bf5f40c45c4679f05d31e7708df3e89b9897c2ff95aa89dbfaf3c501578be",
+  "sourceBytes": 53487620,
+  "outputBytes": 4104548,
+  "outputSha256": "3aa4f05d7b3c56f2ea8dfd773f881976c97730b71b9756a4c8c6ccf0c1651222",
+  "structures": [
+    {
+      "name": "VH_M_frenulum_of_upper_lip",
+      "before": 434,
+      "after": 362,
+      "maxErrorInSourceUnits": 0.000010812612365389968
+    },
+    {
+      "name": "VH_M_frenulum_of_lower_lip",
+      "before": 520,
+      "after": 472,
+      "maxErrorInSourceUnits": 0.000009286924793770052
+    },
+    {
+      "name": "VH_M_mouth_floor",
+      "before": 11270,
+      "after": 1496,
+      "maxErrorInSourceUnits": 0.000043397385134652175
+    },
+    {
+      "name": "VH_M_gingiva_of_lower_jaw",
+      "before": 739205,
+      "after": 51739,
+      "maxErrorInSourceUnits": 0.000023229606003565516
+    },
+    {
+      "name": "VH_M_ginviva_of_upper_jaw",
+      "before": 64644,
+      "after": 7757,
+      "maxErrorInSourceUnits": 0.00003968371050452977
+    },
+    {
+      "name": "VH_M_posterior_part_of_tongue",
+      "before": 111000,
+      "after": 13320,
+      "maxErrorInSourceUnits": 0.000014692226049225088
+    },
+    {
+      "name": "VH_M_dorsal_tongue",
+      "before": 110286,
+      "after": 13233,
+      "maxErrorInSourceUnits": 0.000029792585186570048
+    },
+    {
+      "name": "VH_M_ventral_tongue",
+      "before": 52172,
+      "after": 6259,
+      "maxErrorInSourceUnits": 0.00001956689816859597
+    },
+    {
+      "name": "VH_M_fungiform_papillae",
+      "before": 1164,
+      "after": 452,
+      "maxErrorInSourceUnits": 0.00003921404239658221
+    },
+    {
+      "name": "VH_M_circumvallate_papillae",
+      "before": 1624,
+      "after": 420,
+      "maxErrorInSourceUnits": 0.00004057123351500474
+    },
+    {
+      "name": "VH_M_hard_palate",
+      "before": 66462,
+      "after": 7975,
+      "maxErrorInSourceUnits": 0.00001724027606962394
+    },
+    {
+      "name": "VH_M_mucosa_of_soft_palate",
+      "before": 158862,
+      "after": 19063,
+      "maxErrorInSourceUnits": 0.000028557388535422387
+    },
+    {
+      "name": "VH_M_set_of_lower_jaw_teeth",
+      "before": 102144,
+      "after": 22470,
+      "maxErrorInSourceUnits": 0.000025797765984421437
+    },
+    {
+      "name": "VH_M_set_of_upper_jaw_teeth",
+      "before": 103584,
+      "after": 22788,
+      "maxErrorInSourceUnits": 0.00002859373183079295
+    }
+  ]
+}
