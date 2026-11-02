@@ -25,3 +25,12 @@ neck-repair/
 *.blend1
 *.stl
 *.3mf
+
+# Keep private lesson design, operations and development notes on this computer.
+/AGENTS.md
+/AR-STATUS.md
+/CLOUDBASE-SWITCH.md
+/JOURNEY-GAME.md
+/LESSON-DESIGN-BASELINE.md
+/REGRESSION-REQUIREMENTS.md
+/STOMACH-SAMPLE.md
