@@ -36,3 +36,14 @@
 .ar-page .organ-dialog #organ-media{height:55%;pointer-events:auto;display:flex;flex-direction:column;justify-content:center;gap:6px}.ar-page .organ-dialog #organ-media[hidden]{display:none!important}.ar-page #organ-video{position:static;width:100%;height:calc(100% - 34px);object-fit:contain;border-radius:50% 50% 44% 44%;background:#153f4970}.ar-page #organ-video-caption{font-size:12px;color:white;background:#153f49db;border-radius:8px;padding:4px;margin:0;text-align:center}.ar-page .ar-view-tabs button[hidden]{display:none}.ar-page .ar-view-tabs button[aria-pressed=true]{background:#368a7d;color:#fff}
 
 .ar-page #organ-video.is-animation{border-radius:20px}.ar-page #organ-micrograph{width:100%;height:calc(100% - 34px);object-fit:contain;border-radius:18px}.ar-page #organ-micrograph[hidden],.ar-page #organ-video[hidden]{display:none!important}
+
+/* Two independent lenses grow out of the selected organ. */
+.ar-page .organ-dialog{inset:0!important;width:100%;height:100%;padding:0;background:transparent;border:0;pointer-events:none}
+.ar-page .organ-dialog header{position:absolute;top:2%;left:30%;right:30%;padding:4px 8px}.ar-page .organ-dialog header h2{font-size:19px}
+.ar-page .organ-dialog #organ-3d{position:absolute;top:12%;left:2%;width:44%;height:35%;min-height:0;border:1px solid #b5edda88;border-radius:18px;background:radial-gradient(ellipse,#173b4499,#173b4420);pointer-events:auto}
+.ar-page .organ-dialog #organ-media,.ar-page .organ-dialog #organ-process{position:absolute;top:16%;right:2%;width:44%;height:31%;min-height:0;border-radius:18px;pointer-events:auto;background:#153f4980}
+.ar-page .organ-dialog .ar-view-tabs{position:absolute;top:10%;right:2%;width:44%;margin:0;box-sizing:border-box}.ar-page #show-organ-structure{display:none}.ar-page .ar-view-tabs button{font-size:13px;padding:5px}
+.ar-page .organ-dialog footer{position:absolute;top:47%;left:2%;width:44%;box-sizing:border-box;font-size:12px;padding:4px;margin:0}.ar-page .organ-dialog footer button{font-size:12px;padding:5px;min-height:30px}
+.ar-page .organ-dialog #organ-dialog-note{display:none}.ar-page .organ-dialog .ar-credit{position:absolute;top:54%;left:2%;width:44%;box-sizing:border-box;background:#143944b0;color:#e9fff6;text-shadow:none;font-size:9px}
+#organ-links{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}#organ-links path{fill:none;stroke:#d9fff0;stroke-width:2;stroke-dasharray:5 3}#organ-links circle{fill:#c2ffe0;stroke:#1e6557;stroke-width:2}
+.ar-page .ar-calibration{display:none!important}.ar-page #organ-video-caption{font-size:10px}.ar-page #organ-micrograph{background:#eff6ed}

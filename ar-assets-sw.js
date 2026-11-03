@@ -1,4 +1,4 @@
-importScripts('./resource-manifest.js?v=20261103-motion-2','./resource-store.js?v=20261103-motion-2');
+importScripts('./resource-manifest.js?v=20261103-lenses-3','./resource-store.js?v=20261103-lenses-3');
 const ROOT=new URL('./',self.location.href);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));
 async function withRange(response,range){

@@ -9,7 +9,8 @@ const organs=[
  {id:'large-intestine',name:'大肠',question:'它与小肠的位置有什么关系？',note:'大肠围在小肠外侧，吸收食物残渣中的一部分水分。',feature:'与小肠比较粗细、盘曲方式和位置。'}
 ];
 for(const [id,name,note] of [['trachea','气管','气管在食管前方，把空气送向肺。'],['right-lung','右肺','肺参与气体交换。食物正常情况下不进入气管和肺。'],['left-lung','左肺','观察肺和消化器官的空间关系。'],['pharynx','咽','咽是空气和食物共同经过的部位。此处模型展示咽部肌肉，不是完整咽腔。']])organs.push({id,name,question:'转动观察它与食管的位置关系。',note,feature:note});
-const $=s=>document.querySelector(s),asset=(id,ext)=>`assets/models/${ext==='glb'?(['small-intestine','large-intestine'].includes(id)?'ar-detail':'ar-connected'):'ar'}/${id}.${ext}`;
+for(const [id,name]of [['liver','肝'],['pancreas','胰'],['gallbladder','胆囊'],['heart','心脏'],['submandibular','下颌下腺'],['left-kidney','左肾'],['right-kidney','右肾'],['bladder','膀胱']])organs.push({id,name,question:'观察它与周围器官的位置关系。',feature:'转动放大观察形态与空间关系。',note:'比较外形、位置及局部结构。'});
+const $=s=>document.querySelector(s),asset=(id,ext)=>`assets/models/${ext==='glb'?(['mouth','small-intestine','large-intestine','liver','pancreas'].includes(id)?'ar-detail':'ar-connected'):'ar'}/${id}.${ext}`;
 const tracker=new BodyTracker(),buttons=new Map(),displayed=new Map();
 let record,observation,selected=null,selectedAt=0,stream,worker,mainDetector;
 let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,lastSent=0,lastPose=0,targets=null;
@@ -24,19 +25,19 @@ function saveSoon(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{if(record)
 function closeSelected(){if(selected){const view=observation.views[observation.views.length-1];if(view&&view.organId===selected)view.durationMs=(view.durationMs||0)+Math.round(performance.now()-selectedAt);selectedAt=performance.now();}}
 function renderList(){
  const seen=[...new Set(observation.views.map(v=>v.organId))];
- $('#organ-list').replaceChildren(...seen.map(id=>{const o=organs.find(o=>o.id===id);if(!o)return document.createElement('span');const b=document.createElement('button');b.type='button';b.className='is-seen';b.innerHTML=`${["trachea","right-lung","left-lung","pharynx"].includes(id)?"":`<img src="${asset(id,'png')}" alt="">`}<span>${o.name}</span>`;b.onclick=()=>selectOrgan(id);return b;}));
+ $('#organ-list').replaceChildren(...seen.map(id=>{const o=organs.find(o=>o.id===id);if(!o)return document.createElement('span');const b=document.createElement('button');b.type='button';b.className='is-seen';b.innerHTML=`${["trachea","right-lung","left-lung","pharynx","liver","pancreas","gallbladder","heart","submandibular","left-kidney","right-kidney","spleen","bladder"].includes(id)?"":`<img src="${asset(id,'png')}" alt="">`}<span>${o.name}</span>`;b.onclick=()=>selectOrgan(id);return b;}));
 }
 function selectOrgan(id){
  if(!record)return;closeSelected();selected=id;selectedAt=performance.now();
  observation.views.push({organId:id,at:Date.now(),durationMs:0});observation.views=observation.views.slice(-120);
  const o=organs.find(o=>o.id===id);if(!o)return;connected?.select(id);$('.observe-panel').hidden=false;$('#organ-detail').hidden=false;
- $('#organ-detail').innerHTML=`<p class="organ-question">${o.question}</p>${["trachea","right-lung","left-lung","pharynx"].includes(id)?"":`<img src="${asset(id,'png')}" alt="${o.name}整体结构">`}<strong>${o.name}</strong><p>${o.note}</p>`;
+ $('#organ-detail').innerHTML=`<p class="organ-question">${o.question}</p>${["trachea","right-lung","left-lung","pharynx","liver","pancreas","gallbladder","heart","submandibular","left-kidney","right-kidney","spleen","bladder"].includes(id)?"":`<img src="${asset(id,'png')}" alt="${o.name}整体结构">`}<strong>${o.name}</strong><p>${o.note}</p>`;
  $('#open-local-3d').hidden=false;$('#open-local-3d').textContent=`转动观察${o.name}`;
  $('#finish-observation').disabled=!(observation.cameraStarted&&observation.views.length);
  for(const [key,b]of buttons)b.classList.toggle('is-selected',key===id);
  renderList();saveSoon();void openViewer();
 }
-for(const o of organs.filter(o=>!['trachea','right-lung','left-lung','pharynx'].includes(o.id))){const b=document.createElement('button');b.type='button';b.className='ar-organ';b.dataset.organ=o.id;b.setAttribute('aria-label',`观察${o.name}`);b.innerHTML=`<img src="${asset(o.id,'png')}" alt="" draggable="false">`;b.onclick=()=>selectOrgan(o.id);$('#ar-organs').append(b);buttons.set(o.id,b);}
+for(const o of organs.filter(o=>['mouth','esophagus','stomach','small-intestine','large-intestine'].includes(o.id))){const b=document.createElement('button');b.type='button';b.className='ar-organ';b.dataset.organ=o.id;b.setAttribute('aria-label',`观察${o.name}`);b.innerHTML=`<img src="${asset(o.id,'png')}" alt="" draggable="false">`;b.onclick=()=>selectOrgan(o.id);$('#ar-organs').append(b);buttons.set(o.id,b);}
 $('#ar-organs').hidden=true;
 function receivePose(data){
  busy=false;if(!running||hidden)return;
@@ -100,7 +101,7 @@ function paint(now){
  const fresh=age<Math.min(2000,Math.max(600,interval+meanCost*2+40));
  const visible=targets&&fresh&&((coherent&&motion.reliable)||age<100);
  const currentTargets=targets?Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,{...p,x:p.x+(coherent?motion.x-targetMotion.x:0),y:p.y+(coherent?motion.y-targetMotion.y:0)}])):null;
- if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
+ if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
   for(const [id,b]of buttons){const point=currentTargets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
    if(prior)for(const key of ['x','y','w','h','angle'])next[key]=prior[key]+(next[key]-prior[key])*alpha;
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
@@ -129,8 +130,8 @@ async function startCamera(){
 }
 async function openViewer(){
  if(!selected)return;viewerDispose?.();viewerDispose=null;processStop?.();closeSelected();const id=selected,o=organs.find(o=>o.id===id),generation=++viewerGeneration;
- observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;stopMedia();$('#show-organ-media').hidden=!['stomach','small-intestine'].includes(id);$('#show-organ-media').textContent=id==='small-intestine'?'绒毛放大':'真实内壁';$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#organ-dialog').show();
- const credit=$('#organ-model-credit');credit.textContent=['small-intestine','large-intestine'].includes(id)?'模型：Human Reference Atlas / HuBMAP · CC BY 4.0':id==='mouth'?'模型：Human Reference Atlas · Heidi Schlehlein · CC BY 4.0':['right-lung','left-lung'].includes(id)?'模型：Human Reference Atlas · Kristen Browne、Heidi Schlehlein · CC BY 4.0':id==='pharynx'?'模型：BodyParts3D / OrganUI · CC BY-SA 2.1 Japan':'模型：BodyParts3D · DBCLS · CC BY 4.0';
+ observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;stopMedia();$('#show-organ-media').hidden=!['stomach','small-intestine'].includes(id);$('#show-organ-media').textContent=id==='small-intestine'?'绒毛放大':'真实内壁';$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#show-organ-process').hidden=['liver','pancreas','gallbladder','heart','submandibular','left-kidney','right-kidney','spleen','bladder'].includes(id);$('#organ-dialog').show();queueMicrotask(()=>{if(id==='stomach'||id==='small-intestine')$('#show-organ-media').click();else showContextImage();});
+ const credit=$('#organ-model-credit');credit.textContent=['small-intestine','large-intestine','liver','pancreas'].includes(id)?'模型：Human Reference Atlas / HuBMAP · CC BY 4.0':id==='mouth'?'模型：Human Reference Atlas · Heidi Schlehlein · CC BY 4.0':['right-lung','left-lung'].includes(id)?'模型：Human Reference Atlas · Kristen Browne、Heidi Schlehlein · CC BY 4.0':id==='pharynx'?'模型：BodyParts3D / OrganUI · CC BY-SA 2.1 Japan':'模型：BodyParts3D · DBCLS · CC BY 4.0';
  const mount=$('#organ-3d');mount.textContent='正在准备模型…';
  try{const {createOrganViewer}=await import('./ar-organ-viewer.js');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open);if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
  catch(error){if(generation===viewerGeneration)mount.innerHTML=`<img class="model-fallback-image" src="${asset(id,'png')}" alt="${o.name}"><p>模型加载未完成，请关闭后重试。</p>`;console.warn('Organ model failed',error);}
@@ -157,23 +158,30 @@ $('#close-discovery').onclick=()=>{$('.observe-panel').hidden=true;};
 
 let processStop;
 function showEnzymeVideo(){
- $('#organ-3d').hidden=true;$('#organ-process').hidden=true;$('#organ-dialog footer').hidden=true;$('#organ-media').hidden=false;
+ $('#organ-3d').hidden=false;$('#organ-process').hidden=true;$('#organ-dialog footer').hidden=false;$('#organ-media').hidden=false;
  $('#organ-dialog-note').textContent='小肠继续消化食物。放大示意：绿色结构代表消化酶，帮助把长链大分子分解成较小分子；不是真实显微影像。';
  $('#organ-video-caption').textContent='MedienLB / Siemens Stiftung 2017 · CC BY-NC-SA 4.0 · 静音节选';
  const video=$('#organ-video');video.classList.add('is-animation');video.src='assets/ar-media/enzyme-digestion.mp4';void video.play().catch(()=>{});
 }
 function showMicrograph(){
- $('#organ-3d').hidden=true;$('#organ-process').hidden=true;$('#organ-dialog footer').hidden=true;$('#organ-media').hidden=false;$('#organ-video').hidden=true;
+ $('#organ-3d').hidden=false;$('#organ-process').hidden=true;$('#organ-dialog footer').hidden=false;$('#organ-media').hidden=false;$('#organ-video').hidden=true;
  const image=$('#organ-micrograph');image.src='assets/journey/villi-micrograph.jpg';image.hidden=false;
  $('#organ-video-caption').textContent='真实回肠绒毛切片 · Mikael Häggström, M.D. · CC0';
  $('#organ-dialog-note').textContent='观察向肠腔伸出的绒毛。它们增大了吸收面积。切片照片展示结构，不能直接看到营养的吸收过程。';
 }
 function stopMedia(){const video=$('#organ-video');video.pause();video.classList.remove('is-animation');video.removeAttribute('src');video.load();$('#organ-media').hidden=true;video.hidden=false;$('#organ-micrograph').hidden=true;}
-$('#show-organ-media').onclick=()=>{processStop?.();stopMedia();if(selected==='small-intestine'){showMicrograph();return;}$('#organ-3d').hidden=true;$('#organ-process').hidden=true;$('#organ-dialog footer').hidden=true;$('#organ-dialog-note').textContent='真实胃内壁影像：观察黏膜皱襞。拍摄镜头也在移动，不能用画面移动判断蠕动。';$('#organ-media').hidden=false;$('#organ-video-caption').textContent='HyperKvasir · Borgli 等 · CC BY 4.0 · 静音节选';const video=$('#organ-video');video.src='assets/ar-media/stomach-wall.mp4';void video.play().catch(()=>{});};
-$('#show-organ-process').onclick=async()=>{processStop?.();stopMedia();if(selected==='small-intestine'){showEnzymeVideo();return;}$('#organ-3d').hidden=true;$('#organ-process').hidden=false;$('#organ-dialog footer').hidden=true;$('#organ-dialog-note').textContent=organs.find(o=>o.id===selected).note;const {playProcess}=await import('./ar-process.js');processStop=playProcess($('#organ-process'),selected);};
+$('#show-organ-media').onclick=()=>{processStop?.();stopMedia();if(selected==='small-intestine'){showMicrograph();return;}$('#organ-3d').hidden=false;$('#organ-process').hidden=true;$('#organ-dialog footer').hidden=false;$('#organ-dialog-note').textContent='真实胃内壁影像：观察黏膜皱襞。拍摄镜头也在移动，不能用画面移动判断蠕动。';$('#organ-media').hidden=false;$('#organ-video-caption').textContent='HyperKvasir · Borgli 等 · CC BY 4.0 · 静音节选';const video=$('#organ-video');video.src='assets/ar-media/stomach-wall.mp4';void video.play().catch(()=>{});};
+$('#show-organ-process').onclick=async()=>{processStop?.();stopMedia();if(selected==='small-intestine'){showEnzymeVideo();return;}$('#organ-3d').hidden=false;$('#organ-process').hidden=false;$('#organ-dialog footer').hidden=false;$('#organ-dialog-note').textContent=organs.find(o=>o.id===selected).note;const {playProcess}=await import('./ar-process.js');processStop=playProcess($('#organ-process'),selected);};
 $('#show-organ-structure').onclick=()=>{processStop?.();stopMedia();$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#organ-dialog-note').textContent=organs.find(o=>o.id===selected).feature;window.dispatchEvent(new Event('resize'));};
 $('#organ-dialog').addEventListener('close',()=>{if($('#organ-dialog').open)return;processStop?.();stopMedia();});
 
 $('#compare-airways').onclick=()=>{$('#show-respiratory').checked=true;connected?.respiratory(true);$('#anatomy-turn').value=65;connected?.rotate(65*Math.PI/180);};
 
 $('#reset-alignment').onclick=()=>{$('#anatomy-size').value=1;$('#anatomy-x').value=0;$('#anatomy-y').value=0;$('#anatomy-turn').value=0;connected?.calibrate(1,0,0);connected?.rotate(0);tracker.reset();displayed.clear();motion.reset();targetMotion=null;};
+
+function showContextImage(){
+ stopMedia();$('#organ-process').hidden=true;$('#organ-media').hidden=false;$('#organ-video').hidden=true;
+ const image=$('#organ-micrograph');const contextOnly=['trachea','right-lung','left-lung','pharynx','heart','left-kidney','right-kidney','bladder','mouth','submandibular'].includes(selected);image.src=contextOnly?connected.contextImage():'assets/journey/digestive-system-clean.png';image.hidden=false;image.alt='周围器官的整体空间关系参考';
+ $('#organ-video-caption').textContent=contextOnly?'周围器官的空间关系 · 解剖参考模型':'整体位置参考 · NIDDK / NIH';
+}
+function updateLinks(){if(!$('#organ-dialog').open)return;const p=connected?.anchor(selected);if(!p)return;const stage=$('#camera-stage'),w=stage.clientWidth,h=stage.clientHeight;const svg=$('#organ-links');svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.innerHTML=`<path d="M ${p.x} ${p.y} L ${w*.24} ${h*.49} M ${p.x} ${p.y} L ${w*.76} ${h*.49}"/><circle cx="${p.x}" cy="${p.y}" r="5"/>`;}

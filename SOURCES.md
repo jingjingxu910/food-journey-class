@@ -13,3 +13,5 @@
 
 - 放大观察的小肠、大肠：Human Reference Atlas / HuBMAP，CC BY 4.0；[文件与改编说明](assets/models/ar-detail/ATTRIBUTION.md)。
 - 胃内壁影像：Borgli 等，HyperKvasir（2020），CC BY 4.0；消化酶动画：© MedienLB / Siemens Stiftung 2017，CC BY-NC-SA 4.0（该节选限非商业使用、按相同许可共享）。[来源、许可及节选说明](ar-sources.html)。
+
+- 透视观察新增肝、胰、胆囊、心脏、肾、膀胱及下颌下腺：DBCLS / BodyParts3D，CC BY 4.0，共同参考坐标；精细肝、胰模型：Human Reference Atlas / HuBMAP，CC BY 4.0。[来源及改编说明](ar-sources.html)。

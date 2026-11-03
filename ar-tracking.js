@@ -17,12 +17,13 @@ export function fitBody(points,aspect=1){
   const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
   const shoulder=mid(points[11],points[12]),hip=mid(points[23],points[24]);
   const dx=points[11].x-points[12].x,dy=points[11].y-points[12].y;
-  const width=Math.hypot(dx,dy),tx=hip.x-shoulder.x,ty=hip.y-shoulder.y,height=Math.hypot(tx,ty);
+  const yaw=clamp(Math.atan2(((points[11].z||0)-(points[12].z||0))*aspect,Math.abs(dx)),-1.15,1.15);
+  const width=Math.hypot(dx,dy)/Math.max(.45,Math.cos(yaw)),tx=hip.x-shoulder.x,ty=hip.y-shoulder.y,height=Math.hypot(tx,ty);
   if(width<.10*aspect||height<.14||width>height*1.8||width<height*.35||ty<.08)return null;
   // Person's left is landmark 11; it must not be inferred from screen X.
-  const right={x:dx/width,y:dy/width};
-  const down={x:-right.y,y:right.x};if(down.y<0){down.x*=-1;down.y*=-1;}
-  const anchor=(x,y,w,h)=>({x:shoulder.x+right.x*width*x+down.x*height*y,y:shoulder.y+right.y*width*x+down.y*height*y,w:width*w,h:height*h,angle:Math.atan2(right.y,right.x)});
+  const down={x:tx/height,y:ty/height};
+  const right={x:down.y,y:-down.x};
+  const anchor=(x,y,w,h)=>({x:shoulder.x+right.x*width*x+down.x*height*y,y:shoulder.y+right.y*width*x+down.y*height*y,w:width*w,h:height*h,yaw,angle:Math.atan2(right.y,right.x)});
   const result={
     esophagus:anchor(0,.09,.12,.60),stomach:anchor(.16,.47,.46,.43),
     'small-intestine':anchor(.01,.83,.61,.49),'large-intestine':anchor(0,.86,.83,.66)
@@ -33,7 +34,7 @@ export function fitBody(points,aspect=1){
 }
 export function mapOverlay(point,stageWidth,stageHeight,videoWidth,videoHeight){
   const scale=Math.max(stageWidth/videoWidth,stageHeight/videoHeight),w=videoWidth*scale,h=videoHeight*scale;
-  return {x:(stageWidth-w)/2+point.x*w,y:(stageHeight-h)/2+point.y*h,w:point.w*w,h:point.h*h,angle:Math.atan2(Math.sin(point.angle)*h,Math.cos(point.angle)*w)};
+  return {yaw:point.yaw||0,x:(stageWidth-w)/2+point.x*w,y:(stageHeight-h)/2+point.y*h,w:point.w*w,h:point.h*h,angle:Math.atan2(Math.sin(point.angle)*h,Math.cos(point.angle)*w)};
 }
 export class BodyTracker {
   constructor(){this.filters=new Map();}
