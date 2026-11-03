@@ -1,18 +1,19 @@
 import {BodyTracker,mapOverlay} from './ar-tracking.js';
 import {groupId,currentRecord,saveRecord,submitRecord,homeUrl} from './student-data.js';
 const organs=[
- {id:'mouth',name:'口腔',question:'食物在这里怎样变小？',note:'牙齿咀嚼食物，舌帮助搅拌，唾液润湿食物。',feature:'局部模型：舌与上下颌牙龈。牙齿、嘴唇未包含在这个局部模型中。'},
+ {id:'mouth',name:'口腔',question:'食物在这里怎样变小？',note:'牙齿咀嚼食物，舌帮助搅拌，唾液润湿食物。',feature:'Human Reference Atlas口腔局部：牙列与软组织。转动比较牙齿和舌的位置；不是完整头部模型。'},
  {id:'esophagus',name:'食管',question:'食物怎样沿着这条管道前进？',note:'食管连接咽和胃，管壁蠕动，把食物送向胃。',feature:'转动观察这条细长管道。'},
  {id:'stomach',name:'胃',question:'这个囊状器官与哪里相连？',note:'胃通过蠕动搅拌食物，食物与胃液混合，进一步消化。',feature:'观察胃的形状，以及入口和出口。'},
  {id:'small-intestine',name:'小肠',question:'为什么这条管道盘绕了这么多圈？',note:'小肠盘曲在腹部，是消化食物和吸收营养的主要场所。',feature:'观察小肠的整体形态。绒毛属于更小尺度的内壁结构。'},
  {id:'large-intestine',name:'大肠',question:'它与小肠的位置有什么关系？',note:'大肠围在小肠外侧，吸收食物残渣中的一部分水分。',feature:'与小肠比较粗细、盘曲方式和位置。'}
 ];
-const $=s=>document.querySelector(s),asset=(id,ext)=>`assets/models/ar/${id}.${ext}`;
+for(const [id,name,note] of [['trachea','气管','气管在食管前方，把空气送向肺。'],['right-lung','右肺','肺参与气体交换。食物正常情况下不进入气管和肺。'],['left-lung','左肺','观察肺和消化器官的空间关系。'],['pharynx','咽','咽是空气和食物共同经过的部位。此处模型展示咽部肌肉，不是完整咽腔。']])organs.push({id,name,question:'转动观察它与食管的位置关系。',note,feature:note});
+const $=s=>document.querySelector(s),asset=(id,ext)=>`assets/models/${ext==='glb'?'ar-connected':'ar'}/${id}.${ext}`;
 const tracker=new BodyTracker(),buttons=new Map(),displayed=new Map();
 let record,observation,selected=null,selectedAt=0,stream,worker,mainDetector;
 let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,lastSent=0,lastPose=0,targets=null;
 let workerReady=false,starting=false,saveTimer,viewerDispose,viewerGeneration=0,captureWidth=384,interval=100,meanCost=0,lastPaint=0;
-let startupController;
+let startupController,connected;
 const metrics={samples:0,totalMs:0,maxMs:0,losses:0,mode:null};
 $('#group-label').textContent=`第 ${groupId} 组`;$('#back-link').href=homeUrl();
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
@@ -22,19 +23,19 @@ function saveSoon(){clearTimeout(saveTimer);saveTimer=setTimeout(()=>{if(record)
 function closeSelected(){if(selected){const view=observation.views[observation.views.length-1];if(view&&view.organId===selected)view.durationMs=(view.durationMs||0)+Math.round(performance.now()-selectedAt);selectedAt=performance.now();}}
 function renderList(){
  const seen=[...new Set(observation.views.map(v=>v.organId))];
- $('#organ-list').replaceChildren(...seen.map(id=>{const o=organs.find(o=>o.id===id);if(!o)return document.createElement('span');const b=document.createElement('button');b.type='button';b.className='is-seen';b.innerHTML=`<img src="${asset(id,'png')}" alt=""><span>${o.name}</span>`;b.onclick=()=>selectOrgan(id);return b;}));
+ $('#organ-list').replaceChildren(...seen.map(id=>{const o=organs.find(o=>o.id===id);if(!o)return document.createElement('span');const b=document.createElement('button');b.type='button';b.className='is-seen';b.innerHTML=`${["trachea","right-lung","left-lung","pharynx"].includes(id)?"":`<img src="${asset(id,'png')}" alt="">`}<span>${o.name}</span>`;b.onclick=()=>selectOrgan(id);return b;}));
 }
 function selectOrgan(id){
  if(!record)return;closeSelected();selected=id;selectedAt=performance.now();
  observation.views.push({organId:id,at:Date.now(),durationMs:0});observation.views=observation.views.slice(-120);
- const o=organs.find(o=>o.id===id);$('#organ-detail').hidden=false;
- $('#organ-detail').innerHTML=`<p class="organ-question">${o.question}</p><img src="${asset(id,'png')}" alt="${o.name}整体结构"><strong>${o.name}</strong><p>${o.note}</p>`;
+ const o=organs.find(o=>o.id===id);if(!o)return;connected?.select(id);$('.observe-panel').hidden=false;$('#organ-detail').hidden=false;
+ $('#organ-detail').innerHTML=`<p class="organ-question">${o.question}</p>${["trachea","right-lung","left-lung","pharynx"].includes(id)?"":`<img src="${asset(id,'png')}" alt="${o.name}整体结构">`}<strong>${o.name}</strong><p>${o.note}</p>`;
  $('#open-local-3d').hidden=false;$('#open-local-3d').textContent=`转动观察${o.name}`;
  $('#finish-observation').disabled=!(observation.cameraStarted&&observation.views.length);
  for(const [key,b]of buttons)b.classList.toggle('is-selected',key===id);
- renderList();saveSoon();
+ renderList();saveSoon();void openViewer();
 }
-for(const o of organs){const b=document.createElement('button');b.type='button';b.className='ar-organ';b.dataset.organ=o.id;b.setAttribute('aria-label',`观察${o.name}`);b.innerHTML=`<img src="${asset(o.id,'png')}" alt="" draggable="false">`;b.onclick=()=>selectOrgan(o.id);$('#ar-organs').append(b);buttons.set(o.id,b);}
+for(const o of organs.filter(o=>!['trachea','right-lung','left-lung','pharynx'].includes(o.id))){const b=document.createElement('button');b.type='button';b.className='ar-organ';b.dataset.organ=o.id;b.setAttribute('aria-label',`观察${o.name}`);b.innerHTML=`<img src="${asset(o.id,'png')}" alt="" draggable="false">`;b.onclick=()=>selectOrgan(o.id);$('#ar-organs').append(b);buttons.set(o.id,b);}
 $('#ar-organs').hidden=true;
 function receivePose(data){
  busy=false;if(!running||hidden||dialogOpen)return;
@@ -89,16 +90,16 @@ async function sendFrame(now){
 function paint(now){
  if(!running)return;frame=requestAnimationFrame(paint);if(hidden||dialogOpen)return;
  const video=$('#camera-video'),stage=$('#camera-stage'),age=now-lastPose;
- if(targets&&age<Math.min(600,Math.max(280,interval+meanCost+80))){$('#ar-organs').hidden=false;const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
+ if(targets&&age<Math.min(600,Math.max(280,interval+meanCost+80))){$('#ar-organs').hidden=false;connected?.update(mapOverlay(targets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
   for(const [id,b]of buttons){const point=targets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
    if(prior)for(const key of ['x','y','w','h','angle'])next[key]=prior[key]+(next[key]-prior[key])*alpha;
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
   }
- }else{$('#ar-organs').hidden=true;if(age>800&&lastPose)$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';}
+ }else{connected?.update(null);$('#ar-organs').hidden=true;if(age>800&&lastPose)$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';}
  lastPaint=now;if(busy && now-lastSent>15000){stopCamera();$('#camera-status').textContent='识别暂时没有响应，请重新开启相机';return;}
  lastPaint=now;if(now-lastSent>=interval)void sendFrame(now);
 }
-function stopCamera(){running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
+function stopCamera(){connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
 async function startCamera(){
  if(starting||running||!record)return;starting=true;startupController=new AbortController();$('#cancel-camera').hidden=false;$('#start-camera').disabled=true;
  try{$('#camera-status').textContent='正在开启后置相机…';if(!navigator.mediaDevices?.getUserMedia)throw new Error('请使用支持网页相机的浏览器，并通过 HTTPS 打开课件');
@@ -109,14 +110,17 @@ async function startCamera(){
   const {preparePoseResources}=await waitStartup(import('./pose-resources.js'),30000,'识别资源程序未加载完成，请检查网络后重试');
   await preparePoseResources(startupController.signal,message=>{$('#camera-status').textContent=message;});
   if(startupController.signal.aborted)throw new DOMException('已取消','AbortError');
+  $('#camera-status').textContent='正在准备整套解剖模型…';
+  if(!connected){const {createConnectedOverlay}=await import('./ar-connected.js');connected=await waitStartup(createConnectedOverlay($('#anatomy-overlay'),selectOrgan),45000,'解剖模型加载未完成，请重试',late=>late.dispose());}
   $('#camera-status').textContent='资源已就绪，正在启动人体识别…';await initDetector();
   if(startupController.signal.aborted)throw new DOMException('已取消','AbortError');
   running=true;observation.cameraStarted=true;observation.cameraFacing='environment';saveSoon();$('#start-camera').textContent='相机已开启';$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';lastPose=0;lastSent=0;lastFrame=-1;frame=requestAnimationFrame(paint);
  }catch(error){stopCamera();$('#camera-status').textContent=error.name==='AbortError'?'已取消开启，下载完成的资源已保留':error.name==='NotAllowedError'?'请允许浏览器使用相机':error.name==='NotFoundError'?'未检测到相机。请在有后置相机的平板上用 Chrome 或 Edge 打开':error.name==='NotReadableError'?'相机暂时无法使用，请关闭其他正在使用相机的应用后重试':error.name==='OverconstrainedError'?'没有找到可用的后置相机':`开启未完成：${error.message}`;$('#start-camera').textContent='重新开启';}finally{starting=false;$('#cancel-camera').hidden=true;}
 }
 async function openViewer(){
- if(!selected)return;closeSelected();const id=selected,o=organs.find(o=>o.id===id),generation=++viewerGeneration;
- observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-dialog').showModal();
+ if(!selected)return;viewerDispose?.();viewerDispose=null;processStop?.();closeSelected();const id=selected,o=organs.find(o=>o.id===id),generation=++viewerGeneration;
+ observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#organ-dialog').show();
+ const credit=$('#organ-model-credit');credit.textContent=id==='mouth'?'模型：Human Reference Atlas · Heidi Schlehlein · CC BY 4.0':['right-lung','left-lung'].includes(id)?'模型：Human Reference Atlas · Kristen Browne、Heidi Schlehlein · CC BY 4.0':id==='pharynx'?'模型：BodyParts3D / OrganUI · CC BY-SA 2.1 Japan':'模型：BodyParts3D · DBCLS · CC BY 4.0';
  const mount=$('#organ-3d');mount.textContent='正在准备模型…';
  try{const {createOrganViewer}=await import('./ar-organ-viewer.js');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open);if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
  catch(error){if(generation===viewerGeneration)mount.innerHTML=`<img class="model-fallback-image" src="${asset(id,'png')}" alt="${o.name}"><p>模型加载未完成，请关闭后重试。</p>`;console.warn('Organ model failed',error);}
@@ -126,7 +130,7 @@ $('#cancel-camera').onclick=()=>{startupController?.abort();stopCamera();$('#cam
 $('#start-camera').onclick=startCamera;$('#open-local-3d').onclick=openViewer;$('#close-organ-dialog').onclick=()=>$('#organ-dialog').close();
 $('#organ-dialog').addEventListener('close',()=>{viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;selectedAt=performance.now();tracker.reset();targets=null;});
 document.addEventListener('visibilitychange',()=>{hidden=document.hidden;if(hidden)closeSelected();else{selectedAt=performance.now();targets=null;tracker.reset();}});
-window.addEventListener('pagehide',()=>{startupController?.abort();closeSelected();clearTimeout(saveTimer);if(record)void saveRecord(record);stopCamera();viewerDispose?.();});
+window.addEventListener('pagehide',()=>{connected?.dispose();connected=null;startupController?.abort();closeSelected();clearTimeout(saveTimer);if(record)void saveRecord(record);stopCamera();viewerDispose?.();});
 async function initialize(){
  $('#start-camera').disabled=true;$('#camera-status').textContent='正在读取本组记录…';
  let timer;try{record=await Promise.race([currentRecord(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('本组记录读取超时')),8000);})]);}finally{clearTimeout(timer);}
@@ -134,3 +138,18 @@ async function initialize(){
 function initializeOrRetry(){initialize().catch(error=>{status(`记录暂时无法读取：${error.message}`);$('#camera-status').textContent='页面准备未完成，请重试';$('#start-camera').disabled=false;$('#start-camera').textContent='重试准备';$('#start-camera').onclick=initializeOrRetry;});}
 initializeOrRetry();
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./ar-assets-sw.js').catch(error=>console.info('Resource cache unavailable',error));
+
+document.querySelector('#show-respiratory').onchange=e=>connected?.respiratory(e.target.checked);
+document.querySelector('#anatomy-turn').oninput=e=>connected?.rotate(Number(e.target.value)*Math.PI/180);
+function calibrate(){connected?.calibrate(Number($('#anatomy-size').value),Number($('#anatomy-x').value),Number($('#anatomy-y').value));}
+for(const id of ['anatomy-size','anatomy-x','anatomy-y'])$('#'+id).oninput=calibrate;
+$('#close-discovery').onclick=()=>{$('.observe-panel').hidden=true;};
+
+let processStop;
+$('#show-organ-process').onclick=async()=>{processStop?.();$('#organ-3d').hidden=true;$('#organ-process').hidden=false;$('#organ-dialog footer').hidden=true;$('#organ-dialog-note').textContent=organs.find(o=>o.id===selected).note;const {playProcess}=await import('./ar-process.js');processStop=playProcess($('#organ-process'),selected);};
+$('#show-organ-structure').onclick=()=>{processStop?.();$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#organ-dialog-note').textContent=organs.find(o=>o.id===selected).feature;window.dispatchEvent(new Event('resize'));};
+$('#organ-dialog').addEventListener('close',()=>processStop?.());
+
+$('#compare-airways').onclick=()=>{$('#show-respiratory').checked=true;connected?.respiratory(true);$('#anatomy-turn').value=65;connected?.rotate(65*Math.PI/180);};
+
+$('#reset-alignment').onclick=()=>{$('#anatomy-size').value=1;$('#anatomy-x').value=0;$('#anatomy-y').value=0;$('#anatomy-turn').value=0;connected?.calibrate(1,0,0);connected?.rotate(0);tracker.reset();displayed.clear();};

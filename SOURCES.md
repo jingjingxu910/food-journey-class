@@ -8,3 +8,5 @@
 - 消化系统定位图：National Institute of Diabetes and Digestive and Kidney Diseases（NIDDK）, National Institutes of Health，[原图](https://www.niddk.nih.gov/news/media-library/23136)；已去除英文标注及引线。
 - 保留的旧胃肠道模型：Innerscene，CC0。
 - 场景、器官及食物教学插画含生成式图像，不是真实医学影像。
+
+- 新版AR口腔局部：Heidi Schlehlein / Human Reference Atlas mouth-male v1.0，CC BY 4.0；肺外形：Kristen Browne、Heidi Schlehlein / Human Reference Atlas lung-female v1.4，基于Visible Human Dataset / NLM，CC BY 4.0。均经结构选择、减面和参考配准，详见[AR素材署名](ar-sources.html)。

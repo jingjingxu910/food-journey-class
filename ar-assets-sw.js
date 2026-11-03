@@ -1,4 +1,4 @@
-importScripts('./resource-manifest.js?v=20261103-ar-dependency-2','./resource-store.js?v=20261103-ar-dependency-2');
+importScripts('./resource-manifest.js?v=20261103-connected-1','./resource-store.js?v=20261103-connected-1');
 const ROOT=new URL('./',self.location.href);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));
 self.addEventListener('install',()=>self.skipWaiting());

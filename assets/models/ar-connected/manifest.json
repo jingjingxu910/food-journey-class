@@ -1,0 +1,215 @@
+{
+  "mouth": {
+    "label": "口腔局部：牙列与软组织",
+    "source": "Human Reference Atlas mouth-male v1.0, Heidi Schlehlein",
+    "license": "CC BY 4.0",
+    "sourceUrl": "https://lod.humanatlas.io/ref-organ/mouth-male/v1.0/",
+    "changes": "selected dental and oral tissue meshes; uniform scale, reference registration and mesh simplification",
+    "bytes": 479404
+  },
+  "esophagus": {
+    "label": "食管",
+    "FMA": [
+      "FMA7131"
+    ],
+    "elements": [
+      "FJ2563"
+    ],
+    "triangles": 578,
+    "bytes": 12428,
+    "bounds": [
+      [
+        -23.603195190429688,
+        66.38729858398438,
+        1115.989990234375
+      ],
+      [
+        8.810640335083008,
+        124.26399993896484,
+        1390.3900146484375
+      ]
+    ],
+    "coordinateFrame": "shared; x=-sourceX, y=sourceZ-1120, z=sourceY-125; scale=.003"
+  },
+  "stomach": {
+    "label": "胃",
+    "FMA": [
+      "FMA7148"
+    ],
+    "elements": [
+      "FJ2564"
+    ],
+    "triangles": 1810,
+    "bytes": 34008,
+    "bounds": [
+      [
+        -105.52399444580078,
+        81.47989654541016,
+        1039.8800048828125
+      ],
+      [
+        28.951616287231445,
+        194.37001037597656,
+        1156.8900146484375
+      ]
+    ],
+    "coordinateFrame": "shared; x=-sourceX, y=sourceZ-1120, z=sourceY-125; scale=.003"
+  },
+  "small-intestine": {
+    "label": "小肠",
+    "FMA": [
+      "FMA7200"
+    ],
+    "elements": [
+      "FJ2573",
+      "FJ2574",
+      "FJ2575",
+      "FJ2576",
+      "FJ2577",
+      "FJ2578",
+      "FJ2579",
+      "FJ2580",
+      "FJ2581",
+      "FJ2582",
+      "FJ2583",
+      "FJ2584",
+      "FJ2585",
+      "FJ2586",
+      "FJ2587",
+      "FJ2588",
+      "FJ2589",
+      "FJ2590",
+      "FJ2591",
+      "FJ2592",
+      "FJ2593",
+      "FJ2594",
+      "FJ2595",
+      "FJ2596",
+      "FJ2597",
+      "FJ2598",
+      "FJ2599",
+      "FJ2600",
+      "FJ2601",
+      "FJ2602",
+      "FJ2603",
+      "FJ2604",
+      "FJ2605",
+      "FJ2606",
+      "FJ2607",
+      "FJ2608",
+      "FJ2609",
+      "FJ2610",
+      "FJ2611",
+      "FJ2612",
+      "FJ2613",
+      "FJ2614",
+      "FJ2615",
+      "FJ2616",
+      "FJ2617",
+      "FJ2618",
+      "FJ2619",
+      "FJ2620",
+      "FJ2621",
+      "FJ2622",
+      "FJ2623",
+      "FJ2624",
+      "FJ2625",
+      "FJ2626",
+      "FJ2627",
+      "FJ2628"
+    ],
+    "triangles": 12857,
+    "bytes": 300004,
+    "bounds": [
+      [
+        -106.6209945678711,
+        103.56482696533203,
+        805.2899780273438
+      ],
+      [
+        87.05391693115234,
+        183.4290008544922,
+        1076.948486328125
+      ]
+    ],
+    "coordinateFrame": "shared; x=-sourceX, y=sourceZ-1120, z=sourceY-125; scale=.003"
+  },
+  "large-intestine": {
+    "label": "大肠",
+    "FMA": [
+      "FMA7201"
+    ],
+    "elements": [
+      "FJ2566",
+      "FJ2567",
+      "FJ2568",
+      "FJ2569",
+      "FJ2570",
+      "FJ2571",
+      "FJ2572",
+      "FJ2599"
+    ],
+    "triangles": 12535,
+    "bytes": 317968,
+    "bounds": [
+      [
+        -117.5274887084961,
+        11.299198150634766,
+        757.3051147460938
+      ],
+      [
+        126.78301239013672,
+        196.87901306152344,
+        1064.716552734375
+      ]
+    ],
+    "coordinateFrame": "shared; x=-sourceX, y=sourceZ-1120, z=sourceY-125; scale=.003"
+  },
+  "trachea": {
+    "label": "气管",
+    "FMA": [
+      "FMA7394"
+    ],
+    "elements": [
+      "FJ2541"
+    ],
+    "triangles": 4996,
+    "bytes": 93760,
+    "bounds": [
+      [
+        -12.814493179321289,
+        77.36599731445312,
+        1285.0899658203125
+      ],
+      [
+        13.124109268188477,
+        110.13099670410156,
+        1395.43994140625
+      ]
+    ],
+    "coordinateFrame": "shared; x=-sourceX, y=sourceZ-1120, z=sourceY-125; scale=.003"
+  },
+  "right-lung": {
+    "label": "右肺",
+    "source": "Human Reference Atlas, Lung Female v1.4, Visible Human Dataset / NLM",
+    "license": "CC BY 4.0",
+    "sourceUrl": "https://cdn.humanatlas.io/digital-objects/ref-organ/lung-female/v1.4/assets/3d-vh-f-lung.glb",
+    "changes": "selected lung segments; uniform scale and chest registration; simplification",
+    "bytes": 300048
+  },
+  "left-lung": {
+    "label": "左肺",
+    "source": "Human Reference Atlas, Lung Female v1.4, Visible Human Dataset / NLM",
+    "license": "CC BY 4.0",
+    "sourceUrl": "https://cdn.humanatlas.io/digital-objects/ref-organ/lung-female/v1.4/assets/3d-vh-f-lung.glb",
+    "changes": "selected lung segments; uniform scale and chest registration; simplification",
+    "bytes": 260964
+  },
+  "pharynx": {
+    "label": "咽部肌肉（局部）",
+    "source": "BodyParts3D 4.3 / OrganUI",
+    "license": "CC BY-SA 2.1 Japan",
+    "coordinateFrame": "registered to shared reference; not individual anatomy",
+    "bytes": 586648
+  }
+}

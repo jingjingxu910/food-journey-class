@@ -23,3 +23,28 @@ frame.addEventListener('load', () => {
     }
   } catch { /* Never inspect unrelated origins. */ }
 });
+
+// One orientation policy across all student activities; teacher presentation stays landscape.
+const portraitGuard=document.querySelector('#portrait-guard');
+function isTeacherView(){
+ try{const child=new URL(frame.contentWindow.location.href);if(child.protocol==='http:'||child.protocol==='https:')return child.searchParams.get('mode')==='teacher';}catch{}
+ return new URLSearchParams(params.get('query')||'').get('mode')==='teacher';
+}
+function syncPortrait(){
+ const blocked=!isTeacherView()&&innerWidth>innerHeight;
+ portraitGuard.hidden=!blocked;
+ frame.inert=blocked;
+ frame.setAttribute('aria-hidden',String(blocked));
+}
+async function requestPortrait(){
+ if(isTeacherView())return;
+ try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.();await screen.orientation?.lock?.('portrait');}
+ catch{document.querySelector('#portrait-status').textContent='浏览器未能自动旋转，请将设备转为竖屏。';}
+ syncPortrait();
+}
+document.querySelector('#portrait-retry').onclick=requestPortrait;
+frame.addEventListener('load',syncPortrait);
+window.addEventListener('resize',syncPortrait);
+window.addEventListener('orientationchange',syncPortrait);
+document.addEventListener('fullscreenchange',()=>{if(document.fullscreenElement)void requestPortrait();else syncPortrait();});
+syncPortrait();
