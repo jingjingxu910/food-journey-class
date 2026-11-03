@@ -12,18 +12,11 @@
     if (window.ResizeObserver) new ResizeObserver(fit).observe(wrap);
     window.addEventListener('resize', fit); fit();
   }
-  document.querySelector('#portrait-button')?.addEventListener('click', async () => {
-    const button = document.querySelector('#portrait-button');
-    try {
-      if (!document.fullscreenElement) await window.requestLessonFullscreen?.();
-      if (!screen.orientation?.lock) throw new Error('unsupported');
-      await screen.orientation.lock('portrait');
-      button.textContent = '竖屏';
-    } catch {
-      button.textContent = '已适应当前屏幕';
-      button.setAttribute('aria-label', '设备限制旋转，已使用当前屏幕布局');
-    }
-  });
+  const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
+  if(!teacher){
+    const style=document.createElement('style');style.textContent='.flow-fullscreen,#model-fullscreen-button,#portrait-button,#fullscreen{display:none!important}';document.head.append(style);
+    if(new URLSearchParams(location.search).get('preview')!=='1')document.addEventListener('pointerdown',()=>void window.requestLessonFullscreen?.().catch(()=>{}),{once:true,capture:true});
+  }
   if ('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('./ar-assets-sw.js', {updateViaCache:'none'}).catch(() => {});
   }

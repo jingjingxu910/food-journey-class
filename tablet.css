@@ -1,5 +1,6 @@
 /* Large child-facing controls. Aspect ratio belongs to the body plane, not the screen. */
 [hidden]{display:none!important}
+.organ-drag-ghost{transform:translate(-50%,-50%);max-height:none}
 .prepare-link{font-size:18px;font-weight:800;color:#175b65;margin-right:14px}
 .model-page.student-page:not(.teacher-mode){overflow:auto}
 .model-page.student-page:not(.teacher-mode) .model-app{width:calc(100% - 20px);max-width:1440px;height:100vh;height:100svh;min-height:560px;padding:6px 0}
@@ -66,3 +67,30 @@
  .model-page.student-page:not(.teacher-mode) .model-footer{flex-wrap:wrap}
  .model-page.student-page:not(.teacher-mode) .submit-model-button{flex:1}
 }
+
+/* Student activities occupy one portrait viewport. */
+body.student-page:not(.teacher-mode),body.flow-page{height:100dvh;min-height:0;overflow:hidden}
+#fullscreen-button{display:none!important}
+.model-page.student-page:not(.teacher-mode) .model-app{height:100dvh;min-height:0;width:100%;padding:4px 6px;box-sizing:border-box}
+.model-page.student-page:not(.teacher-mode) .model-student-view{min-height:0;flex:1;overflow:hidden}
+.model-page.student-page:not(.teacher-mode) .model-heading{min-height:0;padding:3px 4px;gap:4px}
+.model-page.student-page:not(.teacher-mode) .model-heading h1{font-size:clamp(20px,3vh,30px);margin:0}
+.model-page.student-page:not(.teacher-mode) .model-heading p{font-size:clamp(12px,1.8vh,18px);margin:2px 0}
+.model-page.student-page:not(.teacher-mode) .model-topbar{min-height:36px;padding:2px 4px}
+.model-page.student-page:not(.teacher-mode) .anatomy-workspace{grid-template-columns:minmax(72px,19%) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;overflow:hidden}
+.model-page.student-page:not(.teacher-mode) .organ-shelf{min-height:0;padding:4px;overflow:hidden;gap:4px}
+.model-page.student-page:not(.teacher-mode) .organ-shelf h2{font-size:15px;margin:0}
+.model-page.student-page:not(.teacher-mode) .organ-palette{grid-template-columns:1fr;grid-auto-rows:minmax(0,1fr);gap:3px;overflow:hidden}
+.model-page.student-page:not(.teacher-mode) .palette-organ{min-height:0;gap:0;overflow:hidden}.model-page.student-page:not(.teacher-mode) .palette-organ img{height:min(6vh,64px);max-height:calc(100% - 18px);object-fit:contain}.model-page.student-page:not(.teacher-mode) .palette-organ span{font-size:clamp(12px,1.8vh,18px)}
+.model-page.student-page:not(.teacher-mode) .model-tools{grid-column:1/-1;flex-direction:row;flex-wrap:nowrap;min-height:0;padding:5px;gap:4px}.model-page.student-page:not(.teacher-mode) .model-tools .task-card{display:none}.model-page.student-page:not(.teacher-mode) .model-tools button{font-size:clamp(12px,1.7vh,18px);min-height:42px;padding:5px;min-width:0;flex:1}
+.model-page.student-page:not(.teacher-mode) .model-footer{flex-wrap:nowrap;min-height:50px;padding:5px;gap:5px}.model-page.student-page:not(.teacher-mode) .model-footer>div{min-width:0;flex:1}.model-page.student-page:not(.teacher-mode) .model-footer strong{font-size:14px}.model-page.student-page:not(.teacher-mode) .submit-model-button{font-size:clamp(13px,1.8vh,19px);min-height:42px;padding:7px;max-width:52%;flex:none}
+.model-page .organ-esophagus{z-index:2}.model-page .organ-lungs{z-index:1}.model-page .organ-trachea{z-index:3}
+.model-page.student-page:not(.teacher-mode) .saved-model-preview.student-model-compare{display:grid;grid-template-columns:1fr 1fr;gap:12px;width:min(94vw,75vh);max-height:65vh}.student-model-compare .mini-model{height:auto;aspect-ratio:2/3}.student-model-compare .mini-label{font-size:16px}
+.home-page .app-shell{height:100dvh;min-height:0;box-sizing:border-box;display:flex;flex-direction:column;padding:8px 14px;overflow:hidden}.home-page .hero{min-height:0;padding:10px 4px;flex:none}.home-page .hero-orbit{display:none}.home-page .hero h1{font-size:clamp(26px,4vh,46px)}.home-page .intro{font-size:clamp(14px,2vh,20px)}.home-page .section-heading{margin:6px 0}.home-page .module-grid{flex:1;min-height:0;grid-auto-rows:minmax(0,1fr);gap:8px}.home-page .module-card{min-height:0;padding:10px}.home-page .module-card h2{font-size:clamp(18px,2.8vh,26px)}.home-page .module-card p{font-size:14px;margin:4px 0}.home-page .module-icon{width:36px;height:36px;font-size:22px}.home-page .module-action{font-size:15px}
+.flow-page .flow-shell{height:100dvh;min-height:0;box-sizing:border-box;overflow:hidden;display:flex;flex-direction:column}.flow-page .assembly-layout{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}.assembly-photo{flex:1;min-height:0;display:flex;flex-direction:column}.assembly-photo .photo-frame{flex:1;min-height:0;aspect-ratio:auto}.assembly-side{flex:none;padding:8px;gap:5px}.assembly-side p{margin:2px}.assembly-side textarea{height:60px;min-height:0}.flow-page .flow-heading{margin:4px 0}.flow-page .flow-heading h1{font-size:clamp(21px,3vh,30px)}
+
+.model-page .placed-organ[data-organ=esophagus]{z-index:2}.model-page .placed-organ[data-organ=trachea]{z-index:3}.model-page .placed-organ[data-organ=lungs]{z-index:1}.placed-organ--trachea img{height:100%;width:100%;object-fit:contain}.mini-model>img.organ-trachea,.mini-model>img.organ-lungs,.mini-model>img.organ-nose{max-height:none}.mini-model>img.organ-trachea{z-index:3}.mini-model>img.organ-esophagus{z-index:2}
+
+.model-page.student-page:not(.teacher-mode) .transition-panel{width:100%;max-width:760px;min-width:0;box-sizing:border-box;margin:6px auto;padding:12px;overflow:hidden}.model-page.student-page:not(.teacher-mode) .transition-panel h1{font-size:clamp(23px,3.6vh,38px)}.model-page.student-page:not(.teacher-mode) .transition-panel p:not(.model-eyebrow){font-size:clamp(13px,2vh,18px);line-height:1.45}.model-page.student-page:not(.teacher-mode) .student-model-compare{width:100%!important;max-width:100%;gap:8px}.student-model-compare>div{min-width:0}
+.home-page .module-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:minmax(0,1fr)}.home-page .module-card{width:auto!important;max-width:none;box-sizing:border-box}.home-page .module-card .module-number{font-size:12px}
+.flow-page>main:not(.flow-shell){max-height:100dvh;box-sizing:border-box;font-size:clamp(15px,2.3vh,22px)!important;margin:8px auto!important;padding:12px!important}

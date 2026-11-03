@@ -1,0 +1,8 @@
+import {createConnectedOverlay} from './ar-connected.js';
+import {BodyTracker,mapOverlay} from './ar-tracking.js';
+export async function startSimulation({mount,select,onReady,onFrame}){
+ const view=await createConnectedOverlay(mount,select),tracker=new BodyTracker();let yaw=0,lean=0,turn=false;
+ const placeholder=document.querySelector('#camera-placeholder');placeholder.hidden=false;placeholder.innerHTML='<img src="assets/anatomy/body-outline.svg" alt="模拟人体轮廓，仅作布局参照" style="height:85%;width:90%;object-fit:contain;opacity:.3">';
+ function paint(now){requestAnimationFrame(paint);if(turn)yaw+=.005;const p=Array.from({length:33},()=>({x:.5,y:.2,z:0,visibility:.95}));const w=p.map(x=>({...x}));for(const [a,b,y,span]of [[11,12,.28,.17],[23,24,.72,.13]]){p[a]={x:.5+span*Math.cos(yaw),y,z:span*Math.sin(yaw),visibility:.9};p[b]={x:.5-span*Math.cos(yaw),y,z:-span*Math.sin(yaw),visibility:.9};w[a]={...p[a]};w[b]={...p[b]};}p[23].x+=lean;p[24].x+=lean;p[9].y=p[10].y=.12;const body=tracker.update(p,now,4/3,w);if(body){view.update(mapOverlay(body.esophagus,mount.clientWidth,mount.clientHeight,640,480));onFrame();}else view.update(null);}
+ window.addEventListener('message',e=>{if(e.origin!==location.origin)return;const d=e.data;if(d?.type==='ar-preview-pose'){yaw=d.yaw*Math.PI/180;lean=d.lean||0;turn=!!d.turn;tracker.reset();}if(d?.type==='ar-preview-select')select(d.id);if(d?.type==='ar-preview-colon'){window.__previewColonVariant=d.variant;select('large-intestine');}});window.arPreviewState=()=>view.getState();onReady(view);window.__arSimulationReady=true;window.parent.postMessage({type:'ar-preview-ready'},location.origin);requestAnimationFrame(paint);
+}

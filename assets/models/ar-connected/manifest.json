@@ -1,11 +1,12 @@
 {
   "mouth": {
-    "label": "口腔局部：牙列与软组织",
-    "source": "Human Reference Atlas mouth-male v1.0, Heidi Schlehlein",
+    "label": "牙列、牙龈和舌",
+    "source": "Human teeth, Alexander Antipov",
     "license": "CC BY 4.0",
-    "sourceUrl": "https://lod.humanatlas.io/ref-organ/mouth-male/v1.0/",
-    "changes": "selected dental and oral tissue meshes; uniform scale, reference registration and mesh simplification",
-    "bytes": 479404
+    "sourceUrl": "https://sketchfab.com/3d-models/human-teeth-c4c569f0e08948e2a572007a7a5726f2",
+    "path": "assets/models/ar-detail/mouth-antipov.glb",
+    "bytes": 6882392,
+    "changes": "Original mesh/UV/textures retained; legacy material converted for local GLB renderer; uniform registration to reference head. Not a complete oral cavity/head atlas."
   },
   "esophagus": {
     "label": "食管",
@@ -549,5 +550,11 @@
       ]
     ],
     "coordinateFrame": "shared; x=-sourceX, y=sourceZ-1120, z=sourceY-125; scale=.003"
+  },
+  "nasal-cavity": {
+    "label": "鼻腔与鼻咽参考结构",
+    "source": "Z-Anatomy / OrganUI nose-3d",
+    "license": "CC BY-SA 4.0",
+    "changes": "selected original anatomical nasal structures; excluded illustrative maxillary sinus; uniform registration to reference head"
   }
 }

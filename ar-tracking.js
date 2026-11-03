@@ -10,15 +10,20 @@ export class AdaptiveFilter {
     this.value+=alpha*(value-this.value);this.time=time;return this.value;
   }
 }
-export function fitBody(points,aspect=1){
+export function fitBody(points,aspect=1,worldPoints=null){
   const required=[11,12,23,24];
-  if(!points||required.some(i=>!points[i]||!Number.isFinite(points[i].x)||!Number.isFinite(points[i].y)||(points[i].visibility??0)<.65))return null;
+  if(!points||required.some(i=>!points[i]||!Number.isFinite(points[i].x)||!Number.isFinite(points[i].y)||(points[i].visibility??0)<.2))return null;
   points=points.map(p=>({...p,x:p.x*aspect}));
   const mid=(a,b)=>({x:(a.x+b.x)/2,y:(a.y+b.y)/2});
   const shoulder=mid(points[11],points[12]),hip=mid(points[23],points[24]);
   const dx=points[11].x-points[12].x,dy=points[11].y-points[12].y;
-  const yaw=clamp(Math.atan2(((points[11].z||0)-(points[12].z||0))*aspect,Math.abs(dx)),-1.15,1.15);
-  const width=Math.hypot(dx,dy)/Math.max(.45,Math.cos(yaw)),tx=hip.x-shoulder.x,ty=hip.y-shoulder.y,height=Math.hypot(tx,ty);
+  const source=worldPoints||points;
+  const depth=(source[11].z||0)-(source[12].z||0),horizontal=source[11].x-source[12].x;
+  const yaw=Math.atan2(depth*(worldPoints?1:aspect),horizontal);
+  const tx=hip.x-shoulder.x,ty=hip.y-shoulder.y,height=Math.hypot(tx,ty);
+  // Depth-aware shoulder span retains volume at profile; signed X retains the back view.
+  const span=Math.hypot(dx,dy,((points[11].z||0)-(points[12].z||0))*aspect);
+  const width=clamp(span,height*.4,height*1.5);
   if(width<.10*aspect||height<.14||width>height*1.8||width<height*.35||ty<.08)return null;
   // Person's left is landmark 11; it must not be inferred from screen X.
   const down={x:tx/height,y:ty/height};
@@ -39,11 +44,11 @@ export function mapOverlay(point,stageWidth,stageHeight,videoWidth,videoHeight){
 export class BodyTracker {
   constructor(){this.filters=new Map();}
   shift(dx,dy){for(const [key,filter]of this.filters){if(key.endsWith('x'))filter.value+=dx;else if(key.endsWith('y'))filter.value+=dy;}}
-  update(points,time,aspect=1){
-    const body=fitBody(points,aspect);if(!body)return null;
-    for(const [id,p] of Object.entries(body))for(const axis of ['x','y','w','h','angle']){
+  update(points,time,aspect=1,worldPoints=null){
+    const body=fitBody(points,aspect,worldPoints);if(!body)return null;
+    for(const [id,p] of Object.entries(body))for(const axis of ['x','y','w','h','angle','yaw']){
       const key=id+axis;if(!this.filters.has(key))this.filters.set(key,new AdaptiveFilter());
-      p[axis]=this.filters.get(key).update(p[axis],time);
+      const f=this.filters.get(key);const value=(axis==='yaw'&&f.value!==null)?f.value+Math.atan2(Math.sin(p[axis]-f.value),Math.cos(p[axis]-f.value)):p[axis];p[axis]=f.update(value,time);
     }
     return body;
   }

@@ -4,6 +4,7 @@ const fromIndex=process.argv.includes('--git-index'),cp=require('node:child_proc
 const content=p=>fromIndex?cp.execFileSync('git',['show',':'+path.relative(root,p).split(path.sep).join('/')],{cwd:root,maxBuffer:64*1024*1024}):fs.readFileSync(p);
 // Excluded from classroom prefetch only. Keep originals and all active teaching assets.
 const excluded=new Set([
+ 'assets/models/ar-connected/mouth.glb','assets/models/ar-detail/mouth.glb',
  'assets/models/journey/mouth-hra.glb','assets/models/journey/pharynx-bp3d.glb',
  'assets/models/stomach.glb','assets/models/intestines.glb',
  'assets/anatomy/body-outline-generated.png','assets/journey/digestive-system-niddk.jpg'

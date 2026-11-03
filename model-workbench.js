@@ -6,6 +6,8 @@ const organs = [
   { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.webp", width: 23.5 },
 ];
 
+const revisionOnlyIds=new Set(['trachea','lungs','liver','pancreas']);
+organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-atlas.png',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-atlas.png',width:25},{id:'pancreas',name:'胰',image:'assets/organs/pancreas-atlas.png',width:18});
 const CLOUD_ENV = "motionless-harrier-d7cuz0659ef1a";
 const CLOUD_COLLECTION = "food-journey-groups";
 const LOCAL_CLEAR_SIGNAL_KEY = "foodJourneyClassLocalClear";
@@ -53,6 +55,7 @@ let lessonExtras = {};
 function createModel() {
   return {
     startedAt: Date.now(),
+    structureColor:"#f4a329",
     visualStyle: Object.fromEntries(organs.map(o => [o.id, {width:o.width, height:o.height, angle:o.angle || 0}])),
     completedAt: null,
     positions: {},
@@ -99,7 +102,7 @@ function createOrganButton(organ, placed = false) {
   button.type = "button";
   button.className = placed ? "placed-organ" : "palette-organ";
   button.dataset.organ = organ.id;
-  const label=phase === "v1" && organ.id === "large-intestine" ? "" : organ.name;
+  const label=phase === "v1" && organ.id === "large-intestine" ? "" : phase === "v2" && organ.id === "trachea" ? "气管（前）" : phase === "v2" && organ.id === "esophagus" ? "食管（后）" : organ.name;
   button.setAttribute("aria-label", label || "未命名器官");
   button.innerHTML = `<img src="${organ.image}" alt="" draggable="false"><span>${label}</span>`;
   button.addEventListener("pointerdown", beginOrganDrag);
@@ -107,7 +110,7 @@ function createOrganButton(organ, placed = false) {
 }
 
 function renderPalette() {
-  palette.replaceChildren(...organs.filter(o => phase !== "v1" || o.id !== "esophagus").map(o=>createOrganButton(o)));
+  palette.replaceChildren(...organs.filter(o => phase !== "v1" || (o.id !== "esophagus" && !revisionOnlyIds.has(o.id))).map(o=>createOrganButton(o)));
   for (const button of palette.children) button.hidden = Boolean(activeModel().positions[button.dataset.organ]);
 }
 
@@ -141,7 +144,7 @@ function render() {
   placementCount.textContent = `${count} 个`;
   document.querySelector("#organ-size-controls").hidden = !selectedOrgan || !activeModel().positions[selectedOrgan] || drawMode;
   drawButton.disabled = false;
-  taskHint.textContent = phase === "v1" ? "按我们的想法摆放，也可以补画。" : "根据观察修正，并补画鼻腔、气管和肺。";
+  taskHint.textContent = phase === "v1" ? "按我们的想法摆放，也可以补画。" : "重新摆放消化和呼吸器官，再画出食物路线。";
   const order = [];
   routeSummary.textContent = order.length ? `你的路线：${order.join(" → ")}` : "等待画路线";
 }
@@ -239,7 +242,7 @@ function drawRoute() {
   context.stroke();
   context.shadowBlur = 0;
   };
-  for(const stroke of activeModel().structureStrokes || []) paint(stroke,"#2878cf");
+  for(const stroke of activeModel().structureStrokes || []) paint(stroke,activeModel().structureColor || "#2878cf");
   paint(points,"#17824d");
 }
 
@@ -252,7 +255,7 @@ function setDrawMode(enabled) {
   drawButton.textContent = drawMode && drawingKind === "route" ? "✓ 结束画路线" : "✎ 画食物路线";
   document.querySelector("#structure-button").textContent = drawMode && drawingKind === "structure" ? "✓ 结束补画" : "✎ 补画结构";
   drawTip.hidden = !drawMode;
-  drawTip.textContent=drawingKind === "structure" ? "蓝色：补画结构" : "绿色：食物路线";
+  drawTip.textContent=drawingKind === "structure" ? "橘黄色：补画器官" : "绿色：食物路线";
   document.querySelector("#structure-button").classList.toggle("is-active",drawMode && drawingKind === "structure");
   document.querySelector("#structure-button").setAttribute("aria-pressed",String(drawMode && drawingKind === "structure"));
   requestAnimationFrame(resizeCanvas);
@@ -503,14 +506,24 @@ function showSavedTransition(record) {
     return;
   }
   const changed = compareModels(record.v1, record.v2);
-  transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已提交</p><h1>模型修正已提交</h1><p>调整了 ${changed.organs.length} 个器官。${record.pendingSync ? "暂未传给老师。" : ""}</p><div class="saved-model-preview">${miniModel(record.v2, "已保存模型")}</div><div class="transition-actions"><a class="submit-model-button" href="assembly.html?group=${groupId}">去拼装 →</a></div>`;
+  transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已提交</p><h1>模型修正已提交</h1><p>对比观察前后的摆放与食物路线。${record.pendingSync ? "暂未传给老师。" : ""}</p><div class="saved-model-preview student-model-compare">${miniModel(record.v1, "观察前模型")}${miniModel(record.v2, "观察后模型")}</div><div class="transition-actions"><a class="submit-model-button" href="assembly.html?group=${groupId}">去拼装 →</a></div>`;
 }
 
 function applyRevisionView() {
   phase = "v2";
+  if(v2 && !v2.completedAt && v2.revisionVersion!==2){v2=createModel();v2.revisionVersion=2;}
+  document.body.classList.add('revision-model');
+  if(!document.querySelector('#airway-reference-button')){
+    const button=document.createElement('button');button.id='airway-reference-button';button.type='button';button.textContent='看前后关系';
+    const dialog=document.createElement('dialog');dialog.id='airway-reference';dialog.innerHTML='<button type="button">关闭</button><p>侧面剖视：气管在前，食管在后。</p><img src="assets/organs/upper-airway-openstax.jpg" alt="OpenStax上呼吸道侧面剖面，包含鼻腔、口腔、咽、气管与食管"><small>OpenStax College · CC BY 3.0 · 原始教材插图</small>';
+    dialog.querySelector('button').onclick=()=>dialog.close();document.body.append(dialog);button.onclick=()=>dialog.showModal();document.querySelector('.organ-shelf').prepend(button);
+  }
+  document.querySelector('#model-prompt').setAttribute('title','气管位于食管前方；重叠时气管显示在前。');
+  document.querySelector('#structure-button').hidden=true;
+  drawingKind='route';setDrawMode(false);
   document.querySelector("#phase-label").textContent = "V2 · 证据修正";
   document.querySelector("#model-title").textContent = "我们修正";
-  document.querySelector("#model-prompt").textContent = "根据观察修正，并补画鼻腔、气管和肺。";
+  document.querySelector("#model-prompt").textContent = "重新摆放消化和呼吸器官，再画出食物路线。";
   document.querySelector("#phase-v1").classList.remove("active");
   document.querySelector("#phase-v1").classList.add("done");
   document.querySelector("#phase-v2").classList.add("active");
@@ -538,13 +551,8 @@ async function submitModel() {
 
 function startRevision() {
   if (!v2) {
-    v2 = clone(v1);
-    v2.visualStyle ||= Object.fromEntries(organs.map(o => [o.id, appearanceFor(o,v1)]));
-    v2.startedAt = Date.now();
-    v2.completedAt = null;
-    v2.moves = [];
-    v2.modificationCount = 0;
-    v2.routeAttempts = [];
+    v2 = createModel();
+    v2.revisionVersion=2;
   }
   applyRevisionView();
   history = [];
@@ -582,7 +590,7 @@ function miniModel(model, label, options = {}) {
   }).join("");
   const interactive = Number.isInteger(options.groupId);
   const attributes = interactive ? ` data-group-id="${options.groupId}" data-model-phase="${options.phase}" role="button" tabindex="0" aria-label="放大第 ${options.groupId} 组${label}"` : "";
-  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.webp?v=20261022-7" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}" style="stroke:#17824d"/>${(model.structureStrokes || []).map(stroke => `<polyline points="${stroke.map(p=>`${p.x},${p.y}`).join(" ")}" style="stroke:#2878cf"/>`).join("")}</svg>${pieces}</div></div>`;
+  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.webp?v=20261022-7" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}" style="stroke:#17824d"/>${(model.structureStrokes || []).map(stroke => `<polyline points="${stroke.map(p=>`${p.x},${p.y}`).join(" ")}" style="stroke:${model.structureColor || '#2878cf'}"/>`).join("")}</svg>${pieces}</div></div>`;
 }
 
 function latestRecord(records, id) {
@@ -791,6 +799,7 @@ async function initialize() {
     lessonExtras = { observation: savedRecord.observation || null, assembly: savedRecord.assembly || null, journey: savedRecord.journey || null };
     sessionId = savedRecord.id;
     v1 = savedRecord.v1 ? clone(savedRecord.v1) : createModel();
+    if(!v1.completedAt)v1.structureColor="#f4a329";
     v2 = savedRecord.v2 ? clone(savedRecord.v2) : null;
     if (v2) applyRevisionView();
     pendingSubmissionSync = Boolean(savedRecord.pendingSync && (savedRecord.v1?.completedAt || savedRecord.v2?.completedAt));

@@ -1,0 +1,162 @@
+{
+  "license": "CC BY-SA 4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+  "sources": [
+    {
+      "id": "5796461926001",
+      "title": "Innånding og utånding",
+      "authors": [
+        "Amendor AS"
+      ],
+      "editor": "Tone Pedersen Rangul",
+      "sourcePage": "https://ndla.no/nn/r/biologi-1/pusting-og-regulering-av-pustebevegelser/0b054fe679",
+      "sourceSha256": "8f23a4c473b1cbaa3a03445a0506a20cb2bd3341a8a90441b8b98ebbdc8f1048"
+    },
+    {
+      "id": "5796250047001",
+      "title": "Respirasjonsorganene",
+      "authors": [
+        "Marit Smith Sørhøy",
+        "Milestep",
+        "Trine Merethe Paulsen"
+      ],
+      "sourcePage": "https://ndla.no/en/r/helsefremmende-arbeid-hs-hea-vg2/utforsk-kols/981fab535e",
+      "sourceSha256": "04666c79a19158c243a2663bbfe652233c8e75a8a75881683a44cdcda05e0509"
+    }
+  ],
+  "adaptations": [
+    {
+      "id": "upper-airway",
+      "source": "5796461926001",
+      "start": 0,
+      "end": 12,
+      "filter": "crop=300:250:630:15,scale=864:720",
+      "size": [
+        864,
+        792
+      ],
+      "cues": [
+        [
+          0,
+          4,
+          "空气可以经鼻腔进入呼吸道"
+        ],
+        [
+          4,
+          8,
+          "观察箭头的流动方向"
+        ],
+        [
+          8,
+          12,
+          "吸气与呼气，空气流向相反"
+        ]
+      ]
+    },
+    {
+      "id": "trachea",
+      "source": "5796250047001",
+      "start": 20.72,
+      "end": 34.72,
+      "filter": "scale=960:540",
+      "size": [
+        960,
+        612
+      ],
+      "cues": [
+        [
+          0,
+          3,
+          "空气沿气管向下流动"
+        ],
+        [
+          3,
+          5.8,
+          "经支气管进入左右两肺"
+        ],
+        [
+          5.8,
+          9.6,
+          "呼吸道表面的纤毛不停摆动"
+        ],
+        [
+          9.6,
+          14,
+          "帮助把黏液和污物向外运送"
+        ]
+      ]
+    },
+    {
+      "id": "breathing",
+      "source": "5796250047001",
+      "start": 36.32,
+      "end": 48.8,
+      "filter": "scale=960:540",
+      "size": [
+        960,
+        612
+      ],
+      "cues": [
+        [
+          0,
+          2.7,
+          "肋间肌和膈参与呼吸运动"
+        ],
+        [
+          2.7,
+          5.4,
+          "使胸腔的大小发生变化"
+        ],
+        [
+          5.4,
+          8.9,
+          "胸腔扩大时吸气"
+        ],
+        [
+          8.9,
+          12.48,
+          "胸腔缩小时呼气"
+        ]
+      ]
+    },
+    {
+      "id": "gas-exchange",
+      "source": "5796250047001",
+      "start": 57.92,
+      "end": 78,
+      "filter": "scale=960:540",
+      "size": [
+        960,
+        612
+      ],
+      "cues": [
+        [
+          0,
+          3.4,
+          "肺泡是肺里的小气囊"
+        ],
+        [
+          3.4,
+          7,
+          "周围分布着毛细血管"
+        ],
+        [
+          7,
+          12.4,
+          "氧气从肺泡进入血液"
+        ],
+        [
+          12.4,
+          16.2,
+          "二氧化碳从血液进入肺泡"
+        ],
+        [
+          16.2,
+          20.08,
+          "再随呼气排出体外"
+        ]
+      ]
+    }
+  ],
+  "changes": "Selected healthy anatomy sequences only; cropped the original head section for upper-airway; removed Norwegian audio; added original concise Chinese classroom explanations (not a verbatim translation); H.264, faststart, derived poster images. All derivative video/posters/captions remain CC BY-SA 4.0. Chinese explanations revised to timed single-line cues, larger type, in a 72-pixel band above the animation."
+}

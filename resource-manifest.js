@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-8899f6fd8042f35f",
-  "bytes": 59835885,
+  "version": "20261102-chunks-7e2aa68817cd9930",
+  "bytes": 74200071,
   "files": [
     {
       "path": "app.js",
@@ -9,13 +9,18 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-connected.js",
-      "bytes": 4339,
-      "hash": "3eb7a3463609fc53486d6b594fef785aee8771c08b07426852534d0bf2f6fbe3"
+      "bytes": 5025,
+      "hash": "13c65d7f9dbea0997b9c33c8b85d059fff9266ca861303f8c07685fa484e5c95"
     },
     {
       "path": "ar-entry.js",
-      "bytes": 860,
-      "hash": "0b8006f8937be2bce7a7bb4487ab47482b47580fc0d45c3c8f3e4c5765faa53d"
+      "bytes": 864,
+      "hash": "ceb4042edc94dfe74422bd8eb8597ab9aab74fc28be19640da2b54a847f3b691"
+    },
+    {
+      "path": "ar-media-segments.js",
+      "bytes": 3924,
+      "hash": "4fda43baa15deef435172d76ce91f1b89c38f0a13ae1b455874f164a46a6c49f"
     },
     {
       "path": "ar-motion.js",
@@ -24,18 +29,18 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-observation.css",
-      "bytes": 9078,
-      "hash": "21351bff2c59231458d45747a61e9cfd9ac86795899364c7644e5d6f05bed85e"
+      "bytes": 13950,
+      "hash": "d267646d3e8a541ea1eb081aca7e582febbc0a55dc0aeaa00ae4876ea3e7e9e8"
     },
     {
       "path": "ar-organ-viewer.js",
-      "bytes": 3567,
-      "hash": "c13876fc5de091eedb6c67705d8c5a4e8e9a8e7d4b97a69e8394f6262edc20e5"
+      "bytes": 3872,
+      "hash": "b17e1052e1696c8f05d5f6ec86e69352707c604bd84d45754a8ab6d733a61bfd"
     },
     {
       "path": "ar-pose-worker.js",
-      "bytes": 2376,
-      "hash": "c60c6c421a4afd8abb0ebdb96c1fe37979a08c15b56d804468fe1b088e595ac3"
+      "bytes": 2421,
+      "hash": "5c53a449866276d5074336adff2014a554e73511cb292e8a9dc3256ec43ac1d8"
     },
     {
       "path": "ar-prepare.html",
@@ -53,19 +58,24 @@ self.LESSON_RESOURCES = {
       "hash": "3f5a994f6ce476e966194b9054a3e9b31063ba24909ad7f13c853168f8ff865b"
     },
     {
+      "path": "ar-simulation.js",
+      "bytes": 1696,
+      "hash": "d00b8a4fffbeef625effec37f556862fde892bb26229de26af899c120adf1e45"
+    },
+    {
       "path": "ar-sources.html",
-      "bytes": 3518,
-      "hash": "5e2405835662b9dc7fa2483a8a5d0922365942cbbda9142f6852b424bace165c"
+      "bytes": 4424,
+      "hash": "4d6c82381e6a6d7b7bab0949f692e4237f286096fe72e80b452bb4c12c3b7c1e"
     },
     {
       "path": "ar-tracking.js",
-      "bytes": 3198,
-      "hash": "fc8f12377b4dc8a9494bbae98fe2821a5387f793b47e1567e8113ff8a4b96c9a"
+      "bytes": 3631,
+      "hash": "0ca06ff51afc69b5cec2fc63c29095f9696fbdf688f102aafd3e4ccf00f64f88"
     },
     {
       "path": "assembly.html",
-      "bytes": 1890,
-      "hash": "b4349b5cae1c043a3534be84bdb8dbbf65071527f8350433f57924184f00818e"
+      "bytes": 1908,
+      "hash": "ba75e6545df6fd5ca9b64b5fa12b835cd8ce7bb12a3408cd8a743a93ba8b2621"
     },
     {
       "path": "assembly.js",
@@ -86,6 +96,175 @@ self.LESSON_RESOURCES = {
       "path": "assets/ar-media/enzyme-digestion.mp4",
       "bytes": 228788,
       "hash": "c341165ea2b373b499eb9da0a34992e289524f1bcd72d15a927b4350c5eb8422"
+    },
+    {
+      "path": "assets/ar-media/local-review/README.md",
+      "bytes": 654,
+      "hash": "d964dee248fa596d09705d6cba649be0e097fc1c3df2122ebb9b997005d56d4c"
+    },
+    {
+      "path": "assets/ar-media/local-review/esophagus.jpg",
+      "bytes": 31814,
+      "hash": "2d3bd4c100467829bed410dd4ef704576571eab0773625b077029107f12619db"
+    },
+    {
+      "path": "assets/ar-media/local-review/esophagus.mp4",
+      "bytes": 851317,
+      "hash": "a1577a7332c46c3f524d2451f63ff0896f092b58d32dd7870011e96c74aa8f72"
+    },
+    {
+      "path": "assets/ar-media/local-review/gallbladder.jpg",
+      "bytes": 38389,
+      "hash": "fb2033b4710a609bba6d85aa9b2dd59f499d93d417b828375ea4f7fa09695831"
+    },
+    {
+      "path": "assets/ar-media/local-review/gallbladder.mp4",
+      "bytes": 678128,
+      "hash": "2bd991b7c93d5863734aa40f34563109ce3215d05f46fc1eff00e483a2334113"
+    },
+    {
+      "path": "assets/ar-media/local-review/large-intestine.jpg",
+      "bytes": 33689,
+      "hash": "2c174ba39c03ed9a1fdf090c8f06eef16824cfcbecb892b0b7438d70994d7199"
+    },
+    {
+      "path": "assets/ar-media/local-review/large-intestine.mp4",
+      "bytes": 1279010,
+      "hash": "5825a4c3955d91b85b25868915163665861a1d7e62217e6739545646be76fe19",
+      "chunks": [
+        {
+          "path": "resource-chunks/893a0eb7158b098928b3711cb3d8d45e2a651b0fbcce6f75ea185c57ceb616d5.bin",
+          "bytes": 524288,
+          "hash": "893a0eb7158b098928b3711cb3d8d45e2a651b0fbcce6f75ea185c57ceb616d5"
+        },
+        {
+          "path": "resource-chunks/b1987194520041a7c18fe502b3a960949042cf4e1055b8e78d256707ff638395.bin",
+          "bytes": 524288,
+          "hash": "b1987194520041a7c18fe502b3a960949042cf4e1055b8e78d256707ff638395"
+        },
+        {
+          "path": "resource-chunks/0128c1ee9dcbf54e6fd356b38e1552b3a1cd441a919ab976f0bfe3a7aff67e49.bin",
+          "bytes": 230434,
+          "hash": "0128c1ee9dcbf54e6fd356b38e1552b3a1cd441a919ab976f0bfe3a7aff67e49"
+        }
+      ]
+    },
+    {
+      "path": "assets/ar-media/local-review/liver.jpg",
+      "bytes": 36905,
+      "hash": "9637418c6bfd74044ce3b7645a45c8ab1764d149f5b69850f4c1c3369d213b19"
+    },
+    {
+      "path": "assets/ar-media/local-review/liver.mp4",
+      "bytes": 513098,
+      "hash": "f5a7c1a20b636e72a93884dff241def0ef9252a547e88bda1ea8fc2bc4404433"
+    },
+    {
+      "path": "assets/ar-media/local-review/mouth.jpg",
+      "bytes": 22167,
+      "hash": "2f311c10cfa94581726b4ffc5275a4bd6c8f1d9c407ff84c0980feb7749608af"
+    },
+    {
+      "path": "assets/ar-media/local-review/mouth.mp4",
+      "bytes": 760029,
+      "hash": "23423232184426a45d2a8b5f7b07c3fc0b05d2d43e7a472ff7540778f8f97b15"
+    },
+    {
+      "path": "assets/ar-media/local-review/pancreas.jpg",
+      "bytes": 31760,
+      "hash": "ffd98f1383af011d1daf49f0f07ddc0be69e510c4c90fa8e5d8e91943ba8bcbe"
+    },
+    {
+      "path": "assets/ar-media/local-review/pancreas.mp4",
+      "bytes": 682796,
+      "hash": "100f05f41c258ea9441949fe05fa25b336d05ce4b452ecca0d86fbd7fd8e7a78"
+    },
+    {
+      "path": "assets/ar-media/local-review/small-intestine.jpg",
+      "bytes": 29604,
+      "hash": "780a959c14959e702d12c2bffc155d5eeca8975d1a4c3f87aff4474005c5232b"
+    },
+    {
+      "path": "assets/ar-media/local-review/small-intestine.mp4",
+      "bytes": 923323,
+      "hash": "0c51bf212a8e0b8c5025f6cd38239192f6809896af4abde8c6422663af2bc6a8"
+    },
+    {
+      "path": "assets/ar-media/local-review/stomach.jpg",
+      "bytes": 39790,
+      "hash": "a40e41475e82a4eda071a795d7fcabff241880d88ddaa0d84b22883e0a82b1d0"
+    },
+    {
+      "path": "assets/ar-media/local-review/stomach.mp4",
+      "bytes": 883331,
+      "hash": "1ea0df480fcdde65871f1ba2976e9f1f73cc95219d0cc62aad5bc5d2268501f8"
+    },
+    {
+      "path": "assets/ar-media/respiratory/ATTRIBUTION.json",
+      "bytes": 3685,
+      "hash": "553b8d34cf5d134003f11c9be60567c88edf0084d852c70a5e422acb20748162"
+    },
+    {
+      "path": "assets/ar-media/respiratory/ATTRIBUTION.md",
+      "bytes": 1644,
+      "hash": "1714305fa797c0a756ebf06e9dd4cbd871aaa8e27ec63aa16918b7e8aa207086"
+    },
+    {
+      "path": "assets/ar-media/respiratory/breathing.jpg",
+      "bytes": 30778,
+      "hash": "17cda0898dbb9fe449f5a279b9fc115f521fbcbf3dcadc163b91f8d834409223"
+    },
+    {
+      "path": "assets/ar-media/respiratory/breathing.mp4",
+      "bytes": 344281,
+      "hash": "fe2bccd9ba9a1f766682955a8123ded4f75379281a92ab12906ff6a110b9e9d3"
+    },
+    {
+      "path": "assets/ar-media/respiratory/gas-exchange.jpg",
+      "bytes": 26036,
+      "hash": "5aac1cd3df0454aab839dce6585211357a9242b3a48f428f3c3b068400d7b789"
+    },
+    {
+      "path": "assets/ar-media/respiratory/gas-exchange.mp4",
+      "bytes": 1263336,
+      "hash": "e18a704394bc613fec4b94d580fdf771d60f485825917d5ed4753b436d98321f",
+      "chunks": [
+        {
+          "path": "resource-chunks/57f704c7f6db20b057a92b3e8af9e1b66f9f00456dfcda730ea14bd5185a9afe.bin",
+          "bytes": 524288,
+          "hash": "57f704c7f6db20b057a92b3e8af9e1b66f9f00456dfcda730ea14bd5185a9afe"
+        },
+        {
+          "path": "resource-chunks/e3fada127b24ceb63cfd646a72c844f91246b8a047ac50d7acfde80106d70d6f.bin",
+          "bytes": 524288,
+          "hash": "e3fada127b24ceb63cfd646a72c844f91246b8a047ac50d7acfde80106d70d6f"
+        },
+        {
+          "path": "resource-chunks/1c1c0dc90ef33d04bebe1dd462f689c6cfc872598a13332a9bad2a3ea011c934.bin",
+          "bytes": 214760,
+          "hash": "1c1c0dc90ef33d04bebe1dd462f689c6cfc872598a13332a9bad2a3ea011c934"
+        }
+      ]
+    },
+    {
+      "path": "assets/ar-media/respiratory/trachea.jpg",
+      "bytes": 28994,
+      "hash": "5a3a8284cd35b4b19d5919bbb31f4cc5396af5c419c88cbc12cd72a0372a51ee"
+    },
+    {
+      "path": "assets/ar-media/respiratory/trachea.mp4",
+      "bytes": 688007,
+      "hash": "d90ab753264f35513ec792702c17f58b9b8ba7dbde5a3d30b57fba9bbd1883f8"
+    },
+    {
+      "path": "assets/ar-media/respiratory/upper-airway.jpg",
+      "bytes": 28575,
+      "hash": "b1205bfa9e7cdc85db4f4f3400c893924acf9ef44c467379d5a4c7c5fa510497"
+    },
+    {
+      "path": "assets/ar-media/respiratory/upper-airway.mp4",
+      "bytes": 389998,
+      "hash": "7516e103f94033d75642529649982c1bbb97316aa76e02b823ebb7c2814f45ff"
     },
     {
       "path": "assets/ar-media/stomach-wall.mp4",
@@ -306,6 +485,11 @@ self.LESSON_RESOURCES = {
       "hash": "ba84faa0bb3ea0a58ba305043b792c0e7943e6450ae829ded7e6c0c8cd1af56d"
     },
     {
+      "path": "assets/models/ar-connected/ATTRIBUTION-NASAL.md",
+      "bytes": 611,
+      "hash": "43b4b62f8c016931ef2db0aaeeb82bf9f44ea6ee44ba7d8c7790696d5ed551c3"
+    },
+    {
       "path": "assets/models/ar-connected/bladder.glb",
       "bytes": 5608,
       "hash": "f5b27011d75413c4f7752b557d5ec4eb83652a4cd5f0bca619b7164b9c6299f3"
@@ -347,13 +531,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "assets/models/ar-connected/manifest.json",
-      "bytes": 10845,
-      "hash": "5faba03a4e1e794042b3e6cd3e62ae3f96bc07eacb66da88bb140619d1559c02"
+      "bytes": 11241,
+      "hash": "28ff7bc580f84418235615c1f0cdc695ae8f9efa3664076f095eb7552b66b740"
     },
     {
-      "path": "assets/models/ar-connected/mouth.glb",
-      "bytes": 479404,
-      "hash": "e6710eb4f4e25c174edfc76976c6f2d5863795910bc01369aeca0e94b6e9a0cb"
+      "path": "assets/models/ar-connected/nasal-cavity.glb",
+      "bytes": 259128,
+      "hash": "f370ec003583186047e435e60d2eacdac29a0fb3287b566162642b4beea25dac"
     },
     {
       "path": "assets/models/ar-connected/pancreas.glb",
@@ -396,6 +580,11 @@ self.LESSON_RESOURCES = {
       "hash": "114cb57ffa97aa8ac66998f1a47a10e7203e93536bcc3534c30babde425846ee"
     },
     {
+      "path": "assets/models/ar-detail/ATTRIBUTION-MOUTH-ANTIPOV.md",
+      "bytes": 1095,
+      "hash": "edd02090a1f2dd2e0d4a2aa740f88ed6f5e44f96bd494e5d7c97b52ee818459b"
+    },
+    {
       "path": "assets/models/ar-detail/ATTRIBUTION.md",
       "bytes": 837,
       "hash": "5f4df02dcb44a3a2440a4125339ae2f49e71e7a583373d0edc308ae1182cd70f"
@@ -433,49 +622,79 @@ self.LESSON_RESOURCES = {
       ]
     },
     {
-      "path": "assets/models/ar-detail/mouth.glb",
-      "bytes": 4104548,
-      "hash": "3aa4f05d7b3c56f2ea8dfd773f881976c97730b71b9756a4c8c6ccf0c1651222",
+      "path": "assets/models/ar-detail/mouth-antipov.glb",
+      "bytes": 6882392,
+      "hash": "6e87630a6cb3c330f44f44913bb5eb2bb54d50b955d074907661dec2db038d81",
       "chunks": [
         {
-          "path": "resource-chunks/779bdd7a252677d186a2ce2e2d9fc24ec794c4dccfc023418978410e3a4a588c.bin",
+          "path": "resource-chunks/1070a26e8b02807a16040566aa437400f42cb8dee93d7ca83aeca68bfe12fd16.bin",
           "bytes": 524288,
-          "hash": "779bdd7a252677d186a2ce2e2d9fc24ec794c4dccfc023418978410e3a4a588c"
+          "hash": "1070a26e8b02807a16040566aa437400f42cb8dee93d7ca83aeca68bfe12fd16"
         },
         {
-          "path": "resource-chunks/7d92bb7677e9265ac14ba9e65bc8c04d008b61a35c13e433cf892389f3b63479.bin",
+          "path": "resource-chunks/6cc3f12db6721bf64d0d55532037950eece449207cbe17c03cfd6e6ce329d0be.bin",
           "bytes": 524288,
-          "hash": "7d92bb7677e9265ac14ba9e65bc8c04d008b61a35c13e433cf892389f3b63479"
+          "hash": "6cc3f12db6721bf64d0d55532037950eece449207cbe17c03cfd6e6ce329d0be"
         },
         {
-          "path": "resource-chunks/e9960c198916379701dd09c19cac48f32fcc9259a1af04dd2adf663bed83fbdc.bin",
+          "path": "resource-chunks/91c13148e40f4de149185af673a4a8f25a380a9a18b8979c8e896a3968e39baa.bin",
           "bytes": 524288,
-          "hash": "e9960c198916379701dd09c19cac48f32fcc9259a1af04dd2adf663bed83fbdc"
+          "hash": "91c13148e40f4de149185af673a4a8f25a380a9a18b8979c8e896a3968e39baa"
         },
         {
-          "path": "resource-chunks/8f16a8bac7d1634e22d6827a8e1514c6b4310c88dc84535293bdae465933df9b.bin",
+          "path": "resource-chunks/a52c8db12d8b32205ee1a87c93e0730d8443da9c8f91b8108c265d3c3e3e43c9.bin",
           "bytes": 524288,
-          "hash": "8f16a8bac7d1634e22d6827a8e1514c6b4310c88dc84535293bdae465933df9b"
+          "hash": "a52c8db12d8b32205ee1a87c93e0730d8443da9c8f91b8108c265d3c3e3e43c9"
         },
         {
-          "path": "resource-chunks/c760668ef676578b3808818bac60147c776c881815c9d077b22cb4e432759068.bin",
+          "path": "resource-chunks/93c0e39fd7a93c380b80516289d003a6e5773b3bf41b60d8040503746d0ae313.bin",
           "bytes": 524288,
-          "hash": "c760668ef676578b3808818bac60147c776c881815c9d077b22cb4e432759068"
+          "hash": "93c0e39fd7a93c380b80516289d003a6e5773b3bf41b60d8040503746d0ae313"
         },
         {
-          "path": "resource-chunks/1371d1f7750c63301ea5358d3afb6e3edfab719b7a9e4d99c6ed3d73590ea11e.bin",
+          "path": "resource-chunks/f763a3e1e09136928545910ab24d26ee83a7855c60b8d34149caa7d1f6d4f677.bin",
           "bytes": 524288,
-          "hash": "1371d1f7750c63301ea5358d3afb6e3edfab719b7a9e4d99c6ed3d73590ea11e"
+          "hash": "f763a3e1e09136928545910ab24d26ee83a7855c60b8d34149caa7d1f6d4f677"
         },
         {
-          "path": "resource-chunks/729cd55e70731291cc0db287e37c406a32d2a7a990ca9abe1a11403bdc4692c6.bin",
+          "path": "resource-chunks/f6a66d4d0447831ce2665a4f44e5b25e1ad335978138528e9cc0e1be494129ab.bin",
           "bytes": 524288,
-          "hash": "729cd55e70731291cc0db287e37c406a32d2a7a990ca9abe1a11403bdc4692c6"
+          "hash": "f6a66d4d0447831ce2665a4f44e5b25e1ad335978138528e9cc0e1be494129ab"
         },
         {
-          "path": "resource-chunks/78646e0cecfd5b262739365d24523e1c732e8b2b35eb77c6be01f624f0b8c979.bin",
-          "bytes": 434532,
-          "hash": "78646e0cecfd5b262739365d24523e1c732e8b2b35eb77c6be01f624f0b8c979"
+          "path": "resource-chunks/a7663b157a8223887e79f0ce84d198e081fbfa8144d64e0825c4bed4e8714d0e.bin",
+          "bytes": 524288,
+          "hash": "a7663b157a8223887e79f0ce84d198e081fbfa8144d64e0825c4bed4e8714d0e"
+        },
+        {
+          "path": "resource-chunks/9d6e0b4a3d5e514f47b77a21e51b6409d71f1db586dd96c414ed717075ec6f1e.bin",
+          "bytes": 524288,
+          "hash": "9d6e0b4a3d5e514f47b77a21e51b6409d71f1db586dd96c414ed717075ec6f1e"
+        },
+        {
+          "path": "resource-chunks/5ce4030d41a0ba2ec20a47a8a1d10e5cf905a010bde9cc68ac24c8b93bdf9916.bin",
+          "bytes": 524288,
+          "hash": "5ce4030d41a0ba2ec20a47a8a1d10e5cf905a010bde9cc68ac24c8b93bdf9916"
+        },
+        {
+          "path": "resource-chunks/7d528a09c0deea0bf7977a3526469680a94b0bdd0ffa2b47f8a1062151b4fc80.bin",
+          "bytes": 524288,
+          "hash": "7d528a09c0deea0bf7977a3526469680a94b0bdd0ffa2b47f8a1062151b4fc80"
+        },
+        {
+          "path": "resource-chunks/93efa3f3529b03985d699f03b4d01bf8a5014e9d30450f3eec8fa8c6f951fda3.bin",
+          "bytes": 524288,
+          "hash": "93efa3f3529b03985d699f03b4d01bf8a5014e9d30450f3eec8fa8c6f951fda3"
+        },
+        {
+          "path": "resource-chunks/5059ef76ede5c582c1b704210c44436624a8d58cc265c54a09d7558880f5c196.bin",
+          "bytes": 524288,
+          "hash": "5059ef76ede5c582c1b704210c44436624a8d58cc265c54a09d7558880f5c196"
+        },
+        {
+          "path": "resource-chunks/fca9d92b1746e7f14887bb062240890f2f7867313da2b8671258388d8977c603.bin",
+          "bytes": 66648,
+          "hash": "fca9d92b1746e7f14887bb062240890f2f7867313da2b8671258388d8977c603"
         }
       ]
     },
@@ -488,6 +707,101 @@ self.LESSON_RESOURCES = {
       "path": "assets/models/ar-detail/small-intestine.glb",
       "bytes": 856388,
       "hash": "34cc2d8aa0c782080cadc2e8474a727dce50f829bec3a4857202eba97e110efb"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/ATTRIBUTION.md",
+      "bytes": 865,
+      "hash": "60737872217c79c6fe3b07b27386eb73a09ddd05ca8fe623017622418d8823bd"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/bladder.png",
+      "bytes": 22802,
+      "hash": "1dd261ccb86c5c2ab53ac35486fe1f726e992338f568f467e7b534b9a27b1da8"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/esophagus.png",
+      "bytes": 2586,
+      "hash": "bc1912317d3f564539b04c42062610d82330ce1abea058ecc71b67d6d09c9e7b"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/gallbladder.png",
+      "bytes": 11696,
+      "hash": "dcb606048e8d221df425e777027027f6031df1870e0e93b36f18b62bfd82e273"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/heart.png",
+      "bytes": 26861,
+      "hash": "e70b41c6fb294e87028daacb522dcbdd96fd3c026f175137c938fe3ad3f31a2f"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/large-intestine.png",
+      "bytes": 14183,
+      "hash": "38c474333d3496f2e0c6513f0cfa2670c0d1afa0c9be8b5d74517477997d417e"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/left-kidney.png",
+      "bytes": 11494,
+      "hash": "5cbf70acde708b6480153ae75f51ecaa5eff84339862d78d15eae9bc0fb43685"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/left-lung.png",
+      "bytes": 10592,
+      "hash": "fe527e6b7e4bab0a2524ddda3436a334c7e9c1fe4018fecff015a135d4de9c65"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/liver.png",
+      "bytes": 21298,
+      "hash": "a9773889039ea35de3b70164195edfbdfb9372370ee9801ca7ba314c01dd1583"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/mouth.png",
+      "bytes": 20818,
+      "hash": "819fbb54d5dbd4ac0b9687351b0d3c8992cdaf157e194f14d1c39a277da65f05"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/nasal-cavity.png",
+      "bytes": 13961,
+      "hash": "96cba81481382e09158c6b1838b8aaf679697f648da68c3a3226c91f958eb753"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/pancreas.png",
+      "bytes": 24407,
+      "hash": "ec8af8e150d4c76d95504e7351ca51b9d7ad60284c53eeccfb3734fa4332d3c7"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/pharynx.png",
+      "bytes": 14222,
+      "hash": "d2bf04035c269a2aa73e67c0690c01b8e821209c8663b6551d6024a1a46babb9"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/right-kidney.png",
+      "bytes": 11646,
+      "hash": "0e28b8f9107d93fbf6b1ae71bf65dc8d4f9d8a66c445ec897cc287124429b523"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/right-lung.png",
+      "bytes": 13507,
+      "hash": "5d11c18c2ded07b9d60487aade3d108df4f09c22fc730b2e3118ca5eee5375d4"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/small-intestine.png",
+      "bytes": 19816,
+      "hash": "a1a86fc24aaff97eec08654131f43960a975af873f82a4b6ddcb6dd41d536347"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/stomach.png",
+      "bytes": 16569,
+      "hash": "d609c9f7bb42490bc3b1fae21b50270f5a7e18a71b5cb47a356e27697f7b1cd9"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/submandibular.png",
+      "bytes": 14013,
+      "hash": "f22f436eec0c617cd033ca9dc4a5fdcf6a520b8c5b12ea3cd9c9b6d106f0979a"
+    },
+    {
+      "path": "assets/models/ar-thumbnails/trachea.png",
+      "bytes": 7697,
+      "hash": "7e489f64c298f6da3bca49aa89e0a9074d9c1e4143538b0bac934bb6674628fb"
     },
     {
       "path": "assets/models/ar/esophagus.glb",
@@ -546,8 +860,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "assets/models/journey/ATTRIBUTION.md",
-      "bytes": 2263,
-      "hash": "9cfcad4ebeefbb4c23d6b33b739cdd4231f4be19d5f2d55aa1c932b579ff237d"
+      "bytes": 7430,
+      "hash": "b337cd3b008af2b12fc7e7383fafb20434d4dad8a23eee22e62cce2ce6820091"
     },
     {
       "path": "assets/models/journey/mouth-hra.glb.json",
@@ -558,6 +872,11 @@ self.LESSON_RESOURCES = {
       "path": "assets/models/journey/pharynx-bp3d.glb.json",
       "bytes": 3193,
       "hash": "20de7b090f40f5f1671bb848c51334a9aaa2789ed2e0d68468234a17ad6d17f2"
+    },
+    {
+      "path": "assets/organs/ATTRIBUTION.md",
+      "bytes": 1537,
+      "hash": "f80a809e6ea2c43f215f310f30ca829ef78078339d9f9128044414d097330b37"
     },
     {
       "path": "assets/organs/esophagus.png",
@@ -607,6 +926,16 @@ self.LESSON_RESOURCES = {
       "hash": "4001b5f5a8b0a3a375667593e35d40d9aa56b30f6dcbbb65f107a111ee1386c8"
     },
     {
+      "path": "assets/organs/liver-atlas.png",
+      "bytes": 296963,
+      "hash": "232fa95e1a753bbffc38852f8de7210e2785e8fbfe04f9f140aa6e97c4507ad7"
+    },
+    {
+      "path": "assets/organs/lungs-atlas.png",
+      "bytes": 253498,
+      "hash": "1c4c27819edc71028d03e882e36fa94cb3a16ab54b1e27b1344a275f6fb12e57"
+    },
+    {
       "path": "assets/organs/mouth-gentle.svg",
       "bytes": 1663,
       "hash": "d5ab843735cfea3101675860be81406f4367899011463617d136c9449d8e3af4"
@@ -642,6 +971,11 @@ self.LESSON_RESOURCES = {
       "path": "assets/organs/mouth.svg",
       "bytes": 408,
       "hash": "33007dca01f23d1bf802f8a23f5bd98408fe9985a154019773fced86b5c12611"
+    },
+    {
+      "path": "assets/organs/pancreas-atlas.png",
+      "bytes": 244288,
+      "hash": "8141f6eb81ab6d36ef5465cb727a4e5ce35444babb69ae49060272cbc27de49b"
     },
     {
       "path": "assets/organs/small-intestine.png",
@@ -708,6 +1042,16 @@ self.LESSON_RESOURCES = {
       "hash": "3989a804baec1a69f66a80b1d6343658d9b1cb09df5388b9244f8baac496b128"
     },
     {
+      "path": "assets/organs/trachea-atlas.png",
+      "bytes": 108935,
+      "hash": "3679c0c69301bb6951d80e65c400b1fc81833dd831bc7b09a5365e8d239774bf"
+    },
+    {
+      "path": "assets/organs/upper-airway-openstax.jpg",
+      "bytes": 948478,
+      "hash": "89b641895325c34134f7f149d58b965a9b5e6a16ef926a553f0b9d98aa64b8df"
+    },
+    {
       "path": "body-map.js",
       "bytes": 3151,
       "hash": "4d8af7af7f0aba413855a23ac51153cfba9514f4c9b7f8ab498b700efbb4497e"
@@ -729,8 +1073,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "index.html",
-      "bytes": 3863,
-      "hash": "ad1d36061ace39b966ba2afd06c15dc273a61958fdce8be2794ee0d4d842dab8"
+      "bytes": 3881,
+      "hash": "993acb8aebe404d4e26733eeffa35a21928468840c989baa066c466b13f4957a"
     },
     {
       "path": "journey-3d.js",
@@ -819,8 +1163,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "journey-sources.html",
-      "bytes": 1258,
-      "hash": "f9316485f0a0572a3bca85b70074aba706cf6aff1710dce5d86a78a754eefd8b"
+      "bytes": 5120,
+      "hash": "9c04ae4b0b4edcff27c25915115c111c4d238a51209d93109fa927f58a6c67fb"
     },
     {
       "path": "journey.css",
@@ -839,8 +1183,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "lesson-shell.html",
-      "bytes": 1523,
-      "hash": "ea7c52c2452aad362c4079b28823f324491905f8b6993ee970897ccd3cfdbe34"
+      "bytes": 1488,
+      "hash": "ce0f0a67b55a352cab45b298f33b957d220a7123500c378e453aea2cf7e6af84"
     },
     {
       "path": "lesson-shell.js",
@@ -849,28 +1193,28 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-learning.css",
-      "bytes": 832,
-      "hash": "bbd25b5aab6693dd716fe2dad0df2c3b013c8073a034a9501fe3dd4ea217ff7e"
+      "bytes": 1819,
+      "hash": "565959634d4f090d79da57294492077f28c3440822166b2de4dbc9a36ce93b34"
     },
     {
       "path": "model-workbench.html",
-      "bytes": 5709,
-      "hash": "95a03e86dd39e9d7c13ebbd76567b3ff9359f405d0793631163c7420b9c6dae8"
+      "bytes": 5745,
+      "hash": "748890e47c57be8f8e827ba6cadd785889238e84d34a9e4d81d8118f8aac8d3c"
     },
     {
       "path": "model-workbench.js",
-      "bytes": 41971,
-      "hash": "f85d6418ca6b29ddab2a0e90916969fd5e4aa6de4c2d2f8afc0b569829077c4c"
+      "bytes": 43705,
+      "hash": "ea145071fc7cc3e40797c38b203acb78eef4a530a6c02ba32b5746a381800472"
     },
     {
       "path": "observation.html",
-      "bytes": 4567,
-      "hash": "16c863949c25159e2ce71602bdf3088298030313f1f7debda33e8f26c8a4834d"
+      "bytes": 4636,
+      "hash": "a6d0d01392397f58123ccc90b282b15c52ee69c268144bd588b8e751b0951c37"
     },
     {
       "path": "observation.js",
-      "bytes": 25950,
-      "hash": "fda2f80eba228431757382dd63aaf5f1951ca556152c6f1144cdeb03dcdb4c1b"
+      "bytes": 26315,
+      "hash": "fe7ea63a95077bc8dd4eee1dbcf0ec5c2dde1f64a378949ec3bcb263eafcc62d"
     },
     {
       "path": "organ-drag.js",
@@ -884,8 +1228,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "resource-selection.js",
-      "bytes": 929,
-      "hash": "765b97914e0986500405b12294584a2b5ccb4d12f45976ce9b9bb979d00f20d3"
+      "bytes": 964,
+      "hash": "d00f2b1a9dea5e466c0f842d9d632f506acad2aaf6d777cc377d5e4c819d54b8"
     },
     {
       "path": "resource-store.js",
@@ -924,13 +1268,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "tablet-runtime.js",
-      "bytes": 1362,
-      "hash": "876aed2b10a987f404082e5e4c193124b21642d0dde3bb267a58429eb83d2f7f"
+      "bytes": 1276,
+      "hash": "b1bd29c6234863480668e10b95f0106f387f799a08aadbec542aff60d50473b4"
     },
     {
       "path": "tablet.css",
-      "bytes": 5909,
-      "hash": "6322bc44c6d4cbd858542f803d28288c6fd73ab5b77390802df00d57eff04042"
+      "bytes": 11514,
+      "hash": "75ca5b895dfbae58ee9f432c2890384ee0e1e17e1b400fe962090a5973952cc7"
     },
     {
       "path": "vendor/BufferGeometryUtils.js",
@@ -1258,7 +1602,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-8899f6fd8042f35f"
+      "hash": "manifest-20261102-chunks-7e2aa68817cd9930"
     }
   ]
 };

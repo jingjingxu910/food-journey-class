@@ -19,7 +19,7 @@ self.onmessage=async({data})=>{
       const costMs=performance.now()-start;
       slowFrames=costMs>220?slowFrames+1:0;
       if(activeDelegate==='GPU'&&slowFrames>=3){detector.close();settings.options.baseOptions.delegate='CPU';settings.options.canvas=new OffscreenCanvas(384,288);detector=await settings.PoseLandmarker.createFromOptions(settings.wasm,settings.options);activeDelegate='CPU';}
-      self.postMessage({type:'pose',points:result.landmarks?.[0]||null,timestamp:data.timestamp,costMs,delegate:activeDelegate});
+      self.postMessage({type:'pose',points:result.landmarks?.[0]||null,worldPoints:result.worldLandmarks?.[0]||null,timestamp:data.timestamp,costMs,delegate:activeDelegate});
     }else if(data.type==='close'){detector?.close();self.close();}
   }catch(error){data.bitmap?.close();self.postMessage({type:'error',message:error.message});}
 };
