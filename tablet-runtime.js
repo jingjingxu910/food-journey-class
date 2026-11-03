@@ -25,6 +25,6 @@
     }
   });
   if ('serviceWorker' in navigator && window.isSecureContext) {
-    navigator.serviceWorker.register('./ar-assets-sw.js').catch(() => {});
+    navigator.serviceWorker.register('./ar-assets-sw.js', {updateViaCache:'none'}).catch(() => {});
   }
 })();

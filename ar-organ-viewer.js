@@ -4,10 +4,10 @@ function disposeModel(group){group.traverse(node=>{node.geometry?.dispose();cons
 export async function createOrganViewer(mount,url,resetButton,isCurrent){
  const gltf=await new GLTFLoader().loadAsync(url);if(!isCurrent()){disposeModel(gltf.scene);return null;}
  let renderer;
- try{renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'low-power'});}catch(error){disposeModel(gltf.scene);throw error;}
- const scene=new THREE.Scene();scene.background=new THREE.Color(0xf0f5ef);
+ try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'low-power'});}catch(error){disposeModel(gltf.scene);throw error;}
+ const scene=new THREE.Scene();scene.background=null;renderer.setClearColor(0,0);
  const camera=new THREE.PerspectiveCamera(40,1,.05,30);camera.position.set(0,0,4.7);
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25));mount.replaceChildren(renderer.domElement);
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.75));mount.replaceChildren(renderer.domElement);
  const bounds=new THREE.Box3().setFromObject(gltf.scene),center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3()),fit=2.7/Math.max(size.x,size.y,size.z);const group=new THREE.Group();const framed=new THREE.Group();gltf.scene.position.sub(center);framed.add(gltf.scene);framed.scale.setScalar(fit);group.add(framed);scene.add(group);scene.add(new THREE.HemisphereLight(0xffffff,0x826c65,2));const light=new THREE.DirectionalLight(0xffffff,2.5);light.position.set(2,3,4);scene.add(light);
  let frame=0,lastX,lastY,drag=false;
  const request=()=>{if(!frame)frame=requestAnimationFrame(()=>{frame=0;renderer.render(scene,camera);});};

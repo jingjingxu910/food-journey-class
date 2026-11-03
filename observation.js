@@ -1,3 +1,4 @@
+import {CameraMotion} from './ar-motion.js';
 import {BodyTracker,mapOverlay} from './ar-tracking.js';
 import {groupId,currentRecord,saveRecord,submitRecord,homeUrl} from './student-data.js';
 const organs=[
@@ -8,12 +9,12 @@ const organs=[
  {id:'large-intestine',name:'大肠',question:'它与小肠的位置有什么关系？',note:'大肠围在小肠外侧，吸收食物残渣中的一部分水分。',feature:'与小肠比较粗细、盘曲方式和位置。'}
 ];
 for(const [id,name,note] of [['trachea','气管','气管在食管前方，把空气送向肺。'],['right-lung','右肺','肺参与气体交换。食物正常情况下不进入气管和肺。'],['left-lung','左肺','观察肺和消化器官的空间关系。'],['pharynx','咽','咽是空气和食物共同经过的部位。此处模型展示咽部肌肉，不是完整咽腔。']])organs.push({id,name,question:'转动观察它与食管的位置关系。',note,feature:note});
-const $=s=>document.querySelector(s),asset=(id,ext)=>`assets/models/${ext==='glb'?'ar-connected':'ar'}/${id}.${ext}`;
+const $=s=>document.querySelector(s),asset=(id,ext)=>`assets/models/${ext==='glb'?(['small-intestine','large-intestine'].includes(id)?'ar-detail':'ar-connected'):'ar'}/${id}.${ext}`;
 const tracker=new BodyTracker(),buttons=new Map(),displayed=new Map();
 let record,observation,selected=null,selectedAt=0,stream,worker,mainDetector;
 let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,lastSent=0,lastPose=0,targets=null;
 let workerReady=false,starting=false,saveTimer,viewerDispose,viewerGeneration=0,captureWidth=384,interval=100,meanCost=0,lastPaint=0;
-let startupController,connected;
+let startupController,connected;const motion=new CameraMotion();let sentMotion=null,targetMotion=null;
 const metrics={samples:0,totalMs:0,maxMs:0,losses:0,mode:null};
 $('#group-label').textContent=`第 ${groupId} 组`;$('#back-link').href=homeUrl();
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
@@ -38,12 +39,17 @@ function selectOrgan(id){
 for(const o of organs.filter(o=>!['trachea','right-lung','left-lung','pharynx'].includes(o.id))){const b=document.createElement('button');b.type='button';b.className='ar-organ';b.dataset.organ=o.id;b.setAttribute('aria-label',`观察${o.name}`);b.innerHTML=`<img src="${asset(o.id,'png')}" alt="" draggable="false">`;b.onclick=()=>selectOrgan(o.id);$('#ar-organs').append(b);buttons.set(o.id,b);}
 $('#ar-organs').hidden=true;
 function receivePose(data){
- busy=false;if(!running||hidden||dialogOpen)return;
+ busy=false;if(!running||hidden)return;
  metrics.samples++;metrics.totalMs+=data.costMs;metrics.maxMs=Math.max(metrics.maxMs,data.costMs);
  meanCost=meanCost?meanCost*.85+data.costMs*.15:data.costMs;
  interval=Math.min(220,Math.max(66,meanCost*1.25));captureWidth=meanCost>95?320:384;
- const body=tracker.update(data.points,data.timestamp,$('#camera-video').videoWidth/$('#camera-video').videoHeight);
- if(body){targets=body;lastPose=performance.now();$('#camera-status').textContent='点击身体上的器官，仔细观察';}
+ // A frame captured before an unmatched camera movement cannot be registered safely.
+ const matched=sentMotion?.sequence===motion.sequence;
+ if(!matched&&performance.now()-data.timestamp>100){targets=null;tracker.reset();return;}
+ let points=data.points;if(points&&matched){const dx=motion.x-sentMotion.x,dy=motion.y-sentMotion.y;points=points.map(p=>({...p,x:p.x+dx,y:p.y+dy}));}
+ if(targetMotion?.sequence===motion.sequence)tracker.shift(motion.x-targetMotion.x,motion.y-targetMotion.y);else tracker.reset();
+ const body=tracker.update(points,data.timestamp,$('#camera-video').videoWidth/$('#camera-video').videoHeight);
+ if(body){motion.setRegion(points);targets=body;lastPose=data.timestamp;targetMotion=motion.snapshot();$('#camera-status').textContent='点击身体上的器官，仔细观察';}
  else{targets=null;metrics.losses++;$('#ar-organs').hidden=true;$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';}
  if(new URLSearchParams(location.search).has('diagnostics'))$('#ar-metrics').textContent=`识别上限 ${(1000/Math.max(interval,meanCost)).toFixed(1)} 次/秒 · 平均 ${Math.round(meanCost)} ms · ${metrics.mode}${data.delegate?' / '+data.delegate:''}`;
 }
@@ -83,15 +89,19 @@ async function initDetector(){
 }
 async function sendFrame(now){
  const video=$('#camera-video');if(busy||video.readyState<2||video.currentTime===lastFrame)return;
- busy=true;lastFrame=video.currentTime;lastSent=now;
+ busy=true;sentMotion=motion.snapshot();lastFrame=video.currentTime;lastSent=now;
  if(workerReady){try{const bitmap=await createImageBitmap(video,{resizeWidth:captureWidth,resizeHeight:Math.round(captureWidth*video.videoHeight/video.videoWidth),resizeQuality:'low'});if(!running||!worker){bitmap.close();busy=false;return;}worker.postMessage({type:'frame',bitmap,timestamp:now},[bitmap]);}catch(error){busy=false;console.warn('Camera frame skipped',error);}}
  else if(mainDetector){const start=performance.now();try{const result=mainDetector.detectForVideo(video,now);receivePose({points:result.landmarks?.[0]||null,timestamp:now,costMs:performance.now()-start});}catch(error){busy=false;console.warn('Pose frame skipped',error);}}
 }
 function paint(now){
- if(!running)return;frame=requestAnimationFrame(paint);if(hidden||dialogOpen)return;
- const video=$('#camera-video'),stage=$('#camera-stage'),age=now-lastPose;
- if(targets&&age<Math.min(600,Math.max(280,interval+meanCost+80))){$('#ar-organs').hidden=false;connected?.update(mapOverlay(targets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
-  for(const [id,b]of buttons){const point=targets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
+ if(!running)return;frame=requestAnimationFrame(paint);if(hidden)return;
+ const video=$('#camera-video'),stage=$('#camera-stage'),age=now-lastPose;motion.update(video,now);
+ const coherent=targetMotion?.sequence===motion.sequence;
+ const fresh=age<Math.min(2000,Math.max(600,interval+meanCost*2+40));
+ const visible=targets&&fresh&&((coherent&&motion.reliable)||age<100);
+ const currentTargets=targets?Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,{...p,x:p.x+(coherent?motion.x-targetMotion.x:0),y:p.y+(coherent?motion.y-targetMotion.y:0)}])):null;
+ if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
+  for(const [id,b]of buttons){const point=currentTargets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
    if(prior)for(const key of ['x','y','w','h','angle'])next[key]=prior[key]+(next[key]-prior[key])*alpha;
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
   }
@@ -99,7 +109,7 @@ function paint(now){
  lastPaint=now;if(busy && now-lastSent>15000){stopCamera();$('#camera-status').textContent='识别暂时没有响应，请重新开启相机';return;}
  lastPaint=now;if(now-lastSent>=interval)void sendFrame(now);
 }
-function stopCamera(){connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
+function stopCamera(){connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();motion.reset();targetMotion=null;$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
 async function startCamera(){
  if(starting||running||!record)return;starting=true;startupController=new AbortController();$('#cancel-camera').hidden=false;$('#start-camera').disabled=true;
  try{$('#camera-status').textContent='正在开启后置相机…';if(!navigator.mediaDevices?.getUserMedia)throw new Error('请使用支持网页相机的浏览器，并通过 HTTPS 打开课件');
@@ -119,8 +129,8 @@ async function startCamera(){
 }
 async function openViewer(){
  if(!selected)return;viewerDispose?.();viewerDispose=null;processStop?.();closeSelected();const id=selected,o=organs.find(o=>o.id===id),generation=++viewerGeneration;
- observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#organ-dialog').show();
- const credit=$('#organ-model-credit');credit.textContent=id==='mouth'?'模型：Human Reference Atlas · Heidi Schlehlein · CC BY 4.0':['right-lung','left-lung'].includes(id)?'模型：Human Reference Atlas · Kristen Browne、Heidi Schlehlein · CC BY 4.0':id==='pharynx'?'模型：BodyParts3D / OrganUI · CC BY-SA 2.1 Japan':'模型：BodyParts3D · DBCLS · CC BY 4.0';
+ observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;stopMedia();$('#show-organ-media').hidden=!['stomach','small-intestine'].includes(id);$('#show-organ-media').textContent=id==='small-intestine'?'绒毛放大':'真实内壁';$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#organ-dialog').show();
+ const credit=$('#organ-model-credit');credit.textContent=['small-intestine','large-intestine'].includes(id)?'模型：Human Reference Atlas / HuBMAP · CC BY 4.0':id==='mouth'?'模型：Human Reference Atlas · Heidi Schlehlein · CC BY 4.0':['right-lung','left-lung'].includes(id)?'模型：Human Reference Atlas · Kristen Browne、Heidi Schlehlein · CC BY 4.0':id==='pharynx'?'模型：BodyParts3D / OrganUI · CC BY-SA 2.1 Japan':'模型：BodyParts3D · DBCLS · CC BY 4.0';
  const mount=$('#organ-3d');mount.textContent='正在准备模型…';
  try{const {createOrganViewer}=await import('./ar-organ-viewer.js');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open);if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
  catch(error){if(generation===viewerGeneration)mount.innerHTML=`<img class="model-fallback-image" src="${asset(id,'png')}" alt="${o.name}"><p>模型加载未完成，请关闭后重试。</p>`;console.warn('Organ model failed',error);}
@@ -128,7 +138,7 @@ async function openViewer(){
 async function finishObservation(){if(!observation.cameraStarted||!observation.views.length)return;$('#finish-observation').disabled=true;closeSelected();selected=null;stopCamera();observation.completedAt=Date.now();observation.performance={...metrics,averageMs:metrics.samples?Math.round(metrics.totalMs/metrics.samples):null};status('正在保存…');const uploaded=await submitRecord(record);status(uploaded?'观察完成。':'已保存到本机，联网后可重试提交。');$('#finish-observation').disabled=false;$('#finish-observation').textContent='去修正模型 →';$('#finish-observation').onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;}
 $('#cancel-camera').onclick=()=>{startupController?.abort();stopCamera();$('#camera-status').textContent='已取消开启，下载完成的资源已保留';};
 $('#start-camera').onclick=startCamera;$('#open-local-3d').onclick=openViewer;$('#close-organ-dialog').onclick=()=>$('#organ-dialog').close();
-$('#organ-dialog').addEventListener('close',()=>{viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;selectedAt=performance.now();tracker.reset();targets=null;});
+$('#organ-dialog').addEventListener('close',()=>{if($('#organ-dialog').open)return;viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;selectedAt=performance.now();tracker.reset();targets=null;});
 document.addEventListener('visibilitychange',()=>{hidden=document.hidden;if(hidden)closeSelected();else{selectedAt=performance.now();targets=null;tracker.reset();}});
 window.addEventListener('pagehide',()=>{connected?.dispose();connected=null;startupController?.abort();closeSelected();clearTimeout(saveTimer);if(record)void saveRecord(record);stopCamera();viewerDispose?.();});
 async function initialize(){
@@ -146,10 +156,24 @@ for(const id of ['anatomy-size','anatomy-x','anatomy-y'])$('#'+id).oninput=calib
 $('#close-discovery').onclick=()=>{$('.observe-panel').hidden=true;};
 
 let processStop;
-$('#show-organ-process').onclick=async()=>{processStop?.();$('#organ-3d').hidden=true;$('#organ-process').hidden=false;$('#organ-dialog footer').hidden=true;$('#organ-dialog-note').textContent=organs.find(o=>o.id===selected).note;const {playProcess}=await import('./ar-process.js');processStop=playProcess($('#organ-process'),selected);};
-$('#show-organ-structure').onclick=()=>{processStop?.();$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#organ-dialog-note').textContent=organs.find(o=>o.id===selected).feature;window.dispatchEvent(new Event('resize'));};
-$('#organ-dialog').addEventListener('close',()=>processStop?.());
+function showEnzymeVideo(){
+ $('#organ-3d').hidden=true;$('#organ-process').hidden=true;$('#organ-dialog footer').hidden=true;$('#organ-media').hidden=false;
+ $('#organ-dialog-note').textContent='小肠继续消化食物。放大示意：绿色结构代表消化酶，帮助把长链大分子分解成较小分子；不是真实显微影像。';
+ $('#organ-video-caption').textContent='MedienLB / Siemens Stiftung 2017 · CC BY-NC-SA 4.0 · 静音节选';
+ const video=$('#organ-video');video.classList.add('is-animation');video.src='assets/ar-media/enzyme-digestion.mp4';void video.play().catch(()=>{});
+}
+function showMicrograph(){
+ $('#organ-3d').hidden=true;$('#organ-process').hidden=true;$('#organ-dialog footer').hidden=true;$('#organ-media').hidden=false;$('#organ-video').hidden=true;
+ const image=$('#organ-micrograph');image.src='assets/journey/villi-micrograph.jpg';image.hidden=false;
+ $('#organ-video-caption').textContent='真实回肠绒毛切片 · Mikael Häggström, M.D. · CC0';
+ $('#organ-dialog-note').textContent='观察向肠腔伸出的绒毛。它们增大了吸收面积。切片照片展示结构，不能直接看到营养的吸收过程。';
+}
+function stopMedia(){const video=$('#organ-video');video.pause();video.classList.remove('is-animation');video.removeAttribute('src');video.load();$('#organ-media').hidden=true;video.hidden=false;$('#organ-micrograph').hidden=true;}
+$('#show-organ-media').onclick=()=>{processStop?.();stopMedia();if(selected==='small-intestine'){showMicrograph();return;}$('#organ-3d').hidden=true;$('#organ-process').hidden=true;$('#organ-dialog footer').hidden=true;$('#organ-dialog-note').textContent='真实胃内壁影像：观察黏膜皱襞。拍摄镜头也在移动，不能用画面移动判断蠕动。';$('#organ-media').hidden=false;$('#organ-video-caption').textContent='HyperKvasir · Borgli 等 · CC BY 4.0 · 静音节选';const video=$('#organ-video');video.src='assets/ar-media/stomach-wall.mp4';void video.play().catch(()=>{});};
+$('#show-organ-process').onclick=async()=>{processStop?.();stopMedia();if(selected==='small-intestine'){showEnzymeVideo();return;}$('#organ-3d').hidden=true;$('#organ-process').hidden=false;$('#organ-dialog footer').hidden=true;$('#organ-dialog-note').textContent=organs.find(o=>o.id===selected).note;const {playProcess}=await import('./ar-process.js');processStop=playProcess($('#organ-process'),selected);};
+$('#show-organ-structure').onclick=()=>{processStop?.();stopMedia();$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#organ-dialog-note').textContent=organs.find(o=>o.id===selected).feature;window.dispatchEvent(new Event('resize'));};
+$('#organ-dialog').addEventListener('close',()=>{if($('#organ-dialog').open)return;processStop?.();stopMedia();});
 
 $('#compare-airways').onclick=()=>{$('#show-respiratory').checked=true;connected?.respiratory(true);$('#anatomy-turn').value=65;connected?.rotate(65*Math.PI/180);};
 
-$('#reset-alignment').onclick=()=>{$('#anatomy-size').value=1;$('#anatomy-x').value=0;$('#anatomy-y').value=0;$('#anatomy-turn').value=0;connected?.calibrate(1,0,0);connected?.rotate(0);tracker.reset();displayed.clear();};
+$('#reset-alignment').onclick=()=>{$('#anatomy-size').value=1;$('#anatomy-x').value=0;$('#anatomy-y').value=0;$('#anatomy-turn').value=0;connected?.calibrate(1,0,0);connected?.rotate(0);tracker.reset();displayed.clear();motion.reset();targetMotion=null;};

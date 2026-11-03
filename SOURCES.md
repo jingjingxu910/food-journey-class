@@ -10,3 +10,6 @@
 - 场景、器官及食物教学插画含生成式图像，不是真实医学影像。
 
 - 新版AR口腔局部：Heidi Schlehlein / Human Reference Atlas mouth-male v1.0，CC BY 4.0；肺外形：Kristen Browne、Heidi Schlehlein / Human Reference Atlas lung-female v1.4，基于Visible Human Dataset / NLM，CC BY 4.0。均经结构选择、减面和参考配准，详见[AR素材署名](ar-sources.html)。
+
+- 放大观察的小肠、大肠：Human Reference Atlas / HuBMAP，CC BY 4.0；[文件与改编说明](assets/models/ar-detail/ATTRIBUTION.md)。
+- 胃内壁影像：Borgli 等，HyperKvasir（2020），CC BY 4.0；消化酶动画：© MedienLB / Siemens Stiftung 2017，CC BY-NC-SA 4.0（该节选限非商业使用、按相同许可共享）。[来源、许可及节选说明](ar-sources.html)。

@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-c4128888d084ae9b",
-  "bytes": 49262890,
+  "version": "20261102-chunks-739e25fa70193453",
+  "bytes": 52184791,
   "files": [
     {
       "path": "app.js",
@@ -14,18 +14,23 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-entry.js",
-      "bytes": 863,
-      "hash": "555b87309ab927818badd3420a003ef37940dfd84bbd140241e74aeb7f455a3a"
+      "bytes": 860,
+      "hash": "a50c191212d1e7cec8bf8dc0e9ed9576a0ccabf41035c112c6cec4fecaaad11f"
+    },
+    {
+      "path": "ar-motion.js",
+      "bytes": 2769,
+      "hash": "a04a630823abe6dfc8f7d5403b2f5360d24eb4b2c68cb084062da6a60e552465"
     },
     {
       "path": "ar-observation.css",
-      "bytes": 5084,
-      "hash": "3fe2f5022371fe32f66b7e692338f73842008cde74fad63490464759e6c00683"
+      "bytes": 7290,
+      "hash": "79922dc16be49cbc3813a978ebe2f03919af7a46d36be8ca41078247edcd1cab"
     },
     {
       "path": "ar-organ-viewer.js",
-      "bytes": 3562,
-      "hash": "7f82d9e46fd71bde05714f7eea0bb1402c24adf77c84e3b88ee02c2cc9edcee6"
+      "bytes": 3567,
+      "hash": "c13876fc5de091eedb6c67705d8c5a4e8e9a8e7d4b97a69e8394f6262edc20e5"
     },
     {
       "path": "ar-pose-worker.js",
@@ -44,18 +49,18 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-process.js",
-      "bytes": 4235,
-      "hash": "7f0fcdb88c8b0a2f111fd7b829366a2a4e50c3a5e0488b01e7e3e9de0faa4de1"
+      "bytes": 4237,
+      "hash": "3f5a994f6ce476e966194b9054a3e9b31063ba24909ad7f13c853168f8ff865b"
     },
     {
       "path": "ar-sources.html",
-      "bytes": 1903,
-      "hash": "9956163c958b93b3a528f54ecfe93af5052160b12d0e5c59931342f28b9ebfad"
+      "bytes": 3394,
+      "hash": "0af1846ffae792aec8245dda082e0614d1c0a9a16599106ce3431b5969f468db"
     },
     {
       "path": "ar-tracking.js",
-      "bytes": 2946,
-      "hash": "8c2059ae49b544a0667ec5a25144c110665f8e60c68e3671b7f2cbc9b0dc57d4"
+      "bytes": 3084,
+      "hash": "1308366fd52d7f8fbc5e5c046a51b16eb2d45363b6f91943045be476aa4f788b"
     },
     {
       "path": "assembly.html",
@@ -76,6 +81,33 @@ self.LESSON_RESOURCES = {
       "path": "assets/anatomy/body-outline.svg",
       "bytes": 1243,
       "hash": "21e5f5e4665259d5edb5061c46aa612db0e09b13621114149d7d3a989f35694d"
+    },
+    {
+      "path": "assets/ar-media/enzyme-digestion.mp4",
+      "bytes": 228788,
+      "hash": "c341165ea2b373b499eb9da0a34992e289524f1bcd72d15a927b4350c5eb8422"
+    },
+    {
+      "path": "assets/ar-media/stomach-wall.mp4",
+      "bytes": 1138492,
+      "hash": "4b959b207b95bdaaa6daba0a334d7697e445ad7c008fceafaa7ef7fa0a1df2c1",
+      "chunks": [
+        {
+          "path": "resource-chunks/6863fe211b484f460bfe5ee0e5733b668ba364ebfc8c4bbb5c4dd766c0ce6d84.bin",
+          "bytes": 524288,
+          "hash": "6863fe211b484f460bfe5ee0e5733b668ba364ebfc8c4bbb5c4dd766c0ce6d84"
+        },
+        {
+          "path": "resource-chunks/118b7c38231b33e1957fc128fc49798f6e07aa0676e848b6343633310f331c89.bin",
+          "bytes": 524288,
+          "hash": "118b7c38231b33e1957fc128fc49798f6e07aa0676e848b6343633310f331c89"
+        },
+        {
+          "path": "resource-chunks/72fcb2a759fc01350fdaa2a3541172cf642d831b2760715a7bd8ddf6f5aa3e4c.bin",
+          "bytes": 89916,
+          "hash": "72fcb2a759fc01350fdaa2a3541172cf642d831b2760715a7bd8ddf6f5aa3e4c"
+        }
+      ]
     },
     {
       "path": "assets/journey/biscuit-fractures-v4.webp",
@@ -322,6 +354,21 @@ self.LESSON_RESOURCES = {
       "path": "assets/models/ar-connected/trachea.glb",
       "bytes": 93760,
       "hash": "114cb57ffa97aa8ac66998f1a47a10e7203e93536bcc3534c30babde425846ee"
+    },
+    {
+      "path": "assets/models/ar-detail/ATTRIBUTION.md",
+      "bytes": 558,
+      "hash": "6465ef4284f84fc824d7b921a410b3e41dbda0e48b289b8ccf836dc69ae791cf"
+    },
+    {
+      "path": "assets/models/ar-detail/large-intestine.glb",
+      "bytes": 686888,
+      "hash": "84a66fb4e2dd07dffc284435da896284c3bddc5b6eb6f8e2f8c1b9130387b66b"
+    },
+    {
+      "path": "assets/models/ar-detail/small-intestine.glb",
+      "bytes": 856388,
+      "hash": "34cc2d8aa0c782080cadc2e8474a727dce50f829bec3a4857202eba97e110efb"
     },
     {
       "path": "assets/models/ar/esophagus.glb",
@@ -698,13 +745,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "observation.html",
-      "bytes": 4175,
-      "hash": "eb40d715cf2a5e4806af1100b40e6402674bdb437fe7767b1451c5fed8b7e515"
+      "bytes": 4516,
+      "hash": "20a3691cdf8e227baecc5641f9254030a8b3524b5d8283d77bad53a8f200c0e0"
     },
     {
       "path": "observation.js",
-      "bytes": 20326,
-      "hash": "c5ffb35e59677aee77b710adbe5e011e4a2620120d501725709a02d8c70a7d11"
+      "bytes": 23969,
+      "hash": "4276bbf4d5de15fbaf4f471c62152ac3fede436de1931bed2938733ef093880c"
     },
     {
       "path": "organ-drag.js",
@@ -718,13 +765,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "resource-selection.js",
-      "bytes": 835,
-      "hash": "168c01d06a27d14c3d5d8ba1eea8bef17e4fec4dfb11b736c607d0986cd2643b"
+      "bytes": 885,
+      "hash": "dee8bfe1e9e24ef4a8ab03a6a0484e6ddeb31118902b234ccd3df87e413c9c24"
     },
     {
       "path": "resource-store.js",
-      "bytes": 5126,
-      "hash": "7f9cb2c4826e7b58018043369fc1c68d1ddd487c819287bb712d6f1dd0aa1e2b"
+      "bytes": 5246,
+      "hash": "1bd77067930cb57b8c235d15d476883a9c3455b616f4778263e9145361d9f263"
     },
     {
       "path": "stomach-sample.css",
@@ -758,8 +805,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "tablet-runtime.js",
-      "bytes": 1337,
-      "hash": "04b2915511cef3e1d9690587e30fa47a4d1f03c612b852bc761f3d205a3dc676"
+      "bytes": 1362,
+      "hash": "876aed2b10a987f404082e5e4c193124b21642d0dde3bb267a58429eb83d2f7f"
     },
     {
       "path": "tablet.css",
@@ -1092,7 +1139,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-c4128888d084ae9b"
+      "hash": "manifest-20261102-chunks-739e25fa70193453"
     }
   ]
 };

@@ -37,6 +37,7 @@ export function mapOverlay(point,stageWidth,stageHeight,videoWidth,videoHeight){
 }
 export class BodyTracker {
   constructor(){this.filters=new Map();}
+  shift(dx,dy){for(const [key,filter]of this.filters){if(key.endsWith('x'))filter.value+=dx;else if(key.endsWith('y'))filter.value+=dy;}}
   update(points,time,aspect=1){
     const body=fitBody(points,aspect);if(!body)return null;
     for(const [id,p] of Object.entries(body))for(const axis of ['x','y','w','h','angle']){
