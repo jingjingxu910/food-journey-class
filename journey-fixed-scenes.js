@@ -15,7 +15,7 @@ export async function prepareFixedScenes(){
 export class FixedScenes{
  constructor(element){this.canvas=element;this.ctx=element.getContext('2d');this.foreground=canvas();this.frame=canvas();this.chew=0;this.phase='mouth';this.progress=0;}
  fit(){const rect=this.canvas.getBoundingClientRect(),scale=Math.max(rect.width/W,rect.height/H);return{width:rect.width,height:rect.height,scale,left:(rect.width-W*scale)/2,top:(rect.height-H*scale)/2};}
- resize(){const b=this.canvas.parentElement.getBoundingClientRect(),ratio=Math.min(devicePixelRatio||1,1.5),w=Math.round(b.width*ratio),h=Math.round(b.height*ratio);if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;}}
+ resize(){const b=this.canvas.parentElement.getBoundingClientRect(),ratio=Math.min(devicePixelRatio||1,1.5),w=Math.round(b.width*ratio),h=Math.round(b.height*ratio);if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;return true;}return false;}
  sourcePoint(clientX,clientY){const b=this.canvas.getBoundingClientRect(),r=this.fit();return{x:(clientX-b.left-r.left)/(W*r.scale),y:(clientY-b.top-r.top)/(H*r.scale)};}
  project(x,y){const r=this.fit();return{x:(r.left+x*W*r.scale)/r.width,y:(r.top+y*H*r.scale)/r.height};}
  pick(name,clientX,clientY){const {x,y}=this.sourcePoint(clientX,clientY);return this.kind(name,x,y);}
@@ -25,7 +25,10 @@ export class FixedScenes{
  passageSpec(name){const mask=canvas();mask.width=this.canvas.width;mask.height=this.canvas.height;const s=Math.max(mask.width/W,mask.height/H);mask.getContext('2d').drawImage(name==='mouth'?oralPortal:pharynxPortal,(mask.width-W*s)/2,(mask.height-H*s)/2,W*s,H*s);const o=name==='mouth'?{x:.5025,y:.445,rx:.2175,ry:.10}:{x:.5,y:.151,rx:.155,ry:.026},fit=this.fit(),center=this.project(o.x,o.y);mask.opening={...center,rx:o.rx*W*fit.scale/fit.width,ry:o.ry*H*fit.scale/fit.height};return{source:this.canvas,mask,focus:center};}
  drawSource(source,scale=1,focus={x:.5,y:.5}){const c=this.canvas,fit=Math.max(c.width/W,c.height/H),w=W*fit*scale,h=H*fit*scale;this.ctx.drawImage(source,c.width*.5-focus.x*w,c.height*.5-focus.y*h,w,h);}
  pharynxView(){return pharynxFrame;}
- draw(name,amount=0,background=null){this.resize();this.phase=name;this.chew=amount;this.progress=0;this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);this.drawSource(name==='mouth'?this.mouthFrame(amount):this.pharynxView(background));}
+ draw(name,amount=0){
+ const resized=this.resize();
+ if(!resized&&this.painted&&this.phase===name&&(name==='pharynx'||this.chew===amount)&&this.progress===0)return;
+ this.painted=true;this.phase=name;this.chew=amount;this.progress=0;this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);this.drawSource(name==='mouth'?this.mouthFrame(amount):this.pharynxView());}
  portal(from,to,progress,liveBackground){this.resize();this.progress=progress;const c=this.ctx,w=this.canvas.width,h=this.canvas.height;c.clearRect(0,0,w,h);if(from==='mouth')this.drawSource(this.pharynxView(liveBackground));else if(liveBackground){const fit=Math.max(w/W,h/H),a=smooth(progress,0,.86),mix=(x,y)=>x+(y-x)*a;c.drawImage(liveBackground,mix((w-W*fit)/2+W*.29*fit,0),mix((h-H*fit)/2+H*.23*fit,0),mix(W*.42*fit,w),mix(H*.15*fit,h));}const f=this.foreground.getContext('2d');f.clearRect(0,0,W,H);f.globalCompositeOperation='source-over';f.drawImage(from==='mouth'?this.mouthFrame(0):pharynxFrame,0,0);f.globalCompositeOperation='destination-out';f.globalAlpha=smooth(progress,.06,.33);f.drawImage(from==='mouth'?oralPortal:pharynxPortal,0,0);f.globalAlpha=1;f.globalCompositeOperation='source-over';const pan=smooth(progress,0,.42),zoom=Math.exp(Math.log(from==='mouth'?40:16)*smooth(progress,.08,1)),focus={x:.5,y:.5+((from==='mouth'?.5005:.31)-.5)*pan};this.drawSource(this.foreground,zoom,focus);}
 }
 import {MouthChew} from './journey-mouth-chew.js';

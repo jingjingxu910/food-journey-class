@@ -4,7 +4,53 @@ $('#group-label').textContent=`第 ${groupId} 组`;
 $('#back-link').href=homeUrl();
 $('#journey-link').href=`journey.html?group=${groupId}`;
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
-let record;
+let record,stream;
+const video=$('#assembly-camera');
+function closeCamera(){
+  stream?.getTracks().forEach(track=>track.stop());
+  stream=null;
+  video.srcObject=null;
+  video.hidden=true;
+  $('#open-camera').hidden=false;
+  $('#take-photo').hidden=true;
+  $('#close-camera').hidden=true;
+}
+async function openCamera(){
+  const button=$('#open-camera');
+  button.disabled=true;
+  try{
+    if(!navigator.mediaDevices?.getUserMedia)throw new Error();
+    const camera=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}}});
+    if(document.hidden){camera.getTracks().forEach(track=>track.stop());return;}
+    stream=camera;
+    video.srcObject=stream;
+    await video.play();
+    if(stream!==camera)return;
+    video.hidden=false;
+    button.hidden=true;
+    $('#take-photo').hidden=false;
+    $('#close-camera').hidden=false;
+    $('#assembly-status').textContent='对准作品后，点击拍照。';
+  }catch{
+    closeCamera();
+    $('#assembly-status').textContent='相机无法开启，可以选择已拍好的照片。';
+  }finally{button.disabled=false;}
+}
+function takePhoto(){
+  if(!video.videoWidth||!video.videoHeight)return;
+  const canvas=document.createElement('canvas');
+  const scale=Math.min(1,1280/Math.max(video.videoWidth,video.videoHeight));
+  canvas.width=Math.round(video.videoWidth*scale);
+  canvas.height=Math.round(video.videoHeight*scale);
+  canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+  closeCamera();
+  canvas.toBlob(file=>{if(file)void savePhoto(file);},'image/jpeg',.9);
+}
+$('#open-camera').onclick=openCamera;
+$('#take-photo').onclick=takePhoto;
+$('#close-camera').onclick=closeCamera;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)closeCamera();});
+window.addEventListener('pagehide',closeCamera);
 
 function photoData(file, maxSide, quality) {
   return new Promise((resolve,reject)=>{
@@ -25,8 +71,8 @@ function showPhoto(data) {
   $('#photo-preview').hidden=false;
   $('#photo-frame').querySelector('span').hidden=true;
 }
-async function choosePhoto(event) {
-  const file=event.target.files?.[0];if(!file)return;
+async function savePhoto(file) {
+  if(!file||!record)return;
   if(!file.type.startsWith('image/')) { $('#assembly-status').textContent='请选择照片。';return; }
   try {
     $('#assembly-status').textContent='正在处理照片…';
@@ -58,8 +104,9 @@ async function initialize() {
   if(record.assembly?.photoLocal||record.assembly?.photoPreview) showPhoto(record.assembly.photoLocal||record.assembly.photoPreview);
   $('#assembly-note').value=record.assembly?.note||'';
   if(record.assembly?.completedAt) $('#journey-link').hidden=false;
+  $('#open-camera').disabled=false;
 }
-$('#photo-input').onchange=choosePhoto;
+$('#photo-input').onchange=event=>{closeCamera();void savePhoto(event.target.files?.[0]);event.target.value='';};
 $('#submit-assembly').onclick=submit;
 $('#assembly-note').oninput=()=>{if(record){record.assembly||={startedAt:Date.now(),completedAt:null};record.assembly.note=$('#assembly-note').value.slice(0,160);void saveRecord(record);}};
 initialize().catch((error)=>$('#assembly-status').textContent=`记录无法读取：${error.message}`);

@@ -27,4 +27,10 @@ header{height:50px;padding:0 6px;font-size:18px}header>a{display:flex;align-item
 .anatomy-copy h2{font-size:32px}.anatomy-copy p{font-size:23px}.anatomy-copy .primary{min-height:55px}
 @media(orientation:portrait){header>span{font-size:17px}.topline{top:16px;left:16px}.topline #chapter{font-size:16px;min-height:34px}#hint{top:8%;max-width:90%;padding:15px 20px;font-size:25px}#views{left:14px;bottom:34px;padding:6px;gap:6px}#views button{min-width:0;padding:10px 12px;font-size:17px}.map{right:14px;bottom:34px;font-size:18px}.direction{right:14px;width:72px;height:82px}#forward{top:29%}#back{bottom:29%}#observation{left:14px;top:22%;max-width:210px;padding:13px 15px}#food-caption{bottom:15%}.anatomy-picture{height:48vh}.anatomy-picture.zoom{height:34vh;aspect-ratio:auto}.anatomy-copy h2{font-size:29px}}
 @media(max-height:650px){header{height:44px}.topline{top:10px}.topline #chapter{min-height:30px;padding:4px 10px;font-size:15px}#hint{top:7%;padding:11px 20px;font-size:22px}#views{bottom:30px}#views button{min-height:42px}.map{bottom:28px;min-height:48px}.direction{height:70px;width:68px}.direction span{font-size:18px}#food-caption{bottom:12%}}
-html[data-voyage=true] #intro,html[data-voyage=true] #food-caption{display:none!important}
+html[data-voyage=true] #intro{display:none!important}
+
+/* Keep long explanations on a consistent reading edge. */
+#hint,#question-text,#answer-hint,#anatomy-text,#knowledge-text{text-align:start}
+#anatomy-text{max-width:31em;margin-inline:auto;line-height:1.6}
+dialog::backdrop{backdrop-filter:none;background:#18312c94}
+.veil,#views,#forward,#back{backdrop-filter:none}

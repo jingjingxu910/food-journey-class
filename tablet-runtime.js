@@ -12,11 +12,6 @@
     if (window.ResizeObserver) new ResizeObserver(fit).observe(wrap);
     window.addEventListener('resize', fit); fit();
   }
-  const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
-  if(!teacher){
-    const style=document.createElement('style');style.textContent='.flow-fullscreen,#model-fullscreen-button,#portrait-button,#fullscreen{display:none!important}';document.head.append(style);
-    if(new URLSearchParams(location.search).get('preview')!=='1')document.addEventListener('pointerdown',()=>void window.requestLessonFullscreen?.().catch(()=>{}),{once:true,capture:true});
-  }
   if ('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('./ar-assets-sw.js', {updateViaCache:'none'}).catch(() => {});
   }

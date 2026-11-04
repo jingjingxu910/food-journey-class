@@ -28,7 +28,8 @@ function hint(text){$('hint').textContent=text.replaceAll('周围的液体','下
 function record(type){state.seen.add(type);try{sessionStorage.setItem('stomach-sample-observation',JSON.stringify({fluid:state.fluid,mixed:state.mixed,wrong:state.wrong,back:state.back,seen:[...state.seen]}));}catch{}voyageMessage('progress',{event:type});}
 function progress(n,label){$('progress').value=n;$('step-label').textContent=label;}
 function setFoodDepthTest(value){for(const s of [bolusSprite,chymeSprite,wetCoat,wetSheen])if(s&&s.material.depthTest!==value){s.material.depthTest=value;s.material.needsUpdate=true;}}
-function evidence(){const lines=[];if(state.fluid)lines.push('✓ 食团变得更湿润');if(state.mixed>.35)lines.push('✓ 食团反复翻动、变形');if(state.mixed>.9)lines.push('✓ 颗粒变细，食团更柔软');$('evidence').replaceChildren(...lines.map(t=>{const d=document.createElement('div');d.textContent=t;return d;}));$('observation').hidden=!lines.length;}
+let evidenceKey;
+function evidence(){const lines=[];if(state.fluid)lines.push('✓ 食团变得更湿润');if(state.mixed>.35)lines.push('✓ 食团反复翻动、变形');if(state.mixed>.9)lines.push('✓ 颗粒变细，食团更柔软');const key=lines.join('|');if(key===evidenceKey)return;evidenceKey=key;$('evidence').replaceChildren(...lines.map(t=>{const d=document.createElement('div');d.textContent=t;return d;}));$('observation').hidden=!lines.length;}
 function noiseTexture(){
  const c=document.createElement('canvas');c.width=c.height=512;const ctx=c.getContext('2d'),image=ctx.createImageData(512,512);
  for(let y=0;y<512;y++)for(let x=0;x<512;x++){
@@ -158,7 +159,7 @@ function buildFood(){
  for(let i=0;i<48;i++){const mesh=new THREE.Mesh(dg,dm);mesh.renderOrder=8;mesh.visible=false;const glow=new THREE.Sprite(glowMaterial);glow.scale.set(.55,.64,1);glow.renderOrder=7;mesh.add(glow);camera.add(mesh);drops.push(mesh);}
 }
 function init(){
- renderer=new THREE.WebGLRenderer({antialias:true,alpha:false,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.setClearColor(0x6b3633);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.93;host.append(renderer.domElement);
+ renderer=new THREE.WebGLRenderer({antialias:!inVoyage,alpha:false,powerPreference:'high-performance'});renderer.setClearColor(0x6b3633);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.93;host.append(renderer.domElement);
  scene=new THREE.Scene();scene.background=new THREE.Color(0x9b5149);scene.fog=new THREE.FogExp2(0x673b34,.037);camera=new THREE.PerspectiveCamera(inVoyage?72:74,1,.045,65);camera.rotation.order='YXZ';scene.add(camera);
  scene.add(new THREE.HemisphereLight(0xffdfc7,0x6a3027,1.25));
  const lamp=new THREE.PointLight(0xffe7d5,16,18,1.7);lamp.position.set(0,.3,-.4);camera.add(lamp);
@@ -168,7 +169,7 @@ function init(){
  renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();$('failure-text').textContent='画面暂时中断，请重新准备旅行。';$('failure').hidden=false;});
  ready=true;hint('食团从这里继续前进。');frame=requestAnimationFrame(draw);
 }
-function resize(){if(!renderer)return;const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+function resize(){if(!renderer)return;const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,inVoyage?1.25:1.5,Math.sqrt(900000/(w*h))));renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
 function nearestYaw(value,from){return from+Math.atan2(Math.sin(value-from),Math.cos(value-from));}
 function orient(target){orientationProbe.position.copy(camera.position);q.copy(target);if(Math.abs(q.z-camera.position.z)<.001)q.z-=.35;orientationProbe.lookAt(q);desiredYaw=nearestYaw(orientationProbe.rotation.y,viewYaw);desiredPitch=orientationProbe.rotation.x;}
 function look(target,duration=1.1){lookPoint.copy(target);const dummy=camera.clone(false);dummy.rotation.order='YXZ';dummy.lookAt(target);viewTween={fromYaw:viewYaw,fromPitch:viewPitch,toYaw:nearestYaw(dummy.rotation.y,viewYaw),toPitch:dummy.rotation.x,start:elapsed,duration};}
@@ -265,8 +266,13 @@ function updateLandmark(o){
  o.dot.style.display=visible&&Math.abs(v.x)<.92&&Math.abs(v.y)<.88?'':'none';o.dot.style.left=`${(v.x+1)*50}%`;o.dot.style.top=`${(1-v.y)*50}%`;
 }
 function draw(ms){
- frame=requestAnimationFrame(draw);if(document.hidden||$('failure').hidden===false)return;if(ms-lastDraw<16)return;lastDraw=ms;const delta=clock.getDelta(),dt=Math.min(delta,.05);elapsed+=dt;
+ frame=requestAnimationFrame(draw);
+ if(ms-lastDraw<16)return;
+ lastDraw=ms;
+ const dt=Math.min(clock.getDelta(),.083);
+ if(document.hidden||!$('failure').hidden||document.querySelector('dialog[open]'))return;
  if(inVoyage&&state.phase==='ready'&&voyageParams.get('autostart')==='0')return;
+ elapsed+=dt;
  if(moving){const k=Math.min(1,(elapsed-moving.start)/moving.duration),e=k*k*(3-2*k);moving.progress=k;if(state.phase==='entering'||state.phase==='leaving'){const entering=state.phase==='entering',u=entering?THREE.MathUtils.lerp(inVoyage?.0125:.05,.43,e):THREE.MathUtils.lerp(.43,inVoyage?.92:.95,e);camera.position.copy(route.getPointAt(u));if(entering)orient(route.getPointAt(Math.min(.999,u+.045)));else{orientationProbe.position.copy(camera.position);orientationProbe.lookAt(route.getPointAt(1));desiredYaw=nearestYaw(orientationProbe.rotation.y,viewYaw);desiredPitch=orientationProbe.rotation.x;}}else camera.position.lerpVectors(moving.from,moving.to,e);if(k>=1){const done=moving.done;moving=null;done?.();}}
  if(moving&&state.phase==='vomiting'){const u=THREE.MathUtils.lerp(.43,.04,THREE.MathUtils.smoothstep(moving.progress,0,1));camera.position.copy(route.getPointAt(u));orient(route.getPointAt(Math.max(0,u-.04)));}
  if(viewTween){const k=Math.min(1,(elapsed-viewTween.start)/viewTween.duration),e=k*k*(3-2*k);desiredYaw=THREE.MathUtils.lerp(viewTween.fromYaw,viewTween.toYaw,e);desiredPitch=THREE.MathUtils.lerp(viewTween.fromPitch,viewTween.toPitch,e);if(k===1)viewTween=null;}

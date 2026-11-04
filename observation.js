@@ -21,6 +21,7 @@ let startupController,connected;const motion=new CameraMotion();let sentMotion=n
 const metrics={samples:0,totalMs:0,maxMs:0,losses:0,mode:null};
 $('#group-label').textContent=`第 ${groupId} 组`;$('#back-link').href=homeUrl();
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
+new ResizeObserver(()=>{if(observation)renderList();}).observe($('#camera-stage'));
 const status=message=>$('#observation-status').textContent=message;
 function freshObservation(){return {startedAt:Date.now(),completedAt:null,views:[],local3dEntries:[],cameraStarted:false};}
 function saveSoon(){if(isPreview)return;clearTimeout(saveTimer);saveTimer=setTimeout(()=>{if(record)void saveRecord(record);},500);}
@@ -46,14 +47,16 @@ function receivePose(data){
  metrics.samples++;metrics.totalMs+=data.costMs;metrics.maxMs=Math.max(metrics.maxMs,data.costMs);
  meanCost=meanCost?meanCost*.85+data.costMs*.15:data.costMs;
  interval=Math.min(220,Math.max(66,meanCost*1.25));captureWidth=meanCost>95?320:384;
- // A frame captured before an unmatched camera movement cannot be registered safely.
+ // Only compensate for camera translation when both frames share a reliable reference.
  const matched=sentMotion?.sequence===motion.sequence;
- if(!matched&&performance.now()-data.timestamp>100){targets=null;tracker.reset();return;}
+ const video=$('#camera-video');
+ if(!sentMotion||sentMotion.sceneRevision!==motion.sceneRevision||sentMotion.width!==video.videoWidth||sentMotion.height!==video.videoHeight||
+    performance.now()-data.timestamp>trackingHold())return;
  let points=data.points;if(points&&matched){const dx=motion.x-sentMotion.x,dy=motion.y-sentMotion.y;points=points.map(p=>({...p,x:p.x+dx,y:p.y+dy}));}
- if(targetMotion?.sequence===motion.sequence)tracker.shift(motion.x-targetMotion.x,motion.y-targetMotion.y);else tracker.reset();
+ if(targetMotion?.sequence===motion.sequence)tracker.shift(motion.x-targetMotion.x,motion.y-targetMotion.y);
  const body=tracker.update(points,data.timestamp,$('#camera-video').videoWidth/$('#camera-video').videoHeight,data.worldPoints);
- if(body){motion.setRegion(points);targets=body;lastPose=data.timestamp;targetMotion=motion.snapshot();$('#camera-status').textContent='点击身体上的器官，仔细观察';}
- else{targets=null;metrics.losses++;$('#ar-organs').hidden=true;$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';}
+ if(body){motion.setRegion(points);targets=body;lastPose=performance.now();targetMotion={...motion.snapshot(),width:video.videoWidth,height:video.videoHeight};$('#camera-status').textContent='点击身体上的器官，仔细观察';}
+ else{metrics.losses++;}
  if(new URLSearchParams(location.search).has('diagnostics'))$('#ar-metrics').textContent=`识别上限 ${(1000/Math.max(interval,meanCost)).toFixed(1)} 次/秒 · 平均 ${Math.round(meanCost)} ms · ${metrics.mode}${data.delegate?' / '+data.delegate:''}`;
 }
 function waitStartup(promise,ms,label,onLate){
@@ -92,23 +95,27 @@ async function initDetector(){
 }
 async function sendFrame(now){
  const video=$('#camera-video');if(busy||video.readyState<2||video.currentTime===lastFrame)return;
- busy=true;sentMotion=motion.snapshot();lastFrame=video.currentTime;lastSent=now;
+ busy=true;sentMotion={...motion.snapshot(),width:video.videoWidth,height:video.videoHeight};lastFrame=video.currentTime;lastSent=now;
  if(workerReady){try{const bitmap=await createImageBitmap(video,{resizeWidth:captureWidth,resizeHeight:Math.round(captureWidth*video.videoHeight/video.videoWidth),resizeQuality:'low'});if(!running||!worker){bitmap.close();busy=false;return;}worker.postMessage({type:'frame',bitmap,timestamp:now},[bitmap]);}catch(error){busy=false;console.warn('Camera frame skipped',error);}}
  else if(mainDetector){const start=performance.now();try{const result=mainDetector.detectForVideo(video,now);receivePose({points:result.landmarks?.[0]||null,worldPoints:result.worldLandmarks?.[0]||null,timestamp:now,costMs:performance.now()-start});}catch(error){busy=false;console.warn('Pose frame skipped',error);}}
+}
+function trackingHold(){
+ return Math.min(1200,Math.max(650,interval+meanCost*2+100));
 }
 function paint(now){
  if(!running)return;frame=requestAnimationFrame(paint);if(hidden)return;
  const video=$('#camera-video'),stage=$('#camera-stage'),age=now-lastPose;motion.update(video,now);
  const coherent=targetMotion?.sequence===motion.sequence;
- const fresh=age<Math.min(2000,Math.max(600,interval+meanCost*2+40));
- const visible=targets&&fresh&&((coherent&&motion.reliable)||age<100);
- const currentTargets=targets?Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,{...p,x:p.x+(coherent?motion.x-targetMotion.x:0),y:p.y+(coherent?motion.y-targetMotion.y:0)}])):null;
+ // A missed inference or a low-texture image must not immediately hide the body.
+ const visible=targets&&age<trackingHold()&&targetMotion.sceneRevision===motion.sceneRevision&&targetMotion.width===video.videoWidth&&targetMotion.height===video.videoHeight;
+ if(targets&&!visible){targets=null;tracker.reset();displayed.clear();}
+ const currentTargets=targets?Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,{...p,x:p.x+(coherent&&motion.reliable?motion.x-targetMotion.x:0),y:p.y+(coherent&&motion.reliable?motion.y-targetMotion.y:0)}])):null;
  if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
   for(const [id,b]of buttons){const point=currentTargets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
    if(prior)for(const key of ['x','y','w','h','angle'])next[key]=prior[key]+(next[key]-prior[key])*alpha;
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
   }
- }else{connected?.update(null);updateLinks();$('#ar-organs').hidden=true;if(age>800&&lastPose)$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';}
+ }else{connected?.update(null);updateLinks();$('#ar-organs').hidden=true;if(lastPose&&!targets)$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';}
  lastPaint=now;if(busy && now-lastSent>15000){stopCamera();$('#camera-status').textContent='识别暂时没有响应，请重新开启相机';return;}
  lastPaint=now;if(now-lastSent>=interval)void sendFrame(now);
 }
@@ -137,7 +144,7 @@ async function openViewer(){
  const mount=$('#organ-3d');mount.textContent='正在准备模型…';
 
 
- try{const {createOrganViewer}=await import('./ar-organ-viewer.js');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open,id==='mouth'?{initialRotation:[.35,-.18,0],zoom:1.2}:{});if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
+ try{const {createOrganViewer}=await import('./ar-organ-viewer.js');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open,id==='mouth'?{initialRotation:[.35,-.18,0]}:{});if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
  catch(error){if(generation===viewerGeneration)mount.innerHTML=`<img class="model-fallback-image" src="${asset(id,'png')}" alt="${o.name}"><p>模型加载未完成，请关闭后重试。</p>`;console.warn('Organ model failed',error);}
 }
 async function finishObservation(){if(!observation.cameraStarted||!observation.views.length)return;$('#finish-observation').disabled=true;closeSelected();selected=null;stopCamera();observation.completedAt=Date.now();observation.performance={...metrics,averageMs:metrics.samples?Math.round(metrics.totalMs/metrics.samples):null};status('正在保存…');const uploaded=await submitRecord(record);status(uploaded?'观察完成。':'已保存到本机，联网后可重试提交。');$('#finish-observation').disabled=false;$('#finish-observation').textContent='去修正模型 →';$('#finish-observation').onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;}

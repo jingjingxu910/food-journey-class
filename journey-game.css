@@ -16,3 +16,7 @@
 #seam-view{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;z-index:13;opacity:0;transition:opacity .32s ease-out}#food-display,#food-caption{z-index:14}#fork-side .side-cut{display:block;width:100%;height:51vh;object-fit:contain;border-radius:18px;overflow:hidden;background:#f1e2d0}#hint{transition:opacity .25s}#stomach-frame{transition:opacity .25s} @media(orientation:portrait){#fork-side .side-cut{height:40vh}}
 .veil{z-index:18}#food-canvas{display:block}
 #fixed-scene{position:absolute;inset:0;width:100%;height:100%;z-index:1;touch-action:manipulation}#observation,#detail,#views,#passages{z-index:3}#forward,#back,#map{z-index:4}
+
+#fork-side p,#micro p,#reflection{text-align:start}
+#reflection .primary{display:block;margin-inline:auto}
+#stage[data-scene="pharynx"] #hint{max-width:min(55%,265px);width:max-content}

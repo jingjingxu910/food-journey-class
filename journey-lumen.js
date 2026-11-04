@@ -9,48 +9,31 @@ function tissueTile(file,rect){
 }
 // A wall-only swatch avoids duplicating the source photograph's distant lumen.
 function esophagusWallTexture(){const image=decodedTissue.get('esophagus-wall-v9.webp'),surface=document.createElement('canvas');surface.width=surface.height=1024;const c=surface.getContext('2d');c.setTransform(0,1,1,0,0,0);c.drawImage(image,0,0,1024,1024);const texture=new THREE.CanvasTexture(surface);texture.colorSpace=THREE.SRGBColorSpace;texture.repeat.set(6,2);texture.anisotropy=8;return texture;}
-// A swallow has a contracted trailing region and a relaxed leading region.
-// Smooth, moving wall normals are computed at vertices, avoiding flat face highlights.
-function animateEsophagus(material,shaders,length){
- material.onBeforeCompile=s=>{
-  s.uniforms.uClock={value:0};s.uniforms.uStrength={value:0};s.uniforms.uSqueeze={value:.44};s.uniforms.uBolusU={value:.315};s.uniforms.uTubeLength={value:length};
-  const profile=`uniform float uStrength;uniform float uBolusU;uniform float uTubeLength;attribute vec3 lumenCenter;attribute vec3 lumenTangent;attribute float lumenU;
-  float trailingBand(float u){float d=u-uBolusU;return smoothstep(-.145,-.095,d)*(1.0-smoothstep(-.055,-.012,d));}
-  float wallScale(float u){float d=u-uBolusU;float lead=smoothstep(-.012,.018,d)*(1.0-smoothstep(.080,.135,d));float taper=smoothstep(.10,.20,u)*(1.0-smoothstep(.80,.895,u));return 1.0+uStrength*taper*(.105*lead-.44*trailingBand(u));}
-  `;
-  s.vertexShader=profile+s.vertexShader;
-  s.vertexShader=s.vertexShader.replace('#include <beginnormal_vertex>',`#include <beginnormal_vertex>
-  float slope=(wallScale(lumenU+.0005)-wallScale(lumenU-.0005))/.001;
-  float axialStretch=1.0+uStrength*.16*(trailingBand(lumenU+.0005)-trailingBand(lumenU-.0005))/(.001*uTubeLength);
-  float axialNormal=dot(objectNormal,lumenTangent);
-  vec3 normalRadial=objectNormal-lumenTangent*axialNormal;
-  objectNormal=normalize(normalRadial*axialStretch+lumenTangent*(axialNormal*wallScale(lumenU)-dot(objectNormal,position-lumenCenter)*slope/uTubeLength));`);
-  s.vertexShader=s.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
-  transformed=lumenCenter+(position-lumenCenter)*wallScale(lumenU)+lumenTangent*.16*trailingBand(lumenU)*uStrength;`);
-  shaders.push(s);
- };
- material.customProgramCacheKey=()=> 'esophagus-swallow-v10';
-}
 // Waves use an explicit centerline coordinate independent of material UVs.
 // Instanced villi use the same transform as the underlying folded wall.
 function animateTissue(material,shaders,type){
- const original=material.onBeforeCompile,cacheKey=material.customProgramCacheKey();material.onBeforeCompile=s=>{original(s);s.uniforms.uClock={value:0};s.uniforms.uStrength={value:0};s.uniforms.uSqueeze={value:type==='esophagus'?.38:type==='small'?.27:.25};s.vertexShader=`uniform float uClock;uniform float uStrength;uniform float uSqueeze;attribute vec3 lumenCenter;attribute float lumenU;\n`+s.vertexShader;
+ const esophagus=type==='esophagus';
+ const original=material.onBeforeCompile,cacheKey=material.customProgramCacheKey();material.onBeforeCompile=s=>{original(s);s.uniforms.uClock={value:0};s.uniforms.uStrength={value:0};s.uniforms.uSqueeze={value:esophagus?.34:type==='small'?.27:.25};if(esophagus)s.uniforms.uBolusU={value:.315};s.vertexShader=`${esophagus?'uniform float uBolusU;':''}uniform float uClock;uniform float uStrength;uniform float uSqueeze;attribute vec3 lumenCenter;attribute float lumenU;\n`+s.vertexShader;
  s.vertexShader=s.vertexShader.replace('#include <project_vertex>',`vec4 tissuePosition=vec4(transformed,1.0);
  #ifdef USE_INSTANCING
  tissuePosition=instanceMatrix*tissuePosition;
  #endif
- float phase=lumenU*${type==='esophagus'?'40.0':'58.0'}-uClock*${type==='esophagus'?'2.15':'2.5'};
+ vec3 radial=tissuePosition.xyz-lumenCenter;
+ float phase=lumenU*${esophagus?'40.0':'58.0'}-uClock*${esophagus?'4.4':'2.5'};
+ ${esophagus?'phase+=.38*radial.y;':''}
  float wave=pow(.5+.5*cos(phase),${type==='esophagus'?'3.0':'4.0'});
  float nextWave=pow(.5+.5*cos(lumenU*${type==='esophagus'?'19.0':'31.0'}-uClock*${type==='esophagus'?'1.2':'1.7'}+1.4),6.0);
  float taper=smoothstep(.105,.20,lumenU)*(1.0-smoothstep(.80,.895,lumenU));
- float contraction=(wave+nextWave*.24)*uSqueeze*(.18+.82*uStrength)*taper;
- vec3 radial=tissuePosition.xyz-lumenCenter;
+ ${esophagus?`// Fade the travelling wave out over a broad region around the moving bolus.
+ float distanceToBolus=lumenU-uBolusU;
+ taper*=smoothstep(-.16,-.07,distanceToBolus)*(1.0-smoothstep(.08,.25,distanceToBolus));`:''}
+ float contraction=(wave+nextWave*.24)*uSqueeze*${esophagus?'uStrength':'(.18+.82*uStrength)'}*taper;
  tissuePosition.xyz=lumenCenter+radial*(1.0-contraction);
- vec4 mvPosition=modelViewMatrix*tissuePosition;gl_Position=projectionMatrix*mvPosition;`);if(type!=='esophagus')s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec3 movedNormal=normalize(cross(dFdx(vViewPosition),dFdy(vViewPosition)));if(dot(movedNormal,normal)<0.0)movedNormal=-movedNormal;normal=normalize(mix(normal,movedNormal,.7));');shaders.push(s);};material.customProgramCacheKey=()=>cacheKey+'-lumen-motion-v7-'+type;
+ vec4 mvPosition=modelViewMatrix*tissuePosition;gl_Position=projectionMatrix*mvPosition;`);s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec3 movedNormal=normalize(cross(dFdx(vViewPosition),dFdy(vViewPosition)));if(dot(movedNormal,normal)<0.0)movedNormal=-movedNormal;normal=normalize(mix(normal,movedNormal,.7));');shaders.push(s);};material.customProgramCacheKey=()=>cacheKey+'-lumen-motion-v8-'+type;
 }
 export function buildLumen(root,targets,type,shaders){
  const small=type==='small',large=type==='large',points=small?[[0,0,7],[0,0,2],[1.5,-.35,-3],[3.1,.5,-7],[.7,-.15,-11],[-2.7,-.6,-15],[-3.0,.25,-19],[.4,.65,-24],[3,-.25,-29],[1.4,0,-34]]:large?[[0,0,7],[0,0,2],[.3,.2,-4],[1.0,.15,-10],[.2,-.2,-16],[-1.2,-.15,-23],[-1,.2,-29],[.4,0,-34]]:[[0,0,7],[0,0,2],[.2,.05,-7],[.08,-.1,-15],[-.25,.1,-24],[0,0,-31]];
- const curve=new THREE.CatmullRomCurve3(points.map(V),false,'catmullrom',.35),rings=type==='esophagus'?384:320,sides=type==='esophagus'?128:96,frames=curve.computeFrenetFrames(rings,false),geometry=new THREE.TubeGeometry(curve,rings,1,sides,false),pos=geometry.attributes.position,centers=[],coordinates=[],tangents=[];
+ const curve=new THREE.CatmullRomCurve3(points.map(V),false,'catmullrom',.35),rings=type==='esophagus'?384:320,sides=type==='esophagus'?128:96,frames=curve.computeFrenetFrames(rings,false),geometry=new THREE.TubeGeometry(curve,rings,1,sides,false),pos=geometry.attributes.position,centers=[],coordinates=[];
  const profile=u=>{const base=large?2.85:small?2.45:2.25,opening=Math.max(1-smooth(u,.018,.11),smooth(u,.88,.98));return THREE.MathUtils.lerp(base,.55,opening);};
  const ellipse=u=>small?.81+.055*Math.sin(u*18):large?.93:.88;
  function radiusAt(u,a){const end=Math.max(1-smooth(u,.02,.12),smooth(u,.88,.98));let r=profile(u);
@@ -65,10 +48,10 @@ export function buildLumen(root,targets,type,shaders){
   return r+end*(type==='esophagus'?.018:.055)*Math.cos(a*9+u*20);
  }
  function pointAt(u,a){const j=Math.min(rings,Math.floor(u*rings)),c=curve.getPointAt(u),r=radiusAt(u,a);return c.addScaledVector(frames.normals[j],Math.cos(a)*r).addScaledVector(frames.binormals[j],Math.sin(a)*r*ellipse(u));}
- for(let j=0;j<=rings;j++){const u=j/rings,c=curve.getPointAt(u);for(let i=0;i<=sides;i++){const p=pointAt(u,i/sides*Math.PI*2),k=j*(sides+1)+i;pos.setXYZ(k,p.x,p.y,p.z);centers.push(c.x,c.y,c.z);coordinates.push(u);if(type==='esophagus')tangents.push(frames.tangents[j].x,frames.tangents[j].y,frames.tangents[j].z);}}
+ for(let j=0;j<=rings;j++){const u=j/rings,c=curve.getPointAt(u);for(let i=0;i<=sides;i++){const p=pointAt(u,i/sides*Math.PI*2),k=j*(sides+1)+i;pos.setXYZ(k,p.x,p.y,p.z);centers.push(c.x,c.y,c.z);coordinates.push(u);}}
  geometry.setAttribute('lumenCenter',new THREE.Float32BufferAttribute(centers,3));geometry.setAttribute('lumenU',new THREE.Float32BufferAttribute(coordinates,1));geometry.computeVertexNormals();const normals=geometry.attributes.normal;for(let j=0;j<=rings;j++){const a=j*(sides+1),b=a+sides,n=new THREE.Vector3().fromBufferAttribute(normals,a).add(new THREE.Vector3().fromBufferAttribute(normals,b)).normalize();normals.setXYZ(a,n.x,n.y,n.z);normals.setXYZ(b,n.x,n.y,n.z);}
  const texture=small?new THREE.Texture(decodedTissue.get('small-mucosa-v3.webp')):large?tissueTile('large-intestine.webp',[35,520,270,245]):esophagusWallTexture();texture.needsUpdate=true;texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=texture.wrapT=type==='esophagus'?THREE.MirroredRepeatWrapping:THREE.RepeatWrapping;if(small)texture.repeat.set(14,3);
- const material=type==='esophagus'?new THREE.MeshStandardMaterial({color:0xffe7da,map:texture,bumpMap:texture,bumpScale:.012,roughness:.46,emissive:0xffdacf,emissiveMap:texture,emissiveIntensity:.035,side:THREE.DoubleSide}):new THREE.MeshStandardMaterial({color:small?0xffe3cc:0xfff3eb,map:texture,bumpMap:texture,bumpScale:small?.030:.045,emissive:0xffe1d4,emissiveMap:texture,emissiveIntensity:small?.035:.12,roughness:small?.39:.32,side:THREE.DoubleSide});if(type==='esophagus'){geometry.setAttribute('lumenTangent',new THREE.Float32BufferAttribute(tangents,3));animateEsophagus(material,shaders,curve.getLength());}else animateTissue(material,shaders,type);
+ const material=type==='esophagus'?new THREE.MeshStandardMaterial({color:0xffe7da,map:texture,bumpMap:texture,bumpScale:.012,roughness:.46,emissive:0xffdacf,emissiveMap:texture,emissiveIntensity:.035,side:THREE.DoubleSide}):new THREE.MeshStandardMaterial({color:small?0xffe3cc:0xfff3eb,map:texture,bumpMap:texture,bumpScale:small?.030:.045,emissive:0xffe1d4,emissiveMap:texture,emissiveIntensity:small?.035:.12,roughness:small?.39:.32,side:THREE.DoubleSide});animateTissue(material,shaders,type);
  // The two ends share the same narrow mucosal sleeve, material and UV phase.
  // Hand-offs happen within these sleeves, while the next cavity is still ahead.
  const first=Math.round(rings*.025),last=rings-first,indexPerRing=sides*6;geometry.clearGroups();geometry.addGroup(0,first*indexPerRing,1);geometry.addGroup(first*indexPerRing,(last-first)*indexPerRing,0);geometry.addGroup(last*indexPerRing,(rings-last)*indexPerRing,1);blendNeck(material);const wall=new THREE.Mesh(geometry,[material,neckMaterial()]);wall.userData.kind='wall';root.add(wall);targets.push(wall);

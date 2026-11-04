@@ -1,4 +1,4 @@
-importScripts('./resource-manifest.js?v=20261104-ar-review-14','./resource-store.js?v=20261104-ar-review-14');
+importScripts('./resource-manifest.js?v=20261105-journey-wave','./resource-store.js?v=20261105-journey-wave');
 const ROOT=new URL('./',self.location.href);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));
 async function withRange(response,range){
