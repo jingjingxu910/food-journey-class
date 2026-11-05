@@ -1,4 +1,4 @@
-import { groupId, currentRecord, saveRecord, submitRecord, homeUrl } from './student-data.js';
+import { groupId, currentRecord, saveRecord, submitRecord, homeUrl, isPhotoPreview } from './student-data.js';
 const $=(selector)=>document.querySelector(selector);
 $('#group-label').textContent=`第 ${groupId} 组`;
 $('#back-link').href=homeUrl();
@@ -68,17 +68,23 @@ function photoData(file, maxSide, quality) {
 }
 function showPhoto(data) {
   $('#photo-preview').src=data;
+  $('#open-camera').textContent='重新拍摄';
   $('#photo-preview').hidden=false;
   $('#photo-frame').querySelector('span').hidden=true;
 }
 async function savePhoto(file) {
-  if(!file||!record)return;
+  const button=$('#submit-assembly');
+  if(!file||!record||button.disabled)return;
   if(!file.type.startsWith('image/')) { $('#assembly-status').textContent='请选择照片。';return; }
+  button.disabled=true;
   try {
     $('#assembly-status').textContent='正在处理照片…';
     const local=await photoData(file,1280,.72);
-    const preview=await photoData(file,500,.55);
+    let preview=await photoData(file,500,.55);
+    if(!isPhotoPreview(preview)) preview=await photoData(file,320,.45);
+    if(!isPhotoPreview(preview)) throw new Error('照片无法压缩，请重新拍摄。');
     record.assembly ||= { startedAt:Date.now(), completedAt:null };
+    record.assembly.completedAt=null;
     record.assembly.photoLocal=local;
     record.assembly.photoPreview=preview;
     record.assembly.photoTakenAt=Date.now();
@@ -86,6 +92,7 @@ async function savePhoto(file) {
     await saveRecord(record);
     $('#assembly-status').textContent='照片已保存在本机。';
   } catch(error) { $('#assembly-status').textContent=error.message; }
+  finally { button.disabled=false; }
 }
 async function submit() {
   record.assembly ||= { startedAt:Date.now(),completedAt:null };
@@ -94,10 +101,21 @@ async function submit() {
   record.assembly.note=$('#assembly-note').value.trim();
   record.assembly.completedAt=Date.now();
   $('#assembly-status').textContent='正在提交…';
-  const uploaded=await submitRecord(record);
-  $('#assembly-status').textContent=uploaded?'拼装记录已提交。':'已保存在本机，暂未传给老师。';
-  $('#journey-link').hidden=false;
-  button.disabled=false;
+  try {
+    if(!isPhotoPreview(record.assembly.photoPreview)) {
+      const source=record.assembly.photoLocal||record.assembly.photoPreview;
+      const file=await (await fetch(source)).blob();
+      record.assembly.photoPreview=await photoData(file,320,.45);
+      if(!isPhotoPreview(record.assembly.photoPreview)) throw new Error('照片无法压缩，请重新拍摄。');
+    }
+    const uploaded=await submitRecord(record);
+    $('#assembly-status').textContent=uploaded?'拼装记录已提交。':'已保存在本机，联网后请再次提交。';
+    $('#journey-link').hidden=false;
+  } catch(error) {
+    $('#assembly-status').textContent=error.message||'暂时无法提交，请重试。';
+  } finally {
+    button.disabled=false;
+  }
 }
 async function initialize() {
   record=await currentRecord();

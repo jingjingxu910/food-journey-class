@@ -3,6 +3,12 @@
 export const groupId = Math.max(1, Math.min(12, Number(new URLSearchParams(location.search).get('group')) || 1));
 const environment = 'motionless-harrier-d7cuz0659ef1a';
 const collectionName = 'food-journey-groups';
+export const maxPhotoPreviewLength = 65536;
+
+export function isPhotoPreview(value) {
+  return typeof value === 'string' && value.length <= maxPhotoPreviewLength &&
+    /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(value);
+}
 
 function openDb() {
   return new Promise((resolve, reject) => {
@@ -47,10 +53,24 @@ export async function currentRecord() {
       (async () => { const db = await cloudDb(); return db.collection(collectionName).doc('class-reset').get(); })(),
       new Promise((_, reject) => { resetTimer=setTimeout(() => reject(new Error('课堂轮次读取超时')),2500); })
     ]).finally(()=>clearTimeout(resetTimer));
+    if (result?.code) throw new Error(result.message || '课堂轮次读取失败');
     const data = Array.isArray(result.data) ? result.data[0] : result.data;
     resetId = typeof data?.resetId === 'string' ? data.resetId : null;
-  } catch { /* Keep the local draft available while offline. */ }
-  const latest = records.filter((item) => item.lesson === 'food-journey' && Number(item.groupId) === groupId && (!resetId || item.resetId === resetId))
+    if (localStorage.getItem('lesson-known-round') !== JSON.stringify(resetId)) {
+      for (let id=1; id<=12; id++) localStorage.removeItem('food-journey-game-v3-group-'+id);
+    }
+    localStorage.setItem('lesson-known-round', JSON.stringify(resetId));
+    const db = await openDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction('learningRecords', 'readwrite');
+      for (const item of records) {
+        if (item.lesson === 'food-journey' && (item.resetId || null) !== resetId) tx.objectStore('learningRecords').delete(item.id);
+      }
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch { try { resetId = JSON.parse(localStorage.getItem('lesson-known-round')); } catch {} }
+  const latest = records.filter((item) => item.lesson === 'food-journey' && Number(item.groupId) === groupId && ((item.resetId || null) === resetId))
     .sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))[0];
   if (latest) return latest;
   const now = Date.now();
@@ -60,7 +80,7 @@ export async function currentRecord() {
 }
 
 let cloudReady;
-async function cloudDb() {
+export async function cloudDb() {
   if (!cloudReady) cloudReady = (async () => {
     if (window.loadClassCloud) await window.loadClassCloud();
     if (!window.cloudbase) throw new Error('CloudBase SDK unavailable');
@@ -68,7 +88,10 @@ async function cloudDb() {
     const auth = app.auth();
     if (!await auth.getLoginState()) await auth.signInAnonymously();
     return app.database();
-  })();
+  })().catch((error) => {
+    cloudReady = null;
+    throw error;
+  });
   return cloudReady;
 }
 
@@ -76,18 +99,31 @@ export async function submitRecord(record, {saveLocal=true}={}) {
   if(saveLocal) await saveRecord(record);
   try {
     const db = await cloudDb();
-    const ref = db.collection(collectionName).doc(`group-${groupId}`);
-    let prior = {};
-    try {
-      const result = await ref.get();
-      prior = Array.isArray(result.data) ? result.data[0] || {} : result.data || {};
-    } catch {}
-    const records = Array.isArray(prior.records) ? prior.records.filter((item) => item.id !== record.id) : [];
-    // Photos are stored locally until a dedicated, size-limited upload is enabled.
+    const collection = db.collection(collectionName);
+    const reset = await collection.doc('class-reset').get();
+    if (reset?.code) throw new Error(reset.message || '课堂轮次读取失败');
+    const active = Array.isArray(reset.data) ? reset.data[0] : reset.data;
+    if ((active?.resetId || null) !== (record.resetId || null)) {
+      throw new Error('课堂已开始新一轮');
+    }
+    const ref = collection.doc(`group-${groupId}`);
+    const result = await ref.get();
+    if (result?.code) throw new Error(result.message || '无法读取小组记录');
+    const prior = Array.isArray(result.data) ? result.data[0] : result.data;
+    const records = Array.isArray(prior?.records) ? prior.records : [];
+    const previous = records.find((item) => item.id === record.id);
     const submitted = JSON.parse(JSON.stringify(record));
+    if (!submitted.v1?.completedAt) submitted.v1 = null;
+    if (!submitted.v2?.completedAt) submitted.v2 = null;
+    if (!submitted.assembly?.completedAt) submitted.assembly = previous?.assembly || null;
     if (submitted.assembly) delete submitted.assembly.photoLocal;
-    records.push(submitted);
-    const payload = { id: groupId, records: records.slice(-12), updatedAt: Date.now() };
+    if (submitted.assembly && !isPhotoPreview(submitted.assembly.photoPreview)) {
+      delete submitted.assembly.photoPreview;
+    }
+    submitted.pendingSync = false;
+    const next = records.filter((item) => item.id !== record.id);
+    next.push(submitted);
+    const payload = { id: groupId, records: next.slice(-12), updatedAt: Date.now() };
     const written = await ref.set(payload);
     if (written?.code || !(written?.updated > 0 || written?.upsertedId || written?.id)) {
       throw new Error(written?.message || '云端未确认保存');

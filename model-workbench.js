@@ -426,6 +426,7 @@ async function loadClassResetId() {
     const database = await initializeCloud();
     return database.collection(CLOUD_COLLECTION).doc("class-reset").get();
   })(), 2500);
+  if (result?.code) throw new Error(result.message || "课堂轮次读取失败");
   const resetRecord = Array.isArray(result?.data) ? result.data[0] || {} : result?.data || {};
   return typeof resetRecord.resetId === "string" ? resetRecord.resetId : null;
 }
@@ -441,7 +442,11 @@ async function initializeCloud() {
       const auth = app.auth();
       const state = await auth.getLoginState();
       if (!state) await auth.signInAnonymously();
-    })();
+    })().catch((error) => {
+      cloudDatabase = null;
+      cloudLoginPromise = null;
+      throw error;
+    });
   }
   await cloudLoginPromise;
   return cloudDatabase;
@@ -449,24 +454,8 @@ async function initializeCloud() {
 
 async function syncRecord(record) {
   try {
-    const database = await initializeCloud();
-    const reference = database.collection(CLOUD_COLLECTION).doc(`group-${groupId}`);
-    let current = {};
-    try {
-      const result = await reference.get();
-      current = Array.isArray(result?.data) ? result.data[0] || {} : result?.data || {};
-    } catch {}
-    const submittedRecord = clone(record);
-    if (!submittedRecord.v1?.completedAt) submittedRecord.v1 = null;
-    if (!submittedRecord.v2?.completedAt) submittedRecord.v2 = null;
-    submittedRecord.pendingSync = false;
-    const records = Array.isArray(current.records) ? current.records.filter((item) => item.id !== record.id) : [];
-    records.push(submittedRecord);
-    const payload = { id: groupId, records: records.slice(-20), updatedAt: Date.now() };
-    const written = await reference.set(payload);
-    if (written?.code || !(written?.updated > 0 || written?.upsertedId || written?.id)) {
-      throw new Error(written?.message || "云端未确认保存");
-    }
+    const { submitRecord } = await import("./student-data.js");
+    if (!await submitRecord(record, { saveLocal: false })) throw new Error("云端未确认保存");
     record.pendingSync = false;
     pendingSubmissionSync = false;
     await saveLocal(record);
@@ -629,7 +618,7 @@ function renderDashboard(records) {
     const observedNames = [...new Set(views.map((item) => organById(item.organId)?.name).filter(Boolean))];
     const observationLine = record.observation?.completedAt ? `观察 ${observedNames.length} 种器官 · 局部 3D ${record.observation.local3dEntries?.length || 0} 次` : "";
     const gameLine = record.journey?.completedAt ? `旅程经过 ${(record.journey.visits || []).length} 处` : "";
-    const photo = /^data:image\/jpeg;base64,/.test(record.assembly?.photoPreview || "") ? `<button class="assembly-thumb" data-photo-group-id="${id}" aria-label="放大第 ${id} 组拼装照片"><img src="${record.assembly.photoPreview}" alt="第 ${id} 组拼装作品"></button>` : "";
+    const photo = record.assembly?.completedAt && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(record.assembly.photoPreview || "") ? `<button class="assembly-thumb" data-photo-group-id="${id}" aria-label="放大第 ${id} 组拼装照片"><img src="${record.assembly.photoPreview}" alt="第 ${id} 组拼装作品"></button>` : "";
     return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${status}</span></header>${before || after ? `<div class="mini-compare ${after ? "has-revision" : "single-model"}">${before}${after}</div>` : ""}${analysis ? `<p class="group-model-analysis">${analysis}</p>` : ""}${observationLine || gameLine ? `<p class="group-progress-line">${[observationLine,gameLine].filter(Boolean).join(" · ")}</p>` : ""}${photo}</article>`;
   }).join("");
 }
@@ -637,6 +626,7 @@ function renderDashboard(records) {
 async function loadCloudRecords() {
   const database = await initializeCloud();
   const result = await database.collection(CLOUD_COLLECTION).get();
+  if (result?.code) throw new Error(result.message || "无法读取云端记录");
   const documents = Array.isArray(result?.data) ? result.data : [];
   return documents.flatMap((document) => Array.isArray(document.records)
     ? document.records.filter((record) => Number(record.groupId) === Number(document.id))
@@ -662,11 +652,13 @@ async function refreshDashboard() {
     ? localRecords.filter((record) => record.lesson !== "food-journey" || record.resetId === activeResetId)
     : localRecords;
   const merged = new Map();
+  const cloudById = new Map(cloudRecords.map((record) => [record.id, record]));
   [...currentLocalRecords, ...cloudRecords]
     .sort((first, second) => Number(first.updatedAt) - Number(second.updatedAt))
-    .forEach((record) => merged.set(record.id, record));
+    .forEach((record) => merged.set(record.id, { ...record, assembly: cloudById.get(record.id)?.assembly || null }));
   const visibleRecords = [...merged.values()].filter((record) => record.lesson === "food-journey" && (record.v1?.completedAt || record.v2?.completedAt || record.observation?.completedAt || record.assembly?.completedAt || record.journey?.completedAt) && (!activeResetId || record.resetId === activeResetId));
   renderDashboard(visibleRecords);
+  window.dispatchEvent(new CustomEvent("lesson-records", {detail:{records:cloudRecords.filter(r=>(r.resetId||null)===(activeResetId||null)),resetId:activeResetId}}));
   button.disabled = false;
   button.textContent = "刷新数据";
 }
@@ -695,7 +687,10 @@ async function clearAllClassData() {
   status.textContent = "本机记录已清除，正在开启新一轮…";
   try {
     const database = await initializeCloud();
-    await database.collection(CLOUD_COLLECTION).doc("class-reset").set({ id: "class-reset", resetId, updatedAt: Date.now() });
+    const result = await database.collection(CLOUD_COLLECTION).doc("class-reset").set({ id: "class-reset", resetId, updatedAt: Date.now() });
+    if (result?.code || !(result?.updated > 0 || result?.upsertedId || result?.id)) throw new Error("云端未确认清空");
+    localStorage.setItem('lesson-known-round', JSON.stringify(resetId));
+    for(let id=1;id<=12;id++)localStorage.removeItem('food-journey-game-v3-group-'+id);
     activeResetId = resetId;
     renderDashboard([]);
     await refreshDashboard();
@@ -796,7 +791,7 @@ async function initialize() {
     .filter((record) => Number(record.groupId) === groupId)
     .sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))[0];
   if (savedRecord) {
-    lessonExtras = { observation: savedRecord.observation || null, assembly: savedRecord.assembly || null, journey: savedRecord.journey || null };
+    lessonExtras = { observation: savedRecord.observation || null, assembly: savedRecord.assembly || null, journey: savedRecord.journey || null, evaluation: savedRecord.evaluation || null };
     sessionId = savedRecord.id;
     v1 = savedRecord.v1 ? clone(savedRecord.v1) : createModel();
     if(!v1.completedAt)v1.structureColor="#f4a329";
@@ -867,7 +862,7 @@ document.querySelector("#group-dashboard").addEventListener("click", (event) => 
   if (photo) {
     const group = Number(photo.dataset.photoGroupId);
     const source = latestRecord(dashboardRecords, group)?.assembly?.photoPreview;
-    if (/^data:image\/jpeg;base64,/.test(source || "")) {
+    if (/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(source || "")) {
       document.querySelector("#preview-model-title").textContent = `第 ${group} 组 · 拼装作品`;
       document.querySelector("#preview-model-content").innerHTML = `<img class="assembly-photo-large" src="${source}" alt="第 ${group} 组拼装作品">`;
       document.querySelector("#model-preview-dialog").showModal();

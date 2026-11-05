@@ -1,7 +1,7 @@
 window.lessonShell = true;
 const frame = document.querySelector('#lesson-frame');
 const base = new URL('./', location.href);
-const allowed = new Set(['index.html','model-workbench.html','observation.html','assembly.html','journey.html','journey-game.html','ar-prepare.html']);
+const allowed = new Set(['evaluation.html','index.html','model-workbench.html','observation.html','assembly.html','journey.html','journey-game.html','ar-prepare.html']);
 const params = new URLSearchParams(location.search);
 const initial = new URL(allowed.has(params.get('page')) ? params.get('page') : 'index.html', base);
 initial.search = params.get('query') || '';
