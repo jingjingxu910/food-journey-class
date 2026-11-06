@@ -95,7 +95,7 @@ export async function cloudDb() {
   return cloudReady;
 }
 
-export async function submitRecord(record, {saveLocal=true}={}) {
+export async function submitRecord(record, {saveLocal=true, submitEvaluation=false}={}) {
   if(saveLocal) await saveRecord(record);
   try {
     const db = await cloudDb();
@@ -113,6 +113,13 @@ export async function submitRecord(record, {saveLocal=true}={}) {
     const records = Array.isArray(prior?.records) ? prior.records : [];
     const previous = records.find((item) => item.id === record.id);
     const submitted = JSON.parse(JSON.stringify(record));
+    delete submitted.evaluationDraft;
+    if (!submitEvaluation) submitted.evaluation = previous?.evaluation || null;
+    if (submitEvaluation && (!submitted.evaluation?.completedAt ||
+      submitted.evaluation.levels?.length !== 3 ||
+      !submitted.evaluation.levels.every(n => Number.isInteger(n) && n >= 1 && n <= 3))) {
+      throw new Error('请完成三项自评后再提交');
+    }
     if (!submitted.v1?.completedAt) submitted.v1 = null;
     if (!submitted.v2?.completedAt) submitted.v2 = null;
     if (!submitted.assembly?.completedAt) submitted.assembly = previous?.assembly || null;
@@ -121,6 +128,8 @@ export async function submitRecord(record, {saveLocal=true}={}) {
       delete submitted.assembly.photoPreview;
     }
     submitted.pendingSync = false;
+    if(submitted.observation)submitted.observation.pendingSync=false;
+    if(submitted.assembly)submitted.assembly.pendingSync=false;
     const next = records.filter((item) => item.id !== record.id);
     next.push(submitted);
     const payload = { id: groupId, records: next.slice(-12), updatedAt: Date.now() };

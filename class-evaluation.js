@@ -1,5 +1,5 @@
 import {groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js';
-import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards} from './evaluation-data.js';
+import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents} from './evaluation-data.js';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
@@ -7,8 +7,12 @@ const symbols=['🔎','🤝','🌱'];
 export function certificate(entry){
  const card=el('article',undefined,'ev-award theme-'+(entry.category||0));
  const art=el('div',undefined,'award-garden');
- art.append(el('span','✧','spark spark-one'),el('span','✦','spark spark-two'),el('span','🌿','leaf leaf-one'),el('span','🌿','leaf leaf-two'),el('span',['🔭','🪁','🚀'][entry.category||0],'award-hero'));
- card.append(el('p','食物在身体里的旅行','award-course'),art,el('p','送给 第 '+entry.groupId+' 组','award-group'),el('h2',entry.title),el('div','你们的闪光时刻','award-ribbon'),el('p',entry.reason,'award-reason'),el('p','带着好奇出发，让每一次发现都发光。','award-wish'),el('span','✧  ✦  ✧','award-confetti'));
+ const reason=el('div',undefined,'award-reason');
+ const paragraphs=entry.reasonParagraphs||String(entry.reason||'').split(/\n+|(?<=[！。？]) +/u);
+ paragraphs.filter(Boolean).forEach(text=>reason.append(el('p',text)));
+ const hero=el('span',awardIcon(entry),'award-hero');hero.setAttribute('aria-hidden','true');
+ art.append(hero);
+ card.append(el('p','食物在身体里的旅行','award-course'),art,el('p','送给 第 '+entry.groupId+' 组','award-group'),el('h2',entry.title),el('div','你们的闪光时刻','award-ribbon'),reason,el('p','带着好奇出发，让每一次发现都发光。','award-wish'),el('span','✧  ✦  ✧','award-confetti'));
  return card;
 }
 if(teacher)setupTeacher();
@@ -16,7 +20,7 @@ else if(document.querySelector('#student-evaluation'))setupStudent();
 function setupTeacher(){
  document.body.classList.add('evaluation-teacher');
  const host=document.querySelector('#teacher-view'),tabs=el('nav',undefined,'ev-tabs'),panel=el('section',undefined,'ev-grid'),dock=el('aside',undefined,'ev-stars');
- let records=[],state={resetId:null,groups:{}},ready=false,dirty=false,version=0,timer,saving=null,busy=false,stage=new URLSearchParams(location.search).get('stage')==='awards'?'专属奖状':'模型';
+ let records=[],state={resetId:null,groups:{}},ready=false,dirty=false,version=0,timer,saving=null,busy=false,stage=new URLSearchParams(location.search).get('stage')==='awards'?'专属奖状':'初始模型';
  const status=el('span','连接课堂中…','ev-status');
  const header=el('div',undefined,'ev-star-heading');
  header.append(el('b','点一下，送一颗星'),el('span','🔎 观察   🤝 合作   🌱 坚持'),status);
@@ -60,7 +64,7 @@ function setupTeacher(){
  async function choose(name){
    if(busy)return;
    stage=name;render();
-   if(!['小组自评','专属奖状'].includes(name))return;
+
    busy=true;renderStars();
    try{
      if(!ready)throw new Error('请先连接课堂。');
@@ -72,12 +76,13 @@ function setupTeacher(){
        makeAwards(records,next.groups).forEach(a=>next.groups[a.groupId]=a);
        await saveFeedback(next);state=next;
      }
-     await sendClassCommand(state.resetId,name==='小组自评'?'evaluation':'awards',String(Date.now()));
-     status.textContent=name==='小组自评'?'学生端正在进入自评':'已颁发，学生端自动展示';
+     const phases={'初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards'};
+     await sendClassCommand(state.resetId,phases[name],String(Date.now()));
+     status.textContent=name==='专属奖状'?'已颁发，学生端自动展示':'学生端正在进入'+name;
      render();
    }catch(error){status.textContent=error.message;}finally{busy=false;renderStars();}
  }
- ['模型','AR观察','实体拼装','食物旅行','小组自评','专属奖状'].forEach(name=>tabs.append(button(name,()=>choose(name))));
+ ['初始模型','AR观察','修正模型','实体拼装','食物旅行','小组自评','专属奖状'].forEach(name=>tabs.append(button(name,()=>choose(name))));
  function showPhoto(data,id){
    const dialog=document.querySelector('#model-preview-dialog'),img=el('img');
    img.src=data;img.alt='第 '+id+' 组拼装照片';img.className='ev-photo-large';
@@ -86,8 +91,18 @@ function setupTeacher(){
  }
  function render(){
    [...tabs.children].forEach(b=>b.setAttribute('aria-selected',String(b.textContent===stage)));
-   const model=stage==='模型';
-   document.querySelector('.teacher-model-heading h1').textContent=model?'各组的消化模型':stage;
+   const model=stage==='初始模型'||stage==='修正模型';
+   document.querySelector('.teacher-model-heading h1').textContent=stage==='初始模型'?'各组的初始模型':stage==='修正模型'?'观察前后的模型对比':stage;
+   document.querySelector('.teacher-model-heading .model-eyebrow').textContent={
+     '初始模型':'任务一 · 表达初始想法',
+     'AR观察':'任务二 · 观察器官结构',
+     '修正模型':'任务三 · 对照观察修正模型',
+     '实体拼装':'任务四 · 展示拼装作品',
+     '食物旅行':'任务五 · 回顾探索过程',
+     '小组自评':'任务六 · 回顾小组表现',
+     '专属奖状':'课堂收尾 · 肯定各组亮点'
+   }[stage];
+   window.dispatchEvent(new CustomEvent('teacher-stage-view',{detail:stage==='修正模型'?'v2':'v1'}));
    document.querySelector('#group-dashboard').hidden=!model;
    document.querySelector('.teacher-pagination').hidden=!model;
    panel.hidden=model;panel.classList.toggle('award-gallery',stage==='专属奖状');panel.replaceChildren();
@@ -112,8 +127,16 @@ function setupTeacher(){
        card.append(el('p','观察过 '+[...new Set((data.views||[]).map(v=>names[v.organId]||v.organId))].join('、')));
      }else{
        card.append(el('p','已完成食物旅行'));
-       const events=data.history||data.events||[],details=el('details');details.append(el('summary','查看探索过程'));
-       events.slice(-30).forEach(e=>details.append(el('p',({identify:'辨认器官',locate:'查看人体图',look:'转向观察','villi-detail':'观察绒毛','stomach-wrong':'再次尝试胃部路径'}[e.type]||'探索活动')+(e.choice?' · '+e.choice:''))));
+       const labels={identify:'辨认器官',locate:'借助人体图查找位置',look:'转向观察',
+         'fork-side-view':'从侧面比较气管与食管','villi-detail':'放大观察小肠绒毛',
+         airway:'食团误入气管后重新尝试','safe-swallow':'选择食管继续旅行',
+         'stomach-locate':'查看胃在身体中的位置','stomach-wrong':'重新辨认胃',
+         'stomach-complete':'完成胃部探索','nutrient-absorption':'观察营养移向肠壁',
+         'water-absorption':'观察水分吸收','peristalsis':'体验食管蠕动',vomit:'观察食物逆行后重新出发'};
+       const events=journeyEvents(data).filter(e=>labels[e.type]),details=el('details');details.append(el('summary','查看探索过程（'+events.length+' 条）'));
+       events.slice(-30).forEach(e=>details.append(el('p',labels[e.type]+(e.choice?' · 选择“'+e.choice+'”':''))));
+       if(!events.length)details.append(el('p','本次提交记录了旅程完成状态，没有可展开的探索步骤。'));
+       if(events.length>30)details.append(el('p','显示最近 30 条；奖状判定仍使用完整提交记录。'));
        card.append(details);
      }
      panel.append(card);
@@ -125,7 +148,7 @@ function setupTeacher(){
    records=[...event.detail.records].sort((a,b)=>b.updatedAt-a.updatedAt).filter((r,i,all)=>all.findIndex(x=>Number(x.groupId)===Number(r.groupId))===i);
    try{
      if(saving)await saving;
-     const stored=await readDocument('class-feedback');
+     const stored=event.detail.feedback||await readDocument('class-feedback');
      if(!dirty||state.resetId!==round)state=stored.resetId===round?{resetId:round,groups:stored.groups||{}}:{resetId:round,groups:{}};
      const local=JSON.parse(localStorage.getItem('teacher-evaluation-draft')||'null');
      if(local?.resetId===round){state=local;dirty=true;}else localStorage.removeItem('teacher-evaluation-draft');
@@ -178,16 +201,19 @@ async function setupStudent(){
    if(levels.some(n=>n===0)){status.textContent='还有星星没点亮哦！';return;}
    locked=true;submit.disabled=true;drawStars();
    try{
-     record.evaluation={levels:[...levels],completedAt:Date.now(),schema:2};
+     record.evaluationDraft={levels:[...levels]};
      await saveRecord(record);
-     if(!await submitRecord(record))throw new Error('星星保存在本机，联网后再点一次。');
+     const evaluation={levels:[...levels],completedAt:Date.now(),schema:2};
+     if(!await submitRecord({...record,evaluation},{saveLocal:false,submitEvaluation:true}))throw new Error('星星保存在本机，联网后再点一次。');
+     record.evaluation=evaluation;delete record.evaluationDraft;
+     await saveRecord(record);
      status.textContent='老师收到啦！一起等待惊喜吧 🌸';submit.textContent='星星已提交 ✓';
    }catch(error){locked=false;submit.disabled=false;drawStars();status.textContent=error.message;}
  };
  window.addEventListener('class-command',event=>showCommand(event.detail));
  try{
    record=await currentRecord();
-   levels=record.evaluation?.levels?.slice(0,3)||levels;drawStars();
+   levels=(record.evaluationDraft||record.evaluation)?.levels?.slice(0,3)||levels;drawStars();
    await showCommand(await readDocument('class-control'));
  }catch{status.textContent='正在连接课堂…';}
 }

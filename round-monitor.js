@@ -1,8 +1,35 @@
 // Lightweight control checks. Artwork and records are fetched only when commands change.
 import {readDocument} from './evaluation-data.js';
-let checking=false,lastCheck=0,lastRoundCheck=0;
-async function check(){
- if(checking||document.hidden||Date.now()-lastCheck<5000)return;
+import {cloudDb} from './student-data.js';
+let checking=false,lastCheck=0,lastRoundCheck=0,lastStageCommand=null;
+let commandWatcher=null,cachedCommand=null,nextWatchAttempt=0,retryAfter=0,failureDelay=2000;
+function stopCommandWatch(){
+ const watcher=commandWatcher;
+ commandWatcher=null;
+ cachedCommand=null;
+ if(watcher)Promise.resolve(watcher.close()).catch(()=>{});
+}
+async function ensureCommandWatch(){
+ if(commandWatcher||Date.now()<nextWatchAttempt)return;
+ nextWatchAttempt=Date.now()+60000;
+ try{
+   const db=await cloudDb();
+   if(document.hidden)return;
+   const ref=db.collection('food-journey-groups').doc('class-control');
+   if(typeof ref.watch!=='function')return;
+   commandWatcher=ref.watch({
+     onChange(snapshot){
+       if(document.hidden)return;
+       cachedCommand=snapshot.docs?.[0]||{};
+       retryAfter=0;
+       void check(true);
+     },
+     onError(){stopCommandWatch();nextWatchAttempt=Date.now()+60000;}
+   });
+ }catch{stopCommandWatch();}
+}
+async function check(force=false){
+ if(checking||document.hidden||Date.now()<retryAfter||(!force&&Date.now()-lastCheck<1500))return;
  const frame=document.querySelector('#lesson-frame');
  if(!frame)return;
  let url;
@@ -25,15 +52,40 @@ async function check(){
        }
      }
    }
-   const command=await readDocument('class-control');
+   await ensureCommandWatch();
+   const command=cachedCommand||await readDocument('class-control');
+   failureDelay=2000;retryAfter=0;
    const known=JSON.parse(localStorage.getItem('lesson-known-round')||'null');
-   if(command.resetId!==known||!['evaluation','awards'].includes(command.phase))return;
+   if(command.resetId!==known)return;
+   const stageRoutes={v1:'model-workbench.html?phase=v1',v2:'model-workbench.html?phase=v2',observation:'observation.html',assembly:'assembly.html',journey:'journey.html'};
+   const route=stageRoutes[command.phase];
+   if(route){
+     const key=JSON.stringify([known,command.phase,command.commandId]);
+     if(key===lastStageCommand)return;
+     if(await frame.contentWindow.prepareClassNavigation?.()===false)return;
+     const target=new URL(route,url);
+     target.searchParams.set('group',url.searchParams.get('group')||1);
+     target.searchParams.set('controlled','1');
+     lastStageCommand=key;
+     frame.contentWindow.location.replace(target.href);
+     return;
+   }
+   if(!['evaluation','awards'].includes(command.phase))return;
+   lastStageCommand=null;
    if(!url.pathname.endsWith('/evaluation.html')){
+     if(await frame.contentWindow.prepareClassNavigation?.()===false)return;
      frame.contentWindow.location.replace('evaluation.html?group='+(url.searchParams.get('group')||1));
    }else frame.contentWindow.dispatchEvent(new frame.contentWindow.CustomEvent('class-command',{detail:command}));
- }catch{/* Retain local progress and retry when online. */}finally{checking=false;}
+ }catch{
+   retryAfter=Date.now()+failureDelay;
+   failureDelay=Math.min(60000,failureDelay*2);
+ }finally{checking=false;}
 }
-setInterval(check,15000);
-window.addEventListener('focus',check);
-window.addEventListener('online',check);
-document.addEventListener('visibilitychange',check);
+setInterval(check,2000);
+window.addEventListener('focus',()=>void check(true));
+window.addEventListener('online',()=>{nextWatchAttempt=0;retryAfter=0;void check(true);});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden)stopCommandWatch();
+ else {nextWatchAttempt=0;void check(true);}
+});
+window.addEventListener('pagehide',stopCommandWatch);

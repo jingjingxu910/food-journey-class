@@ -15,7 +15,7 @@ export function renderReflection(doc,organs,log,foodArt){
  const used=types=>events.some(e=>types.includes(e.type));
  const steps=[];
  if(used(['look','stomach-ahead','stomach-entry','stomach-pool']))steps.push('我们换个方向，看看四周有什么。');
- if(used(['locate','stomach-locate']))steps.push('认不出是哪里时，我们打开人体图找一找。');
+ if(used(['locate','stomach-locate']))steps.push('我们打开人体图，把眼前的器官和身体中的位置对照起来。');
  if(used(['fork-side-view']))steps.push('在咽部，我们从侧面比较了两条通道。');
  if(used(['villi-detail']))steps.push('在小肠里，我们凑近看了肠壁上的绒毛。');
  if(log.coughs)steps.push('食团走错了路，引起了咳嗽。我们回去再选了一次。');

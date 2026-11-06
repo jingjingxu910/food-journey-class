@@ -46,9 +46,15 @@ let cloudDatabase = null;
 let cloudLoginPromise = null;
 let draftSaveTimer = null;
 let dashboardRecords = [];
+let teacherModelPhase = 'v1';
+window.addEventListener('teacher-stage-view',event=>{
+  teacherModelPhase=event.detail;
+  renderDashboard(dashboardRecords);
+});
 let dashboardPage = 0;
 let resetCheckInProgress = false;
 let pendingSubmissionSync = false;
+let modelSubmitting = false;
 let discardDraftOnExit = false;
 let lessonExtras = {};
 
@@ -302,23 +308,33 @@ function finishRoute(event) {
   queueDraftSave();
 }
 
-function calculateRouteOrder() {
-  const model = activeModel();
-  const ranked = organs.filter(o=>model.positions[o.id]).map((organ) => {
-    const position = model.positions[organ.id];
-    let closestIndex = 0;
-    let closestDistance = Infinity;
-    model.routePoints.forEach((point, index) => {
-      const distance = Math.hypot(point.x - position.x, point.y - position.y);
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestIndex = index;
-      }
-    });
-    model.routeDistances[organ.id] = Number(closestDistance.toFixed(2));
-    return { id: organ.id, index: closestIndex };
+function inferRouteOrder(model) {
+  const points = model?.routePoints || [], distances = {};
+  if (points.length < 2) return {order:[],distances};
+  const ranked = organs.filter(o=>model.positions?.[o.id]).map(organ=>{
+    const position=model.positions[organ.id],appearance=appearanceFor(organ,model);
+    const rx=Math.max(3,appearance.width/2),ry=Math.max(3,(appearance.height||appearance.width/1.5)/2);
+    let closest=Infinity,at=0;
+    // Project onto every actual stroke segment, including sparse pointer samples.
+    for(let i=1;i<points.length;i++){
+      const a={x:(points[i-1].x-position.x)/rx,y:(points[i-1].y-position.y)/ry};
+      const b={x:(points[i].x-position.x)/rx,y:(points[i].y-position.y)/ry};
+      const dx=b.x-a.x,dy=b.y-a.y,length=dx*dx+dy*dy;
+      const t=length?Math.max(0,Math.min(1,-(a.x*dx+a.y*dy)/length)):0;
+      const distance=Math.hypot(a.x+t*dx,a.y+t*dy);
+      if(distance<closest){closest=distance;at=i-1+t;}
+    }
+    distances[organ.id]=Number(closest.toFixed(3));
+    return {id:organ.id,at,distance:closest};
   });
-  model.routeOrder = ranked.sort((a, b) => a.index - b.index).map((item) => item.id);
+  return {order:ranked.filter(item=>item.distance<=1).sort((a,b)=>a.at-b.at).map(item=>item.id),distances};
+}
+
+function calculateRouteOrder(model = activeModel()) {
+  const result=inferRouteOrder(model);
+  model.routeOrder=result.order;
+  model.routeDistances=result.distances;
+  model.routeOrderVersion=2;
 }
 
 function undo() {
@@ -470,6 +486,8 @@ async function syncRecord(record) {
 }
 
 function buildRecord() {
+  if(v1)calculateRouteOrder(v1);
+  if(v2)calculateRouteOrder(v2);
   return {
     ...lessonExtras,
     id: sessionId,
@@ -492,10 +510,20 @@ function showSavedTransition(record) {
     document.querySelector("#start-v2-button").addEventListener("click", () => {
       location.href = `observation.html?group=${groupId}`;
     });
+    addSyncRetry(record);
     return;
   }
   const changed = compareModels(record.v1, record.v2);
   transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已提交</p><h1>模型修正已提交</h1><p>对比观察前后的摆放与食物路线。${record.pendingSync ? "暂未传给老师。" : ""}</p><div class="saved-model-preview student-model-compare">${miniModel(record.v1, "观察前模型")}${miniModel(record.v2, "观察后模型")}</div><div class="transition-actions"><a class="submit-model-button" href="assembly.html?group=${groupId}">去拼装 →</a></div>`;
+  addSyncRetry(record);
+}
+
+function addSyncRetry(record){
+  if(!record.pendingSync)return;
+  transitionPanel.querySelector('h1').textContent='模型已保存在本机';
+  const retry=document.createElement('button');retry.className='submit-model-button';retry.textContent='重新提交给老师';
+  retry.onclick=async()=>{if(modelSubmitting)return;modelSubmitting=true;retry.disabled=true;try{await syncRecord(record);showSavedTransition(record);}finally{modelSubmitting=false;}};
+  transitionPanel.querySelector('.transition-actions').prepend(retry);
 }
 
 function applyRevisionView() {
@@ -520,6 +548,7 @@ function applyRevisionView() {
 }
 
 async function submitModel() {
+  if(modelSubmitting)return;
   if (!Object.keys(activeModel().positions).length && !activeModel().structureStrokes?.length) {
     saveStatus.textContent = "先摆放或补画我们的想法。";
     return;
@@ -528,6 +557,8 @@ async function submitModel() {
     saveStatus.textContent = "在人体上画出食物的路线。";
     return;
   }
+  modelSubmitting=true;submitButton.disabled=true;
+  try{
   activeModel().visualStyle ||= Object.fromEntries(organs.map(o=>[o.id,appearanceFor(o,activeModel())]));
   activeModel().completedAt = Date.now();
   pendingSubmissionSync = true;
@@ -536,6 +567,8 @@ async function submitModel() {
   document.querySelector("#connection-status").textContent = "本机已保存";
   await syncRecord(record);
   showSavedTransition(record);
+  }catch{saveStatus.textContent='暂时未能保存，请再提交一次。';}
+  finally{modelSubmitting=false;submitButton.disabled=false;}
 }
 
 function startRevision() {
@@ -553,13 +586,13 @@ function startRevision() {
 }
 
 function compareModels(first, second) {
-  if (!second) return { organs: [], routeChanged: false };
+  if (!first || !second) return { organs: [], routeChanged: false };
   const changedOrgans = organs.filter((organ) => {
     const a = first.positions[organ.id];
     const b = second.positions[organ.id];
     return Boolean(a) !== Boolean(b) || (a && b && (Math.hypot(a.x-b.x,a.y-b.y)>2.5 || JSON.stringify(appearanceFor(organ,first)) !== JSON.stringify(appearanceFor(organ,second))));
   }).map((organ) => organ.name);
-  return { organs: changedOrgans, routeChanged: first.routeOrder.join(",") !== second.routeOrder.join(",") || second.routeAttempts.length > 0 };
+  return { organs: changedOrgans, routeChanged: JSON.stringify(first.routePoints || []) !== JSON.stringify(second.routePoints || []) };
 }
 
 function formatDuration(model) {
@@ -570,7 +603,7 @@ function formatDuration(model) {
 
 function miniModel(model, label, options = {}) {
   if (!model) return `<div class="mini-empty"><strong>${label}</strong><span>尚未提交</span></div>`;
-  const polyline = (model.routePoints || []).map((point) => `${point.x},${point.y}`).join(" ");
+  const polyline = (model.routePoints || []).map((point) => `${point.x},${point.y*1.5}`).join(" ");
   const pieces = organs.map((organ) => {
     const position = model.positions?.[organ.id];
     if (!position) return "";
@@ -579,7 +612,7 @@ function miniModel(model, label, options = {}) {
   }).join("");
   const interactive = Number.isInteger(options.groupId);
   const attributes = interactive ? ` data-group-id="${options.groupId}" data-model-phase="${options.phase}" role="button" tabindex="0" aria-label="放大第 ${options.groupId} 组${label}"` : "";
-  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.webp?v=20261022-7" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${polyline}" style="stroke:#17824d"/>${(model.structureStrokes || []).map(stroke => `<polyline points="${stroke.map(p=>`${p.x},${p.y}`).join(" ")}" style="stroke:${model.structureColor || '#2878cf'}"/>`).join("")}</svg>${pieces}</div></div>`;
+  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.webp?v=20261022-7" alt=""><svg viewBox="0 0 100 150" preserveAspectRatio="none">${(model.structureStrokes || []).map(stroke => `<polyline points="${stroke.map(p=>`${p.x},${p.y*1.5}`).join(" ")}" style="stroke:${model.structureColor || '#2878cf'}"/>`).join("")}<polyline points="${polyline}" style="stroke:#17824d"/></svg>${pieces}</div></div>`;
 }
 
 function latestRecord(records, id) {
@@ -587,15 +620,15 @@ function latestRecord(records, id) {
 }
 
 function renderDashboard(records) {
-  dashboardRecords = records.filter((record) => record.lesson === "food-journey" && (record.v1?.completedAt || record.v2?.completedAt || record.observation?.completedAt || record.assembly?.completedAt || record.journey?.completedAt));
+  dashboardRecords = records.filter((record) => record.lesson === "food-journey" && (record.v1?.completedAt || record.v2?.completedAt || record.observation?.completedAt || record.assembly?.completedAt || record.journey?.completedAt || record.evaluation?.completedAt));
   const latestRecords = Array.from({ length: 12 }, (_, index) => latestRecord(dashboardRecords, index + 1));
-  const participatingGroups = latestRecords.filter(Boolean).length;
+  const evaluated = latestRecords.filter(record => record?.evaluation?.completedAt).length;
   const completedV1 = latestRecords.filter((record) => record?.v1?.completedAt).length;
   const completedV2 = latestRecords.filter((record) => record?.v2?.completedAt).length;
   const observed = latestRecords.filter((record) => record?.observation?.completedAt).length;
   const assembled = latestRecords.filter((record) => record?.assembly?.completedAt).length;
   const journeyed = latestRecords.filter((record) => record?.journey?.completedAt).length;
-  document.querySelector("#teacher-summary").innerHTML = `<div><strong>${participatingGroups}</strong><span>组已提交</span></div><div><strong>${completedV1}</strong><span>组初始模型</span></div><div><strong>${observed}</strong><span>组完成观察</span></div><div><strong>${completedV2}</strong><span>组修正模型</span></div><div><strong>${assembled}</strong><span>组拼装</span></div><div><strong>${journeyed}</strong><span>组完成旅程</span></div>`;
+  document.querySelector("#teacher-summary").innerHTML = `<div><strong>${completedV1}</strong><span>组提交初始模型</span></div><div><strong>${observed}</strong><span>组完成观察</span></div><div><strong>${completedV2}</strong><span>组提交修正模型</span></div><div><strong>${assembled}</strong><span>组完成拼装</span></div><div><strong>${journeyed}</strong><span>组完成旅程</span></div><div><strong>${evaluated}</strong><span>组完成自评</span></div>`;
   const pageSize = 6;
   const pageCount = Math.ceil(12 / pageSize);
   dashboardPage = Math.min(dashboardPage, pageCount - 1);
@@ -606,20 +639,16 @@ function renderDashboard(records) {
   document.querySelector("#dashboard-next").disabled = dashboardPage === pageCount - 1;
   document.querySelector("#group-dashboard").innerHTML = groups.map((id) => {
     const record = latestRecord(dashboardRecords, id);
+    const revisionView = teacherModelPhase === 'v2';
     if (!record) return `<article class="group-model-card is-empty"><header><h2>第 ${id} 组</h2><span>等待提交</span></header></article>`;
     const difference = compareModels(record.v1, record.v2);
-    const status = record.pendingSync ? "本机已提交·待同步" : record.journey?.completedAt ? "已完成旅程" : record.assembly?.completedAt ? "已提交拼装" : record.v2?.completedAt ? "已提交观察后修正" : record.observation?.completedAt ? "已完成观察" : "已提交观察前想法";
-    const before = record.v1 ? miniModel({ ...record.v1, _paired: Boolean(record.v2?.completedAt) }, "观察前想法", { groupId: id, phase: "v1" }) : "";
-    const after = record.v2?.completedAt ? miniModel(record.v2, "观察后修正", { groupId: id, phase: "v2" }) : "";
-    const analysis = record.v2?.completedAt
+    const status = revisionView ? (record.v2?.completedAt ? "已提交修正模型" : "等待修正模型") : (record.v1?.completedAt ? "已提交初始模型" : "等待初始模型");
+    const before = record.v1?.completedAt ? miniModel({ ...record.v1, _paired: revisionView && Boolean(record.v2?.completedAt) }, "观察前想法", { groupId: id, phase: "v1" }) : "";
+    const after = revisionView && record.v2?.completedAt ? miniModel(record.v2, "观察后修正", { groupId: id, phase: "v2" }) : "";
+    const analysis = !revisionView ? "" : record.v2?.completedAt
       ? `${difference.organs.length ? `位置有变化：${difference.organs.join("、")}` : "器官位置未见明显变化"}；${difference.routeChanged ? "食物路线有变化" : "食物路线保持原样"}`
       : record.v1?.completedAt ? "等待小组完成观察后修正" : "";
-    const views = record.observation?.views || [];
-    const observedNames = [...new Set(views.map((item) => organById(item.organId)?.name).filter(Boolean))];
-    const observationLine = record.observation?.completedAt ? `观察 ${observedNames.length} 种器官 · 局部 3D ${record.observation.local3dEntries?.length || 0} 次` : "";
-    const gameLine = record.journey?.completedAt ? `旅程经过 ${(record.journey.visits || []).length} 处` : "";
-    const photo = record.assembly?.completedAt && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(record.assembly.photoPreview || "") ? `<button class="assembly-thumb" data-photo-group-id="${id}" aria-label="放大第 ${id} 组拼装照片"><img src="${record.assembly.photoPreview}" alt="第 ${id} 组拼装作品"></button>` : "";
-    return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${status}</span></header>${before || after ? `<div class="mini-compare ${after ? "has-revision" : "single-model"}">${before}${after}</div>` : ""}${analysis ? `<p class="group-model-analysis">${analysis}</p>` : ""}${observationLine || gameLine ? `<p class="group-progress-line">${[observationLine,gameLine].filter(Boolean).join(" · ")}</p>` : ""}${photo}</article>`;
+    return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${status}</span></header>${before || after ? `<div class="mini-compare ${after ? "has-revision" : "single-model"}">${before}${after}</div>` : ""}${analysis ? `<p class="group-model-analysis">${analysis}</p>` : ""}</article>`;
   }).join("");
 }
 
@@ -635,6 +664,7 @@ async function loadCloudRecords() {
 
 async function refreshDashboard() {
   const button = document.querySelector("#refresh-dashboard");
+  if(button.disabled)return;
   button.disabled = true;
   button.textContent = "正在刷新…";
   const localRecords = await loadLocalRecords().catch(() => []);
@@ -646,22 +676,49 @@ async function refreshDashboard() {
     document.querySelector("#connection-status").textContent = "教师端已连接";
   } catch (error) {
     console.error("教师端云端读取失败", error);
-    document.querySelector("#connection-status").textContent = "仅显示本机记录";
+    document.querySelector("#connection-status").textContent = "连接失败，请刷新重试";
   }
-  const currentLocalRecords = activeResetId
-    ? localRecords.filter((record) => record.lesson !== "food-journey" || record.resetId === activeResetId)
-    : localRecords;
-  const merged = new Map();
-  const cloudById = new Map(cloudRecords.map((record) => [record.id, record]));
-  [...currentLocalRecords, ...cloudRecords]
-    .sort((first, second) => Number(first.updatedAt) - Number(second.updatedAt))
-    .forEach((record) => merged.set(record.id, { ...record, assembly: cloudById.get(record.id)?.assembly || null }));
-  const visibleRecords = [...merged.values()].filter((record) => record.lesson === "food-journey" && (record.v1?.completedAt || record.v2?.completedAt || record.observation?.completedAt || record.assembly?.completedAt || record.journey?.completedAt) && (!activeResetId || record.resetId === activeResetId));
+  const visibleRecords = cloudRecords.filter(record => (record.resetId || null) === (activeResetId || null));
   renderDashboard(visibleRecords);
   window.dispatchEvent(new CustomEvent("lesson-records", {detail:{records:cloudRecords.filter(r=>(r.resetId||null)===(activeResetId||null)),resetId:activeResetId}}));
   button.disabled = false;
   button.textContent = "刷新数据";
+  if(mode==='teacher')void watchTeacherRecords();
 }
+
+let teacherWatcher=null,teacherWatchStarting=false;
+function stopTeacherWatch(){
+  const watcher=teacherWatcher;teacherWatcher=null;
+  if(watcher)Promise.resolve(watcher.close()).catch(()=>{});
+}
+async function watchTeacherRecords(){
+  if(teacherWatcher||teacherWatchStarting||document.hidden)return;
+  teacherWatchStarting=true;
+  try{
+    const database=await initializeCloud(),collection=database.collection(CLOUD_COLLECTION);
+    if(document.hidden||typeof collection.watch!=='function')return;
+    teacherWatcher=collection.watch({
+      onChange(snapshot){
+        if(document.hidden||!Array.isArray(snapshot.docs))return;
+        const docs=snapshot.docs,reset=docs.find(d=>d._id==='class-reset'||d.id==='class-reset');
+        if((reset?.resetId||null)!==(activeResetId||null)){void refreshDashboard();return;}
+        const records=docs.flatMap(d=>Array.isArray(d.records)?d.records.filter(r=>Number(r.groupId)===Number(d.id)):[])
+          .filter(r=>(r.resetId||null)===(activeResetId||null));
+        renderDashboard(records);
+        const feedback=docs.find(d=>d._id==='class-feedback'||(d.groups&&d.resetId!==undefined));
+        window.dispatchEvent(new CustomEvent('lesson-records',{detail:{records,resetId:activeResetId,feedback}}));
+        document.querySelector('#connection-status').textContent='教师端实时接收中';
+      },
+      onError(){stopTeacherWatch();document.querySelector('#connection-status').textContent='实时接收中断，可点刷新重连';}
+    });
+  }catch{stopTeacherWatch();}finally{teacherWatchStarting=false;}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(mode!=='teacher')return;
+  if(document.hidden)stopTeacherWatch();else void refreshDashboard();
+});
+window.addEventListener('online',()=>{if(mode==='teacher')void refreshDashboard();});
+window.addEventListener('pagehide',stopTeacherWatch);
 
 async function clearAllClassData() {
   const button = document.querySelector("#clear-data-button");
@@ -747,11 +804,10 @@ function openModelPreview(groupId, phaseName) {
   const model = phaseName === "v2" ? record?.v2 : record?.v1;
   if (!model) return;
   const label = phaseName === "v2" ? "观察后修正" : "观察前想法";
-  const route = (model.routeOrder || []).map((id) => organById(id)?.name).filter(Boolean).join(" → ") || "未记录";
-  const observation = record.observation;
-  const observed = [...new Set((observation?.views || []).map((item) => organById(item.organId)?.name).filter(Boolean))].join("、") || "未记录";
+  const routeNames=inferRouteOrder(model).order.map(id=>organById(id).name);
+  const route = routeNames.length ? routeNames.join(" → ") : model.routePoints?.length >= 2 ? "已有笔迹，未识别到经过的器官，请对照上图查看" : "本次提交没有路线笔迹";
   const revision = phaseName === "v2" ? compareModels(record.v1, model) : null;
-  const metrics = `<dl class="model-preview-metrics"><div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>完成时间</dt><dd>${formatDuration(model)}</dd></div><div><dt>所画路线</dt><dd>${route}</dd></div><div><dt>观察器官</dt><dd>${observed}</dd></div>${revision ? `<div><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div><dt>路线变化</dt><dd>${revision.routeChanged ? "有变化" : "保持原样"}</dd></div>` : ""}</dl>`;
+  const metrics = `<dl class="model-preview-metrics"><div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>建模用时</dt><dd>${formatDuration(model)}</dd></div><div><dt>所画路线（自动识别）</dt><dd>${route}</dd></div>${revision ? `<div><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div><dt>路线变化</dt><dd>${revision.routeChanged ? "有变化" : "保持原样"}</dd></div>` : ""}</dl>`;
   document.querySelector("#preview-model-title").textContent = `第 ${groupId} 组 · ${label}`;
   document.querySelector("#preview-model-content").innerHTML = `<div class="preview-model-image">${miniModel(model, label)}</div>${metrics}`;
   document.querySelector("#model-preview-dialog").showModal();
@@ -796,7 +852,7 @@ async function initialize() {
     v1 = savedRecord.v1 ? clone(savedRecord.v1) : createModel();
     if(!v1.completedAt)v1.structureColor="#f4a329";
     v2 = savedRecord.v2 ? clone(savedRecord.v2) : null;
-    if (v2) applyRevisionView();
+    if (v2 && !(params.get('controlled')==='1' && params.get('phase')==='v1')) applyRevisionView();
     pendingSubmissionSync = Boolean(savedRecord.pendingSync && (savedRecord.v1?.completedAt || savedRecord.v2?.completedAt));
     if (pendingSubmissionSync) void syncRecord(savedRecord);
     else if (savedRecord.pendingSync) {
@@ -882,3 +938,5 @@ document.querySelector("#preview-dialog-close").addEventListener("click", () => 
 document.querySelector("#teacher-fullscreen-button").addEventListener("click", () => window.requestLessonFullscreen?.());
 document.querySelector("#model-fullscreen-button").addEventListener("click", () => window.requestLessonFullscreen?.());
 initialize().finally(() => { studentView.style.pointerEvents = ''; stage.style.pointerEvents = ''; submitButton.disabled = false; });
+
+window.prepareClassNavigation = async () => { if(modelSubmitting)return false; if (mode === 'student' && !discardDraftOnExit) { clearTimeout(draftSaveTimer); await saveLocal(buildRecord()); } };

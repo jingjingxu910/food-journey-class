@@ -6,3 +6,9 @@
 .model-page.student-page:not(.teacher-mode) .anatomy-workspace.drawing-expanded{grid-template-columns:minmax(0,1fr)}
 
 #airway-reference-button{font:inherit;font-size:12px;border:1px solid #bdd7cf;border-radius:8px;background:#eef7f2;color:#275c58;padding:4px}#airway-reference{width:min(90vw,700px);max-height:90dvh;box-sizing:border-box;padding:12px;border:1px solid #bed4cf;border-radius:16px}#airway-reference[open]{display:flex;flex-direction:column;gap:6px}#airway-reference img{max-width:100%;height:65dvh;object-fit:contain;min-height:0}#airway-reference p{margin:0}#airway-reference button{align-self:flex-end}#airway-reference small{font-size:12px}.model-page .placed-organ[data-organ=liver]{z-index:4}.model-page .placed-organ[data-organ=pancreas]{z-index:2}
+/* Match the student canvas: original organ sizes, stacking and full freehand strokes. */
+.mini-model > img:not(.mini-body){max-height:none}
+.mini-model > img.organ-lungs{z-index:1}
+.mini-model > img.organ-liver{z-index:4}
+.mini-model > img.organ-pancreas{z-index:2}
+.mini-model svg{z-index:5;pointer-events:none}

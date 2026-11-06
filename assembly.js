@@ -95,11 +95,13 @@ async function savePhoto(file) {
   finally { button.disabled=false; }
 }
 async function submit() {
+  if(!record||$('#submit-assembly').disabled)return;
   record.assembly ||= { startedAt:Date.now(),completedAt:null };
   if(!record.assembly.photoLocal && !record.assembly.photoPreview) { $('#assembly-status').textContent='先拍下拼装结果。';return; }
   const button=$('#submit-assembly');button.disabled=true;
   record.assembly.note=$('#assembly-note').value.trim();
   record.assembly.completedAt=Date.now();
+  record.assembly.pendingSync=true;
   $('#assembly-status').textContent='正在提交…';
   try {
     if(!isPhotoPreview(record.assembly.photoPreview)) {
@@ -109,8 +111,9 @@ async function submit() {
       if(!isPhotoPreview(record.assembly.photoPreview)) throw new Error('照片无法压缩，请重新拍摄。');
     }
     const uploaded=await submitRecord(record);
+    if(uploaded){record.assembly.pendingSync=false;await saveRecord(record);}
     $('#assembly-status').textContent=uploaded?'拼装记录已提交。':'已保存在本机，联网后请再次提交。';
-    $('#journey-link').hidden=false;
+    $('#journey-link').hidden=!uploaded;
   } catch(error) {
     $('#assembly-status').textContent=error.message||'暂时无法提交，请重试。';
   } finally {
@@ -121,10 +124,12 @@ async function initialize() {
   record=await currentRecord();
   if(record.assembly?.photoLocal||record.assembly?.photoPreview) showPhoto(record.assembly.photoLocal||record.assembly.photoPreview);
   $('#assembly-note').value=record.assembly?.note||'';
-  if(record.assembly?.completedAt) $('#journey-link').hidden=false;
+  if(record.assembly?.completedAt&&!record.assembly.pendingSync) $('#journey-link').hidden=false;
   $('#open-camera').disabled=false;
 }
 $('#photo-input').onchange=event=>{closeCamera();void savePhoto(event.target.files?.[0]);event.target.value='';};
 $('#submit-assembly').onclick=submit;
 $('#assembly-note').oninput=()=>{if(record){record.assembly||={startedAt:Date.now(),completedAt:null};record.assembly.note=$('#assembly-note').value.slice(0,160);void saveRecord(record);}};
 initialize().catch((error)=>$('#assembly-status').textContent=`记录无法读取：${error.message}`);
+
+window.prepareClassNavigation = async () => { if (!record || $('#submit-assembly').disabled) return false; await saveRecord(record); closeCamera(); };

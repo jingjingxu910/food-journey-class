@@ -14,7 +14,7 @@ for(const [id,name,note] of [['nasal-cavity','鼻腔','观察鼻腔与鼻咽的�
 for(const [id,name]of [['liver','肝'],['pancreas','胰'],['gallbladder','胆囊'],['heart','心脏'],['submandibular','下颌下腺'],['left-kidney','左肾'],['right-kidney','右肾'],['bladder','膀胱']])organs.push({id,name,question:'观察它与周围器官的位置关系。',feature:'转动放大观察形态与空间关系。',note:'比较外形、位置及局部结构。'});
 const $=s=>document.querySelector(s),asset=(id,ext)=>id==='mouth'&&ext==='glb'?'assets/models/ar-detail/mouth-antipov.glb':`assets/models/${ext==='glb'?(id==='large-intestine'&&(!isPreview||window.__previewColonVariant!=='hra')?'ar-connected':['mouth','small-intestine','large-intestine','liver','pancreas'].includes(id)?'ar-detail':'ar-connected'):'ar'}/${id}.${ext}`;
 const tracker=new BodyTracker(),buttons=new Map(),displayed=new Map();
-let record,observation,selected=null,selectedAt=0,stream,worker,mainDetector;
+let record,observation,selected=null,selectedAt=0,stream,worker,mainDetector,observationSubmitting=false;
 let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,lastSent=0,lastPose=0,targets=null;
 let workerReady=false,starting=false,saveTimer,viewerDispose,viewerGeneration=0,captureWidth=384,interval=100,meanCost=0,lastPaint=0;
 let startupController,connected;const motion=new CameraMotion();let sentMotion=null,targetMotion=null;
@@ -147,7 +147,22 @@ async function openViewer(){
  try{const {createOrganViewer}=await import('./ar-organ-viewer.js');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open,id==='mouth'?{initialRotation:[.35,-.18,0]}:{});if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
  catch(error){if(generation===viewerGeneration)mount.innerHTML=`<img class="model-fallback-image" src="${asset(id,'png')}" alt="${o.name}"><p>模型加载未完成，请关闭后重试。</p>`;console.warn('Organ model failed',error);}
 }
-async function finishObservation(){if(!observation.cameraStarted||!observation.views.length)return;$('#finish-observation').disabled=true;closeSelected();selected=null;stopCamera();observation.completedAt=Date.now();observation.performance={...metrics,averageMs:metrics.samples?Math.round(metrics.totalMs/metrics.samples):null};status('正在保存…');const uploaded=await submitRecord(record);status(uploaded?'观察完成。':'已保存到本机，联网后可重试提交。');$('#finish-observation').disabled=false;$('#finish-observation').textContent='去修正模型 →';$('#finish-observation').onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;}
+async function finishObservation(){
+ if(observationSubmitting||!observation.cameraStarted||!observation.views.length)return;
+ observationSubmitting=true;
+ const button=$('#finish-observation');button.disabled=true;
+ try{
+  closeSelected();selected=null;stopCamera();observation.completedAt=Date.now();
+  observation.performance={...metrics,averageMs:metrics.samples?Math.round(metrics.totalMs/metrics.samples):null};
+  observation.pendingSync=true;status('正在提交观察记录…');
+  const uploaded=await submitRecord(record);
+  if(!uploaded){status('发现已保存在本机，联网后点这里再提交一次。');button.textContent='重新提交观察';button.onclick=finishObservation;return;}
+  observation.pendingSync=false;await saveRecord(record);
+  status('观察记录已提交。哪些发现能帮助你们检查模型？');button.textContent='去修正模型 →';
+  button.onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;
+ }catch{status('暂时未能提交，请再试一次。');button.textContent='重新提交观察';button.onclick=finishObservation;}
+ finally{button.disabled=false;observationSubmitting=false;}
+}
 $('#cancel-camera').onclick=()=>{startupController?.abort();stopCamera();$('#camera-status').textContent='已取消开启，下载完成的资源已保留';};
 $('#start-camera').onclick=startCamera;$('#open-local-3d').onclick=openViewer;$('#close-organ-dialog').onclick=()=>$('#organ-dialog').close();
 $('#organ-dialog').addEventListener('close',()=>{if($('#organ-dialog').open)return;viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;selectedAt=performance.now();tracker.reset();targets=null;});
@@ -156,7 +171,7 @@ window.addEventListener('pagehide',()=>{connected?.dispose();connected=null;star
 async function initialize(){
  $('#start-camera').disabled=true;$('#camera-status').textContent='正在读取本组记录…';
  let timer;try{record=isPreview?{id:'ar-local-preview',groupId:9,observation:freshObservation()}:await Promise.race([currentRecord(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('本组记录读取超时')),8000);})]);}finally{clearTimeout(timer);}
- $('#camera-status').textContent='等待开启';$('#start-camera').textContent='开启后置相机';$('#start-camera').onclick=startCamera;observation=record.observation||freshObservation();record.observation=observation;renderList();$('#start-camera').disabled=false;if(observation.completedAt){$('#finish-observation').disabled=false;$('#finish-observation').textContent='去修正模型 →';$('#finish-observation').onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;}else $('#finish-observation').onclick=finishObservation;}
+ $('#camera-status').textContent='等待开启';$('#start-camera').textContent='开启后置相机';$('#start-camera').onclick=startCamera;observation=record.observation||freshObservation();record.observation=observation;renderList();$('#start-camera').disabled=false;if(observation.completedAt&&!observation.pendingSync){$('#finish-observation').disabled=false;$('#finish-observation').textContent='去修正模型 →';$('#finish-observation').onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;}else {$('#finish-observation').onclick=finishObservation;if(observation.pendingSync){$('#finish-observation').disabled=false;$('#finish-observation').textContent='重新提交观察';}}}
 function initializeOrRetry(){initialize().catch(error=>{status(`记录暂时无法读取：${error.message}`);$('#camera-status').textContent='页面准备未完成，请重试';$('#start-camera').disabled=false;$('#start-camera').textContent='重试准备';$('#start-camera').onclick=initializeOrRetry;});}
 initializeOrRetry();if(isPreview)import('./ar-simulation.js').then(m=>m.startSimulation({mount:$('#anatomy-overlay'),select:selectOrgan,onReady:view=>{connected=view;$('#start-camera').hidden=true;$('#finish-observation').hidden=true;$('#camera-status').textContent='模拟预览 · 正面 / 侧面 / 背面';},onFrame:updateLinks}));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./ar-assets-sw.js').catch(error=>console.info('Resource cache unavailable',error));
@@ -192,3 +207,5 @@ function updateLinks(){
  for(const panel of [$('#organ-3d'),$('#organ-media')]){const b=panel.getBoundingClientRect();if(panel.hidden||!b.width||!b.height)continue;const l=b.left-bounds.left,r=b.right-bounds.left,t=b.top-bounds.top,d=b.bottom-bounds.top;if(p.x>=l&&p.x<=r&&p.y>=t&&p.y<=d)continue;const clamp=(v,a,z)=>Math.max(a,Math.min(z,v));const ends=[{x:clamp(p.x,l+16,r-16),y:t},{x:clamp(p.x,l+16,r-16),y:d},{x:l,y:clamp(p.y,t+16,d-16)},{x:r,y:clamp(p.y,t+16,d-16)}];ends.sort((a,b)=>Math.hypot(a.x-p.x,a.y-p.y)-Math.hypot(b.x-p.x,b.y-p.y));const e=ends[0],mid=(p.y+e.y)/2;paths.push(`M ${p.x} ${p.y} C ${p.x} ${mid}, ${e.x} ${mid}, ${e.x} ${e.y}`);}
  svg.innerHTML=paths.length?`<path d="${paths.join(' ')}"/><circle cx="${p.x}" cy="${p.y}" r="4"/>`:'';
 }
+
+window.prepareClassNavigation = async () => { if (!record||observationSubmitting) return false; clearTimeout(saveTimer); if (!isPreview) await saveRecord(record); };
