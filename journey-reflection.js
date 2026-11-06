@@ -24,7 +24,7 @@ export function renderReflection(doc,organs,log,foodArt){
  const corrections=[...revised].map(id=>organs[id]?.name).filter(Boolean);
  const judgment=corrections.length
   ? `我们一开始猜错了${corrections.join('、')}。后来看到什么，才改了主意？`
-  : '我们认出了五个器官。你能选一个，说说是凭什么认出来的吗？';
+  : '我们认出了五个器官。我们选一个，说说是凭什么认出来的吧。';
  const parts=[
   ['食物变成了什么样？',evidence.join('')||'回想一下，饼干出发时是什么样，走到最后又是什么样？'],
   ['我们是怎么认出来的？',judgment],

@@ -158,7 +158,7 @@ async function finishObservation(){
   const uploaded=await submitRecord(record);
   if(!uploaded){status('发现已保存在本机，联网后点这里再提交一次。');button.textContent='重新提交观察';button.onclick=finishObservation;return;}
   observation.pendingSync=false;await saveRecord(record);
-  status('观察记录已提交。哪些发现能帮助你们检查模型？');button.textContent='去修正模型 →';
+  status('观察记录已提交。哪些发现能帮助我们检查模型？');button.textContent='去修正模型 →';
   button.onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;
  }catch{status('暂时未能提交，请再试一次。');button.textContent='重新提交观察';button.onclick=finishObservation;}
  finally{button.disabled=false;observationSubmitting=false;}

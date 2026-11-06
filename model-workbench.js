@@ -152,7 +152,7 @@ function render() {
   drawButton.disabled = false;
   taskHint.textContent = phase === "v1" ? "按我们的想法摆放，也可以补画。" : "重新摆放消化和呼吸器官，再画出食物路线。";
   const order = [];
-  routeSummary.textContent = order.length ? `你的路线：${order.join(" → ")}` : "等待画路线";
+  routeSummary.textContent = order.length ? `我们的路线：${order.join(" → ")}` : "等待画路线";
 }
 
 function pointerPosition(event) {

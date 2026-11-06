@@ -1,11 +1,11 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-b147d779571441ad",
-  "bytes": 74253263,
+  "version": "20261102-chunks-718249e1635c7b11",
+  "bytes": 74253370,
   "files": [
     {
       "path": "app.js",
-      "bytes": 2172,
-      "hash": "5bd421608c34981078f1c2b437356e2ebc7550d7b517fb44c1ae1f4f090c550a"
+      "bytes": 2175,
+      "hash": "44dc43fe19b253e0340a584ee97bffb479e03b4a80982d4422d70616359784f6"
     },
     {
       "path": "ar-connected.js",
@@ -75,7 +75,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "assembly.html",
       "bytes": 2347,
-      "hash": "14617faa199f48776abc83d97d4da892b65338060b9fc42f7e7e95e42fd42b21"
+      "hash": "20c80778e110b63a370c701fd147c5c750ca48db3a68ee002e18147a6bafa222"
     },
     {
       "path": "assembly.js",
@@ -1063,8 +1063,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "class-evaluation.js",
-      "bytes": 14815,
-      "hash": "ebf2b2d1890c4813ddd040f680f60657ecea96fd209b9bba158af7e982b25cec"
+      "bytes": 14820,
+      "hash": "8f27ecbd3aa9725661650b44654e2acaa7334b68f3d1f82bdaddb2019dab9b86"
     },
     {
       "path": "cloud-loader.js",
@@ -1078,8 +1078,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "evaluation-data.js",
-      "bytes": 16890,
-      "hash": "09cb04e78fa514d2f6951369cfd6f656f35949ba5645f83adb58eda33f5a6b96"
+      "bytes": 16986,
+      "hash": "2c71f21d373b82f28e2f4651f825793a65c9a60cff77efc4653fcc89112de602"
     },
     {
       "path": "evaluation.html",
@@ -1174,7 +1174,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "journey-reflection.js",
       "bytes": 3930,
-      "hash": "c3aae2255988930b860cbae50cfb4ab7c7ae07720b3aa4d02f87214eec21ecf2"
+      "hash": "765034505820a78cdd0caa5e6184373edcb9c83d7242edbacc4f43369773c18a"
     },
     {
       "path": "journey-scenes.js",
@@ -1223,8 +1223,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-workbench.js",
-      "bytes": 46162,
-      "hash": "d6277fffe7815694a222ba61db8be5d254df0c42007ee13b5791d3d922ac6595"
+      "bytes": 46165,
+      "hash": "b1a55ec8eb9c4215b40558c606ada56fad1d35a5e366ed5833eff12366caa400"
     },
     {
       "path": "observation.html",
@@ -1234,7 +1234,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "observation.js",
       "bytes": 27642,
-      "hash": "e93892db28244a4ebfe86e33ee47ea6623eea354a388b472c5945e3927327f68"
+      "hash": "5f0aefa9e0a5159bfc5eddbc1817f9b5eed05e4a6ff6d02def33a0982f5a73a3"
     },
     {
       "path": "organ-drag.js",
@@ -1627,7 +1627,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-b147d779571441ad"
+      "hash": "manifest-20261102-chunks-718249e1635c7b11"
     }
   ]
 };

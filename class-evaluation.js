@@ -12,7 +12,7 @@ export function certificate(entry){
  paragraphs.filter(Boolean).forEach(text=>reason.append(el('p',text)));
  const hero=el('span',awardIcon(entry),'award-hero');hero.setAttribute('aria-hidden','true');
  art.append(hero);
- card.append(el('p','食物在身体里的旅行','award-course'),art,el('p','送给 第 '+entry.groupId+' 组','award-group'),el('h2',entry.title),el('div','你们的闪光时刻','award-ribbon'),reason,el('p','带着好奇出发，让每一次发现都发光。','award-wish'),el('span','✧  ✦  ✧','award-confetti'));
+ card.append(el('p','食物在身体里的旅行','award-course'),art,el('p','我们是第 '+entry.groupId+' 组','award-group'),el('h2',entry.title),el('div','我们的闪光时刻','award-ribbon'),reason,el('p','带着好奇出发，让每一次发现都发光。','award-wish'),el('span','✧  ✦  ✧','award-confetti'));
  return card;
 }
 if(teacher)setupTeacher();
@@ -189,7 +189,7 @@ async function setupStudent(){
        form.hidden=true;title.hidden=true;subtitle.hidden=true;
        if(entry?.issuedAt&&entry.recordId===record.id){
          awardArea.replaceChildren(certificate({...entry,groupId}));status.textContent='';document.body.classList.add('award-mode');displayedCommand=command.commandId;
-       }else{awardArea.replaceChildren();status.textContent='老师正在把祝福送给你们，请稍等 🌷';}
+       }else{awardArea.replaceChildren();status.textContent='我们的奖状正在准备中，一起等一等 🌷';}
      }else{
        document.body.classList.remove('award-mode');awardArea.replaceChildren();form.hidden=false;title.hidden=false;subtitle.hidden=false;
        if(command?.phase==='evaluation'){displayedCommand=command.commandId;locked=false;submit.disabled=false;submit.textContent='把星星提交给老师 ✨';drawStars();}

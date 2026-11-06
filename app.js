@@ -42,7 +42,7 @@ function showProgress(record) {
     action.textContent = index < step ? '已完成 · 查看' : action.dataset.startLabel;
   });
   document.querySelector('.section-heading h2').textContent = [
-    '从你的想法开始', '接下来，仔细观察', '回到模型，再想一想', '现在，动手拼装', '跟着食物去旅行', '最后，一起回顾表现', '完成的活动',
+    '从我们的想法开始', '接下来，仔细观察', '回到模型，再想一想', '现在，动手拼装', '跟着食物去旅行', '最后，一起回顾表现', '完成的活动',
   ][step];
 }
 

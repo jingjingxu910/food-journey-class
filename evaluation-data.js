@@ -73,33 +73,33 @@ export function awardEvidence(record, stars) {
   if (corrected.length) {
     const organs = corrected.map(id => organNames[id]).join('、');
     add('identify-correction','辨认进步',2,10,[
-      '一开始没认准'+organs+'，后来你们重新选择，找到了正确的答案。肯修正自己的判断，这一步进步很可贵！',
-      '你们在'+organs+'的辨认中，从选错到选对，没有停在第一次答案上。老师喜欢这份愿意改正的认真！'
+      '一开始没认准'+organs+'，后来我们重新选择，找到了正确的答案。肯修正自己的判断，这一步进步很可贵！',
+      '我们在'+organs+'的辨认中，从选错到选对，没有停在第一次答案上。再检查一次自己的判断，就有机会发现新的线索。'
     ]);
   }
   const airway = events.findIndex(event => event.type === 'airway');
   if (airway >= 0 && events.slice(airway + 1).some(event => event.type === 'safe-swallow')) {
     add('swallow-correction','通道辨析',2,10,[
-      '食团误入气管后，你们重新选择了通向食管的路。能把这次尝试改过来，真有进步！',
-      '你们经历了“走错通道”，随后选中了食管。把刚才的错误变成下一次选择的提醒，值得表扬！'
+      '食团误入气管后，我们重新选择了通向食管的路。能把这次尝试改过来，我们又向前迈进了一步！',
+      '我们经历了“走错通道”，随后选中了食管。把刚才的错误变成下一次选择的提醒，我们学会了从尝试中寻找线索！'
     ]);
   }
   if (has('fork-side-view')) add('side-view','换位观察',0,7,[
-    '你们打开侧面图查看气管和食管。正面看不清的关系，换个角度再看，这是很好的观察办法！',
-    '你们特意从侧面查看两条通道，把目光放在它们的前后关系上。会选择观察角度，真不错！'
+    '我们打开侧面图查看气管和食管。正面看不清的关系，换个角度再看，这是很好的观察办法！',
+    '我们从侧面查看两条通道，比较它们的前后关系。正面看不清时，还可以换个角度找线索！'
   ]);
   if (has('villi-detail')) add('villi','细节探究',0,7,[
-    '你们把小肠绒毛放大来看，留意到了肠壁上的细小结构。愿意走近细节，才能找到更多线索！',
-    '你们没有只看小肠的外形，还打开了绒毛细节。把观察从整体推进到局部，这个做法很棒！'
+    '我们把小肠绒毛放大来看，留意到了肠壁上的细小结构。愿意走近细节，才能找到更多线索！',
+    '我们没有只看小肠的外形，还打开了绒毛细节。从整体看到局部，我们还能发现哪些不同？'
   ]);
   if (has('locate') || has('stomach-locate')) add('location','线索追寻',0,6,[
-    '探索时，你们主动打开人体图查位置。把眼前的器官放回身体里找一找，是解决疑问的好办法！',
-    '你们会借助人体图寻找线索，把局部观察和身体的位置联系起来。遇到疑问时能用好工具，值得表扬！'
+    '探索时，我们主动打开人体图查位置。把眼前的器官放回身体里找一找，是解决疑问的好办法！',
+    '我们会借助人体图寻找线索，把局部观察和身体的位置联系起来。遇到疑问时能用好工具，我们学会了从尝试中寻找线索！'
   ]);
   if (has('villi-detail') && (has('nutrient-absorption') || has('nutrient-absorption-start'))) {
     add('structure-function','结构寻因',0,9,[
-      '你们既查看了小肠绒毛，也探索了营养吸收。把“长什么样”和“做什么工作”放在一起观察，这个方向很有价值！',
-      '你们关注了绒毛的样子，又体验了营养吸收。继续追问这两者有什么关系，就能把发现想得更深入！'
+      '我们既查看了小肠绒毛，也探索了营养吸收。把“长什么样”和“做什么工作”放在一起观察，这个方向很有价值！',
+      '我们关注了绒毛的样子，又体验了营养吸收。继续追问这两者有什么关系，就能把发现想得更深入！'
     ]);
   }
   if (record.v1?.completedAt && record.v2?.completedAt) {
@@ -109,35 +109,35 @@ export function awardEvidence(record, stars) {
     if (moved.length) {
       const organs = moved.map(id => organNames[id]).join('、');
       add('model-position','模型推敲',0,8,[
-        '第二次建模时，你们重新调整了'+organs+'的位置。愿意重新检查最初的摆放，老师看到了你们修改想法的行动！',
-        '你们对'+organs+'的位置作了新的调整。把想法落实到模型里，再看看是否合适，这是认真推敲的表现！'
+        '第二次建模时，我们重新调整了'+organs+'的位置。愿意重新检查最初的摆放，我们把新的想法落实到了模型中。',
+        '我们对'+organs+'的位置作了新的调整。把想法落实到模型里，再看看是否合适，这是认真推敲的表现！'
       ]);
     }
     const first = record.v1.routeOrder || [], second = record.v2.routeOrder || [];
     if (first.length && second.length && first.join(',') !== second.join(',')) {
       add('model-route','路线推敲',0,8,[
-        '你们第二次画出的食物路线，经过器官的顺序有了变化。愿意重新推敲“先到哪里、再到哪里”，这是思考的进步！',
-        '你们重新调整了食物经过器官的顺序，把路线当作需要检验的想法。接着说说修改的依据，会更有说服力！'
+        '我们第二次画出的食物路线，经过器官的顺序有了变化。愿意重新推敲“先到哪里、再到哪里”，这是思考的进步！',
+        '我们重新调整了食物经过器官的顺序，把路线当作需要检验的想法。接着说说修改的依据，会更有说服力！'
       ]);
     }
   }
   if (stars[0] > 0) add('teacher-observation','用心观察',0,5,[
-    '你们在观察上的认真，值得表扬。继续带着问题看一看，把发现说清楚，让自己的判断更有依据！',
-    '用心观察是你们这节课的亮点。下次再多比较一处细节，也许就会找到新的线索！'
+    '认真观察是我们这节课的一处亮点。继续带着问题看一看，把发现说清楚，让自己的判断更有依据！',
+    '用心观察是我们这节课的亮点。下次再多比较一处细节，也许就会找到新的线索！'
   ]);
   if (stars[1] > 0) add('teacher-cooperation','合作同行',1,5,[
-    '合作是你们这节课的一处亮点。把小组的事一起做好，值得肯定；继续让每位伙伴都有参与的机会！',
-    '你们这节课的合作表现得到了老师的肯定。一起完成任务时，继续听听伙伴的想法，让小组的办法更丰富！'
+    '合作是我们这节课的一处亮点。把小组的事一起做好，我们为这份合作感到高兴；继续让每位伙伴都有参与的机会！',
+    '我们这节课的合作表现得到了老师的肯定。一起完成任务时，继续听听伙伴的想法，让小组的办法更丰富！'
   ]);
   if (stars[2] > 0) add('teacher-persistence','坚持探索',2,5,[
-    '遇到问题还愿意继续尝试，这份劲头值得表扬。再想一次、再试一次，办法就有机会变得更好！',
-    '你们在探索中表现出的坚持很可贵。继续比较每次尝试有什么不同，让下一次尝试更有方向！'
+    '遇到问题时，我们愿意继续尝试。再想一次、再试一次，办法就有机会变得更好！',
+    '我们在探索中表现出的坚持很可贵。继续比较每次尝试有什么不同，让下一次尝试更有方向！'
   ]);
   if (!candidates.length) {
     add('reflection','成长启航',0,1,[
       record.evaluation?.completedAt
-        ? '你们给观察、合作和坚持评了星，完成了一次对学习表现的回顾。下次选一个具体例子，说说哪颗星最能代表自己的进步吧！'
-        : '你们已经开始了对身体的探索。接下来挑一个最想弄清的问题，带着它去观察、比较，老师期待听到你们的新发现！'
+        ? '我们给观察、合作和坚持评了星，完成了一次对学习表现的回顾。下次选一个具体例子，说说哪颗星最能代表自己的进步吧！'
+        : '我们已经开始了对身体的探索。接下来挑一个最想弄清的问题，带着它去观察、比较，看看我们还能找到哪些新线索！'
     ]);
   }
   return candidates;
@@ -180,19 +180,19 @@ export function awardCandidates(record, stars) {
       'swallow-correction':1,'model-position':Object.keys(record.v2?.positions||{}).filter(id=>record.v1?.positions?.[id]&&Math.hypot(record.v1.positions[id].x-record.v2.positions[id].x,record.v1.positions[id].y-record.v2.positions[id].y)>2.5).length,
       'model-route':1,'teacher-cooperation':stars[1],'teacher-persistence':stars[2],'teacher-observation':stars[0]})[c.key]||1;
     if(c.key==='villi')c.texts=[count('villi-detail')>1
-      ? '你们打开了 '+count('villi-detail')+' 次绒毛细节，把目光放到了小肠内壁的小小结构上。愿意回到细节中观察，这份好奇值得珍惜！'
-      : '你们打开绒毛细节，把观察从小肠的整体推进到内壁的小小结构。继续带着问题看一看，让每个发现都更清楚！'];
+      ? '我们打开了 '+count('villi-detail')+' 次绒毛细节，把目光放到了小肠内壁的小小结构上。愿意回到细节中观察，这份好奇值得珍惜！'
+      : '我们打开绒毛细节，把观察从小肠的整体推进到内壁的小小结构。继续带着问题看一看，让每个发现都更清楚！'];
   }
   const observed=new Set((record.observation?.views||[]).map(v=>v.organId).filter(Boolean));
-  if(record.observation?.completedAt&&observed.size)add('observation-breadth',0,observed.size,'你们观察了 '+observed.size+' 种器官，把探索的目光投向身体里的不同地方。继续比较它们的形状和作用，会有更多新发现！');
-  if(record.assembly?.completedAt)add('assembly-work',1,1,'你们完成了实体拼装，把纸面上的想法变成了可以查看的作品。接着指着作品说说连接的理由，让大家听见你们的思考！');
-  if(record.v1?.completedAt)add('initial-idea',0,1,'你们用初始模型表达了食物在身体里旅行的想法。愿意把想法摆出来、画出来，就是讨论和检验的好起点！');
-  if(record.v2?.completedAt)add('revision-work',0,1,'观察之后，你们完成并提交了第二份模型。继续对照前后的作品，说说保留或调整的理由，让观察和想法连起来！');
-  if(record.journey?.completedAt)add('journey-complete',2,new Set((journey.visits||[]).map(v=>v.organId)).size||1,'你们完成了这次食物旅行，走到了探索的终点。挑一站最有意思的经历讲给大家听，让一路的发现留下来！');
-  if(record.evaluation?.completedAt)add('reflection',1,1,'你们认真提交了观察、合作和坚持的自评。愿意停下来回顾自己的表现，下一次努力就有了新的起点！');
-  if(count('nutrient-absorption','nutrient-absorption-start'))add('absorption',0,1,'你们体验了营养吸收的过程，把注意力放在食物中的营养去了哪里。继续追踪这些变化，老师期待听见你们的新问题！');
+  if(record.observation?.completedAt&&observed.size)add('observation-breadth',0,observed.size,'我们观察了 '+observed.size+' 种器官，把探索的目光投向身体里的不同地方。继续比较它们的形状和作用，会有更多新发现！');
+  if(record.assembly?.completedAt)add('assembly-work',1,1,'我们完成了实体拼装，把纸面上的想法变成了可以查看的作品。接着指着作品说说连接的理由，让大家听见我们的思考！');
+  if(record.v1?.completedAt)add('initial-idea',0,1,'我们用初始模型表达了食物在身体里旅行的想法。愿意把想法摆出来、画出来，就是讨论和检验的好起点！');
+  if(record.v2?.completedAt)add('revision-work',0,1,'观察之后，我们完成并提交了第二份模型。继续对照前后的作品，说说保留或调整的理由，让观察和想法连起来！');
+  if(record.journey?.completedAt)add('journey-complete',2,new Set((journey.visits||[]).map(v=>v.organId)).size||1,'我们完成了这次食物旅行，走到了探索的终点。挑一站最有意思的经历讲给大家听，让一路的发现留下来！');
+  if(record.evaluation?.completedAt)add('reflection',1,1,'我们认真提交了观察、合作和坚持的自评。愿意停下来回顾自己的表现，下一次努力就有了新的起点！');
+  if(count('nutrient-absorption','nutrient-absorption-start'))add('absorption',0,1,'我们体验了营养吸收的过程，把注意力放在食物中的营养去了哪里。继续追踪这些变化，我们还能提出哪些新问题呢？');
   const correct=new Set(events.filter(e=>e.type==='identify'&&organNames[e.organId]===e.choice).map(e=>e.organId));
-  if(correct.size)add('identify-accurate',0,correct.size,'你们在旅行中正确辨认了 '+correct.size+' 种器官。接下来试着说出辨认时用到的特点，让答案更有依据！');
+  if(correct.size)add('identify-accurate',0,correct.size,'我们在旅行中正确辨认了 '+correct.size+' 种器官。接下来试着说出辨认时用到的特点，让答案更有依据！');
   return candidates;
 }
 
@@ -220,7 +220,7 @@ export function makeAwards(records, groups) {
       // Sparse or identical records cannot prove twelve different strengths.
       // Use an explicitly forward-looking wish, never invent an observed action.
       const key=awardOrder.find(k=>!used.has(k));used.add(key);
-      primary={key,category:0,metric:0,texts:['这份成长寄语送给第 '+record.groupId+' 组：下一次，试着'+awardGoals[awardOrder.indexOf(key)]+'。老师期待看到你们新的进步！']};
+      primary={key,category:0,metric:0,texts:['第 '+record.groupId+' 组的下一步：我们可以试着'+awardGoals[awardOrder.indexOf(key)]+'。让我们带着这个目标继续探索！']};
       isEncouragement=true;
     }
     const index=awardOrder.indexOf(primary.key);
