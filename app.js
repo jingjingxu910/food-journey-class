@@ -26,7 +26,8 @@ function nextStep(record) {
   if (!record.v2?.completedAt) return 2;
   if (!record.assembly?.completedAt) return 3;
   if (!record.journey?.completedAt) return 4;
-  return 5;
+  if (!record.evaluation?.completedAt) return 5;
+  return 6;
 }
 
 function showProgress(record) {
@@ -41,7 +42,7 @@ function showProgress(record) {
     action.textContent = index < step ? '已完成 · 查看' : action.dataset.startLabel;
   });
   document.querySelector('.section-heading h2').textContent = [
-    '从你的想法开始', '接下来，仔细观察', '回到模型，再想一想', '现在，动手拼装', '跟着食物去旅行', '完成的活动',
+    '从你的想法开始', '接下来，仔细观察', '回到模型，再想一想', '现在，动手拼装', '跟着食物去旅行', '最后，一起回顾表现', '完成的活动',
   ][step];
 }
 

@@ -1,4 +1,4 @@
-importScripts('./resource-manifest.js?v=20261105-class-evaluation','./resource-store.js?v=20261105-class-evaluation');
+importScripts('./resource-manifest.js?v=20261106-final-task','./resource-store.js?v=20261106-final-task');
 const ROOT=new URL('./',self.location.href);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));
 async function withRange(response,range){

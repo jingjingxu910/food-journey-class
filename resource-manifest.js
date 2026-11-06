@@ -1,11 +1,11 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-62d8710c39652def",
-  "bytes": 74232238,
+  "version": "20261102-chunks-e0edb802ef29b997",
+  "bytes": 74232627,
   "files": [
     {
       "path": "app.js",
-      "bytes": 2092,
-      "hash": "dbc9717a05e31627f327cf5db584bd39f8d4b470de8ef5a12c3ee6250c54e200"
+      "bytes": 2172,
+      "hash": "5bd421608c34981078f1c2b437356e2ebc7550d7b517fb44c1ae1f4f090c550a"
     },
     {
       "path": "ar-connected.js",
@@ -1093,8 +1093,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "index.html",
-      "bytes": 3954,
-      "hash": "5c54a96f81b912056a1b2019f731e21a65d99c2ab03cd9ef1b8584880bb476b4"
+      "bytes": 4263,
+      "hash": "b3620c555422f82036fe10e2ec983455fbcc9db8f916ef48fbdd1ae78e52cf80"
     },
     {
       "path": "journey-3d.js",
@@ -1627,7 +1627,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-62d8710c39652def"
+      "hash": "manifest-20261102-chunks-e0edb802ef29b997"
     }
   ]
 };
