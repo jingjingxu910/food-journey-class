@@ -4,6 +4,33 @@
 .ev-button.primary{background:#238477;color:white;border:0}
 .ev-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:24px 0}
 .ev-tabs [aria-selected=true]{background:#238477;color:white}
+.lesson-presenting .ev-tabs{margin:10px 0 14px}
+.ev-tabs .lesson-fullscreen{margin-inline-start:auto}
+body.evaluation-teacher.lesson-presenting{padding-bottom:0!important}
+.lesson-slide{
+ position:relative;isolation:isolate;overflow:hidden;box-sizing:border-box;
+ display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:clamp(10px,2vh,24px);
+ min-height:clamp(420px,calc(100dvh - 150px),850px);
+ padding:clamp(24px,5vw,96px);border:1px solid #c5e0d7;border-radius:28px;
+ color:#193d40;background:radial-gradient(ellipse at 98% 12%,#cce9d4,transparent 54%),#f5fbf2;
+}
+.lesson-slide[data-page="课题封面"]{background:radial-gradient(ellipse at 88% 20%,#296b64,transparent 60%),#123d43;color:#fff9e9}
+.lesson-slide[data-page="课题封面"]::after{
+ content:"";position:absolute;z-index:-1;right:-10%;bottom:-50%;width:56%;aspect-ratio:1;
+ border:1px solid #a6dcc560;border-radius:50%;box-shadow:0 0 0 34px #a6dcc514,0 0 0 70px #a6dcc514,0 0 0 112px #a6dcc514;
+}
+.lesson-slide-label{margin:0;color:#176559;font-size:clamp(16px,1.65vw,25px);font-weight:700;letter-spacing:.17em}
+.lesson-slide[data-page="课题封面"] .lesson-slide-label{color:#d1ebac}
+.lesson-slide h1{margin:0;font-size:clamp(34px,5.6vw,100px);line-height:1.15;letter-spacing:-.035em}
+.lesson-slide[data-page="课题封面"] h1{font-size:clamp(42px,7.4vw,132px);max-width:11em}
+.lesson-slide h1:focus{outline:none}
+.lesson-slide-prompt{max-width:29em;margin:0;font-size:clamp(22px,2.8vw,44px);line-height:1.42;font-weight:650}
+.lesson-slide .lesson-discussion-title{color:#176559;font-size:clamp(18px,2vw,30px);letter-spacing:.12em}
+.lesson-discussion{margin:0;max-width:24em;font-size:clamp(26px,4.2vw,68px);line-height:1.45;font-weight:700}
+.lesson-slide-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:clamp(5px,2vh,22px)}
+.lesson-slide-actions .ev-button{font-size:clamp(15px,1.45vw,22px);min-height:44px}
+.lesson-slide-actions .primary{background:#176459}
+.lesson-slide[data-page="课题封面"] .primary{background:#d1ebac;color:#173c36;font-weight:700}
 body.evaluation-teacher{height:auto!important;min-height:100vh;overflow-y:auto!important;padding-bottom:145px!important}
 .evaluation-teacher .teacher-model-view,.evaluation-teacher .model-shell{height:auto!important;overflow:visible!important}
 .ev-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-bottom:32px}

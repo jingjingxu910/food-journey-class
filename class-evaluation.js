@@ -4,6 +4,12 @@ const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
 const symbols=['🔎','🤝','🌱'];
+const discussion=[
+ '食物在身体中的旅行要经过哪些器官？它们是如何合作完成食物消化的？',
+ '回顾本单元的学习内容，推测一下：食物的消化过程与呼吸有什么联系吗？',
+ '我们跳绳时，身体有哪些器官在参与这个活动？'
+];
+const lessonSlides=new Set(['课题封面','课堂研讨']);
 export function certificate(entry){
  const card=el('article',undefined,'ev-award theme-'+(entry.category||0));
  const art=el('div',undefined,'award-garden');
@@ -20,12 +26,27 @@ else if(document.querySelector('#student-evaluation'))setupStudent();
 function setupTeacher(){
  document.body.classList.add('evaluation-teacher');
  const host=document.querySelector('#teacher-view'),tabs=el('nav',undefined,'ev-tabs'),panel=el('section',undefined,'ev-grid'),dock=el('aside',undefined,'ev-stars');
- let records=[],state={resetId:null,groups:{}},ready=false,dirty=false,version=0,timer,saving=null,busy=false,stage=new URLSearchParams(location.search).get('stage')==='awards'?'专属奖状':'初始模型';
+ const requestedStage=new URLSearchParams(location.search).get('stage');
+ let records=[],state={resetId:null,groups:{}},ready=false,dirty=false,version=0,timer,saving=null,busy=false,stage=requestedStage==='awards'?'专属奖状':'课题封面';
+ const slide=el('section',undefined,'lesson-slide');
+ slide.setAttribute('aria-label','课堂投屏');
+ const summary=document.querySelector('#teacher-summary');
+ const heading=host.querySelector('.teacher-model-heading');
+ const fullscreen=button('全屏',()=>window.requestLessonFullscreen?.(),'ev-button lesson-fullscreen');
+ let discussionIndex=0;
  const status=el('span','连接课堂中…','ev-status');
  const header=el('div',undefined,'ev-star-heading');
  header.append(el('b','点一下，送一颗星'),el('span','🔎 观察   🤝 合作   🌱 坚持'),status);
  const rows=el('div',undefined,'ev-star-groups');dock.append(header,rows);host.append(panel,dock);
- host.insertBefore(tabs,document.querySelector('#teacher-summary'));
+ tabs.setAttribute('aria-label','教学页面和学生活动');
+ host.insertBefore(tabs,heading);
+ host.insertBefore(slide,summary);
+ function showStage(name){
+   stage=name;
+   render();
+   window.scrollTo(0,0);
+   if(lessonSlides.has(stage))slide.querySelector('h1').focus({preventScroll:true});
+ }
  function entry(id){return state.groups[id]||={stars:[0,0,0]};}
  async function flush(){
    clearTimeout(timer);
@@ -62,8 +83,9 @@ function setupTeacher(){
    }
  }
  async function choose(name){
+   if(lessonSlides.has(name)){showStage(name);return;}
    if(busy)return;
-   stage=name;render();
+   showStage(name);
 
    busy=true;renderStars();
    try{
@@ -82,7 +104,39 @@ function setupTeacher(){
      render();
    }catch(error){status.textContent=error.message;}finally{busy=false;renderStars();}
  }
- ['初始模型','AR观察','修正模型','实体拼装','食物旅行','小组自评','专属奖状'].forEach(name=>tabs.append(button(name,()=>choose(name))));
+ ['课题封面','初始模型','AR观察','修正模型','实体拼装','食物旅行','课堂研讨','小组自评','专属奖状'].forEach(name=>{
+   const tab=button(name,()=>choose(name));
+   tab.title=lessonSlides.has(name)?'仅在教师端展示':'展示并带领学生进入'+name;
+   tabs.append(tab);
+ });
+ tabs.append(fullscreen);
+ function renderSlide(){
+   const cover=stage==='课题封面';
+   const slideTitle=el('h1',cover?'食物在身体里的旅行':'课堂研讨');
+   slideTitle.tabIndex=-1;
+   slide.dataset.page=stage;
+   if(cover){
+     const actions=el('div',undefined,'lesson-slide-actions');
+     actions.append(button('开始上课 →',()=>choose('初始模型'),'ev-button primary'));
+     slide.replaceChildren(el('p','四年级 · 科学','lesson-slide-label'),slideTitle,el('p','一块饼干咽下去以后，会去哪儿？','lesson-slide-prompt'),actions);
+   }else{
+     slideTitle.textContent='课堂研讨 · '+(discussionIndex+1)+' / '+discussion.length;
+     slideTitle.classList.add('lesson-discussion-title');
+     const question=el('p',discussion[discussionIndex],'lesson-discussion');
+     const actions=el('div',undefined,'lesson-slide-actions');
+     function move(step){
+       discussionIndex+=step;
+       renderSlide();
+       slide.querySelector('h1').focus({preventScroll:true});
+     }
+     const previous=button('← 上一题',()=>move(-1));
+     const next=button('下一题 →',()=>move(1),'ev-button primary');
+     previous.disabled=discussionIndex===0;
+     next.disabled=discussionIndex===discussion.length-1;
+     actions.append(previous,next);
+     slide.replaceChildren(slideTitle,question,actions);
+   }
+ }
  function showPhoto(data,id){
    const dialog=document.querySelector('#model-preview-dialog'),img=el('img');
    img.src=data;img.alt='第 '+id+' 组拼装照片';img.className='ev-photo-large';
@@ -90,7 +144,25 @@ function setupTeacher(){
    document.querySelector('#preview-model-content').replaceChildren(img);dialog.showModal();
  }
  function render(){
-   [...tabs.children].forEach(b=>b.setAttribute('aria-selected',String(b.textContent===stage)));
+   [...tabs.children].forEach(b=>{
+     if(b===fullscreen)return;
+     const current=b.textContent===stage;
+     b.setAttribute('aria-selected',String(current));
+     if(current)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
+   });
+   const presenting=lessonSlides.has(stage);
+   document.body.classList.toggle('lesson-presenting',presenting);
+   slide.hidden=!presenting;
+   heading.hidden=summary.hidden=dock.hidden=presenting;
+   fullscreen.hidden=!presenting;
+   if(presenting){
+     document.querySelector('#group-dashboard').hidden=true;
+     document.querySelector('.teacher-pagination').hidden=true;
+     panel.hidden=true;
+     if(slide.dataset.page!==stage)renderSlide();
+     return;
+   }
+   delete slide.dataset.page;
    const model=stage==='初始模型'||stage==='修正模型';
    document.querySelector('.teacher-model-heading h1').textContent=stage==='初始模型'?'各组的初始模型':stage==='修正模型'?'观察前后的模型对比':stage;
    document.querySelector('.teacher-model-heading .model-eyebrow').textContent={
