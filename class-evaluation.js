@@ -1,5 +1,5 @@
 import {groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js';
-import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents} from './evaluation-data.js';
+import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=20261108-award-celebration';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
@@ -11,6 +11,12 @@ const discussion=[
 ];
 const lessonSlides=new Set(['课题封面','课堂研讨']);
 export function certificate(entry){
+ if(entry.awardBasis?.isEncouragement){
+   entry={...entry,title:'课堂探索家',reasonParagraphs:[participationPraise],awardBasis:{isAdditional:true}};
+ }
+ if(entry.awardBasis?.isAdditional&&/^第\s*\d+\s*组/.test(entry.title)){
+   entry={...entry,title:'发现小先锋'};
+ }
  const card=el('article',undefined,'ev-award theme-'+(entry.category||0));
  const art=el('div',undefined,'award-garden');
  const reason=el('div',undefined,'award-reason');
@@ -18,7 +24,7 @@ export function certificate(entry){
  paragraphs.filter(Boolean).forEach(text=>reason.append(el('p',text)));
  const hero=el('span',awardIcon(entry),'award-hero');hero.setAttribute('aria-hidden','true');
  art.append(hero);
- card.append(el('p','食物在身体里的旅行','award-course'),art,el('p','我们是第 '+entry.groupId+' 组','award-group'),el('h2',entry.title),el('div','我们的闪光时刻','award-ribbon'),reason,el('p','带着好奇出发，让每一次发现都发光。','award-wish'),el('span','✧  ✦  ✧','award-confetti'));
+ card.append(el('p','食物在身体里的旅行','award-course'),art,el('p','我们是第 '+entry.groupId+' 组','award-group'),el('h2',entry.title),el('div','我们的闪光时刻','award-ribbon'),reason,el('p','为我们在这节课里的投入与收获喝彩！','award-wish'),el('span','✧  ✦  ✧','award-confetti'));
  return card;
 }
 if(teacher)setupTeacher();
@@ -32,6 +38,35 @@ function setupTeacher(){
  slide.setAttribute('aria-label','课堂投屏');
  const summary=document.querySelector('#teacher-summary');
  const heading=host.querySelector('.teacher-model-heading');
+ const sharingControl=el('label',undefined,'ev-sharing');
+ const sharingSelect=el('select');
+ sharingControl.append(el('span','交流小组'),sharingSelect);
+ const blankOption=el('option','未指定');
+ blankOption.value='';
+ sharingSelect.append(blankOption);
+ for(let group=1;group<=12;group++){
+   const option=el('option','第 '+group+' 组');
+   option.value=String(group);
+   sharingSelect.append(option);
+ }
+ const sharingStage=()=>stage==='课堂研讨'?'研讨'+(discussionIndex+1):stage;
+ function renderSharing(){
+   const key=sharingStage();
+   const discussing=stage==='课堂研讨';
+   const fullscreenButton=discussing?fullscreen:heading.querySelector('#teacher-fullscreen-button');
+   if(sharingControl.parentElement!==fullscreenButton.parentElement)fullscreenButton.before(sharingControl);
+   sharingControl.hidden=!Object.hasOwn(sharingAwards,key);
+   sharingSelect.value=String(state.shares?.[key]??(key==='研讨1'?state.shares?.['食物旅行']:null)??'');
+ }
+ sharingSelect.onchange=()=>{
+   const key=sharingStage();
+   if(!ready||busy||!Object.hasOwn(sharingAwards,key))return;
+   state.shares||={};
+   if(key==='研讨1')delete state.shares['食物旅行'];
+   if(sharingSelect.value)state.shares[key]=Number(sharingSelect.value);
+   else delete state.shares[key];
+   schedule();
+ };
  const fullscreen=button('全屏',()=>window.requestLessonFullscreen?.(),'ev-button lesson-fullscreen');
  let discussionIndex=0;
  const status=el('span','连接课堂中…','ev-status');
@@ -64,6 +99,7 @@ function setupTeacher(){
  }
  status.onclick=()=>flush().catch(()=>{status.textContent='暂未保存，点击重试';});
  function renderStars(){
+   sharingSelect.disabled=!ready||busy;
    rows.replaceChildren();
    for(let id=1;id<=12;id++){
      const cell=el('div',undefined,'ev-star-group');cell.append(el('b',id+' 组'));
@@ -95,7 +131,7 @@ function setupTeacher(){
        records=await submittedRecords(state.resetId);
        if(!records.length)throw new Error('还没有本轮作品，暂时无法颁发。');
        const next=structuredClone(state);
-       makeAwards(records,next.groups).forEach(a=>next.groups[a.groupId]=a);
+       makeAwards(records,next.groups,next.shares).forEach(a=>next.groups[a.groupId]=a);
        await saveFeedback(next);state=next;
      }
      const phases={'初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards'};
@@ -127,6 +163,7 @@ function setupTeacher(){
      function move(step){
        discussionIndex+=step;
        renderSlide();
+       renderSharing();
        slide.querySelector('h1').focus({preventScroll:true});
      }
      const previous=button('← 上一题',()=>move(-1));
@@ -144,8 +181,9 @@ function setupTeacher(){
    document.querySelector('#preview-model-content').replaceChildren(img);dialog.showModal();
  }
  function render(){
+   renderSharing();
    [...tabs.children].forEach(b=>{
-     if(b===fullscreen)return;
+     if(b===fullscreen||b===sharingControl)return;
      const current=b.textContent===stage;
      b.setAttribute('aria-selected',String(current));
      if(current)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
@@ -221,7 +259,7 @@ function setupTeacher(){
    try{
      if(saving)await saving;
      const stored=event.detail.feedback||await readDocument('class-feedback');
-     if(!dirty||state.resetId!==round)state=stored.resetId===round?{resetId:round,groups:stored.groups||{}}:{resetId:round,groups:{}};
+     if(!dirty||state.resetId!==round)state=stored.resetId===round?{resetId:round,groups:stored.groups||{},shares:stored.shares||{}}:{resetId:round,groups:{}};
      const local=JSON.parse(localStorage.getItem('teacher-evaluation-draft')||'null');
      if(local?.resetId===round){state=local;dirty=true;}else localStorage.removeItem('teacher-evaluation-draft');
      ready=true;status.textContent='每项最多 5 星 · 自动保存';

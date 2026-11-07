@@ -4,8 +4,10 @@
 .ev-button.primary{background:#238477;color:white;border:0}
 .ev-tabs{display:flex;gap:9px;flex-wrap:wrap;margin:24px 0}
 .ev-tabs [aria-selected=true]{background:#238477;color:white}
-.lesson-presenting .ev-tabs{margin:10px 0 14px}
+:root:has(> body.evaluation-teacher){scrollbar-gutter:stable}
 .ev-tabs .lesson-fullscreen{margin-inline-start:auto}
+.ev-sharing{display:flex;align-items:center;gap:8px;white-space:nowrap;color:var(--ink);font-size:14px}
+.ev-sharing select{font:inherit;color:inherit;background:#fff;border:1px solid #bdd8d2;border-radius:10px;padding:8px}
 body.evaluation-teacher.lesson-presenting{padding-bottom:0!important}
 .lesson-slide{
  position:relative;isolation:isolate;overflow:hidden;box-sizing:border-box;

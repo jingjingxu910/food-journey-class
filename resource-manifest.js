@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-16a4eccb6c0122f7",
-  "bytes": 74258678,
+  "version": "20261102-chunks-9611c1f710fee79e",
+  "bytes": 74264163,
   "files": [
     {
       "path": "app.js",
@@ -1058,13 +1058,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "class-evaluation.css",
-      "bytes": 9374,
-      "hash": "7b850a4962ad5d92fb594773663426ff55a92970a0fe2684a4508ea55cc21019"
+      "bytes": 9611,
+      "hash": "799597fdccad9cc3f4be45c11c86f346d777354c11b50e3abeef18546c10e88d"
     },
     {
       "path": "class-evaluation.js",
-      "bytes": 18023,
-      "hash": "f7a78f237fdfb60a1472975e45cddab6ae30664fd8069ebcf170a6317909ff79"
+      "bytes": 19819,
+      "hash": "93d45c9444e23c65b69ee0aae5e0619064582ea2ed8fd5c49483b9b45de995dd"
     },
     {
       "path": "cloud-loader.js",
@@ -1078,13 +1078,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "evaluation-data.js",
-      "bytes": 16986,
-      "hash": "2c71f21d373b82f28e2f4651f825793a65c9a60cff77efc4653fcc89112de602"
+      "bytes": 20400,
+      "hash": "7b1fe8334851af56d0a4665109ce505d5e7e308fc06efab097dda1230232b489"
     },
     {
       "path": "evaluation.html",
-      "bytes": 475,
-      "hash": "b0dd3a1714a0068c5a26cc5d31d9d9e31da7d7e5da68508f70999324019b8a47"
+      "bytes": 505,
+      "hash": "cf2ec76a5bebe95d7f19d4cdd37f2bd072535f0edc755f77ac503b9b94fc9265"
     },
     {
       "path": "frame-entry.js",
@@ -1218,8 +1218,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-workbench.html",
-      "bytes": 5794,
-      "hash": "2d7ffdbc752d6ba4e36ca968cad6546e835cabd20c036d25dcbd755422241981"
+      "bytes": 5802,
+      "hash": "0ff9b91d9fd5e61942d9b1d017ae997353cf6eae56c587fa0ef58709db496380"
     },
     {
       "path": "model-workbench.js",
@@ -1627,7 +1627,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-16a4eccb6c0122f7"
+      "hash": "manifest-20261102-chunks-9611c1f710fee79e"
     }
   ]
 };
