@@ -1,6 +1,6 @@
 // Lightweight control checks. Artwork and records are fetched only when commands change.
-import {readDocument} from './evaluation-data.js';
-import {cloudDb} from './student-data.js';
+import {readDocument} from './evaluation-data.js?v=20261109-cloud2';
+import {cloudDb} from './student-data.js?v=20261109-cloud2';
 let checking=false,lastCheck=0,lastRoundCheck=0,lastStageCommand=null;
 let commandWatcher=null,cachedCommand=null,nextWatchAttempt=0,retryAfter=0,failureDelay=2000;
 function stopCommandWatch(){

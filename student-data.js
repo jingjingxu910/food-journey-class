@@ -1,3 +1,9 @@
+export function cloudErrorText(error) {
+  const code = error?.code || error?.name;
+  const message = error?.message || String(error || '原因未知');
+  return (code && code !== 'Error' ? code + '：' : '') + message;
+}
+export let lastSubmissionError = null;
 // A missing document is normal before the first submission. Other failures must propagate.
 export async function readOptionalDocument(ref) {
   try {
@@ -109,6 +115,7 @@ export async function cloudDb() {
 }
 
 export async function submitRecord(record, {saveLocal=true, submitEvaluation=false}={}) {
+  lastSubmissionError = null;
   if(saveLocal) await saveRecord(record);
   try {
     const db = await cloudDb();
@@ -152,6 +159,7 @@ export async function submitRecord(record, {saveLocal=true, submitEvaluation=fal
     }
     return true;
   } catch (error) {
+    lastSubmissionError = error;
     console.warn('课堂记录暂未同步', error);
     return false;
   }

@@ -5,7 +5,7 @@ import {buildLumen,prepareLumenAssets} from './journey-lumen.js';
 import {PassageView,openingMask} from './journey-passage-view.js';
 import {showAnatomyView,cancelAnatomyView} from './journey-anatomy-zoom.js';
 import {renderReflection} from './journey-reflection.js';
-import {groupId,homeUrl,allRecords,currentRecord,saveRecord,submitRecord} from './student-data.js';
+import {groupId,homeUrl,allRecords,currentRecord,saveRecord,submitRecord} from './student-data.js?v=20261109-cloud2';
 
 const $=id=>document.getElementById(id),host=$('world'),stage=$('stage');
 const sequence=['outside','mouth','pharynx','esophagus','stomach','small','large'];

@@ -1,4 +1,4 @@
-import {cloudDb, readOptionalDocument} from './student-data.js';
+import {cloudDb, readOptionalDocument} from './student-data.js?v=20261109-cloud2';
 export const dimensions = ['观察有依据','合作会倾听','遇到问题再尝试'];
 export async function readDocument(id) {
   const db=await cloudDb();

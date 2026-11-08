@@ -440,7 +440,7 @@ function withCloudDeadline(work, ms) {
 async function loadClassResetId() {
   const result = await withCloudDeadline((async () => {
     const database = await initializeCloud();
-    const {readOptionalDocument} = await import("./student-data.js");
+    const {readOptionalDocument} = await import("./student-data.js?v=20261109-cloud2");
     return readOptionalDocument(database.collection(CLOUD_COLLECTION).doc("class-reset"));
   })(), 2500);
   if (result?.code) throw new Error(result.message || "课堂轮次读取失败");
@@ -471,8 +471,8 @@ async function initializeCloud() {
 
 async function syncRecord(record) {
   try {
-    const { submitRecord } = await import("./student-data.js");
-    if (!await submitRecord(record, { saveLocal: false })) throw new Error("云端未确认保存");
+    const data = await import("./student-data.js?v=20261109-cloud2");
+    if (!await data.submitRecord(record, { saveLocal: false })) throw data.lastSubmissionError || new Error("云端未确认保存");
     record.pendingSync = false;
     pendingSubmissionSync = false;
     await saveLocal(record);
@@ -481,7 +481,9 @@ async function syncRecord(record) {
   } catch (error) {
     pendingSubmissionSync = true;
     console.error("同步失败，记录已保存在本机", error);
-    document.querySelector("#connection-status").textContent = "本机已保存";
+    const status = document.querySelector("#connection-status");
+    status.textContent = "本机已保存，上传失败：" + (error?.code || error.message);
+    status.title = error.message;
     return false;
   }
 }
@@ -677,7 +679,7 @@ async function refreshDashboard() {
     document.querySelector("#connection-status").textContent = "教师端已连接";
   } catch (error) {
     console.error("教师端云端读取失败", error);
-    document.querySelector("#connection-status").textContent = "连接失败，请刷新重试";
+    document.querySelector("#connection-status").textContent = "连接失败：" + (error?.code ? error.code + " · " : "") + error.message;
   }
   const visibleRecords = cloudRecords.filter(record => (record.resetId || null) === (activeResetId || null));
   renderDashboard(visibleRecords);

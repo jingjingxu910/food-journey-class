@@ -1,4 +1,4 @@
-importScripts('./resource-manifest.js?v=20261108-award-celebration','./resource-store.js?v=20261106-student-voice');
+importScripts('./resource-manifest.js?v=20261109-cloud2','./resource-store.js?v=20261106-student-voice');
 const ROOT=new URL('./',self.location.href);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));
 async function withRange(response,range){

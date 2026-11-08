@@ -1,5 +1,5 @@
-import {groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js';
-import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=20261108-award-celebration';
+import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js?v=20261109-cloud2';
+import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=20261109-cloud2';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
@@ -264,7 +264,7 @@ function setupTeacher(){
      if(local?.resetId===round){state=local;dirty=true;}else localStorage.removeItem('teacher-evaluation-draft');
      ready=true;status.textContent='每项最多 5 星 · 自动保存';
      if(dirty)schedule();
-   }catch(error){console.error('教师评分读取失败',error);status.textContent='连接失败，请刷新课堂';status.title=error?.message||String(error);}
+   }catch(error){console.error('教师评分读取失败',error);status.textContent='连接失败：'+cloudErrorText(error);status.title='连接版本 1109-2 · '+location.origin;}
    renderStars();render();
  });
  window.addEventListener('online',()=>{if(dirty)flush().catch(()=>{});});

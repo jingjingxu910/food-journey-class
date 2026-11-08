@@ -1,4 +1,4 @@
-import { groupId, currentRecord, saveRecord, submitRecord, homeUrl } from './student-data.js';
+import { groupId, currentRecord, saveRecord, submitRecord, homeUrl } from './student-data.js?v=20261109-cloud2';
 import { createJourney3D } from './journey-3d.js';
 
 const $ = (id) => document.getElementById(id);
