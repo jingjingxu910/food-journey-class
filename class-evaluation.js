@@ -264,7 +264,7 @@ function setupTeacher(){
      if(local?.resetId===round){state=local;dirty=true;}else localStorage.removeItem('teacher-evaluation-draft');
      ready=true;status.textContent='每项最多 5 星 · 自动保存';
      if(dirty)schedule();
-   }catch{status.textContent='连接失败，请刷新课堂';}
+   }catch(error){console.error('教师评分读取失败',error);status.textContent='连接失败，请刷新课堂';status.title=error?.message||String(error);}
    renderStars();render();
  });
  window.addEventListener('online',()=>{if(dirty)flush().catch(()=>{});});

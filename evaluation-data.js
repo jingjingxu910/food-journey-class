@@ -1,8 +1,8 @@
-import {cloudDb} from './student-data.js';
+import {cloudDb, readOptionalDocument} from './student-data.js';
 export const dimensions = ['观察有依据','合作会倾听','遇到问题再尝试'];
 export async function readDocument(id) {
   const db=await cloudDb();
-  const result=await db.collection('food-journey-groups').doc(id).get();
+  const result=await readOptionalDocument(db.collection('food-journey-groups').doc(id));
   if(result?.code) throw new Error(result.message||'暂时无法连接课堂');
   return (Array.isArray(result.data)?result.data[0]:result.data)||{};
 }

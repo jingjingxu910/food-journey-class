@@ -1,3 +1,16 @@
+// A missing document is normal before the first submission. Other failures must propagate.
+export async function readOptionalDocument(ref) {
+  try {
+    const result = await ref.get();
+    if (result?.code === 'DOCUMENT_NOT_FOUND') return {data: []};
+    if (result?.code) throw Object.assign(new Error(result.message || '课堂数据读取失败'), {code: result.code});
+    return result;
+  } catch (error) {
+    if (error?.code === 'DOCUMENT_NOT_FOUND') return {data: []};
+    throw error;
+  }
+}
+
 // The same record is used by the model, observation, assembly and journey pages.
 // Drafts stay on this device; one small upload is attempted on each explicit submission.
 export const groupId = Math.max(1, Math.min(12, Number(new URLSearchParams(location.search).get('group')) || 1));
@@ -50,7 +63,7 @@ export async function currentRecord() {
   try {
     let resetTimer;
     const result = await Promise.race([
-      (async () => { const db = await cloudDb(); return db.collection(collectionName).doc('class-reset').get(); })(),
+      (async () => { const db = await cloudDb(); return readOptionalDocument(db.collection(collectionName).doc('class-reset')); })(),
       new Promise((_, reject) => { resetTimer=setTimeout(() => reject(new Error('课堂轮次读取超时')),2500); })
     ]).finally(()=>clearTimeout(resetTimer));
     if (result?.code) throw new Error(result.message || '课堂轮次读取失败');
@@ -100,14 +113,14 @@ export async function submitRecord(record, {saveLocal=true, submitEvaluation=fal
   try {
     const db = await cloudDb();
     const collection = db.collection(collectionName);
-    const reset = await collection.doc('class-reset').get();
+    const reset = await readOptionalDocument(collection.doc('class-reset'));
     if (reset?.code) throw new Error(reset.message || '课堂轮次读取失败');
     const active = Array.isArray(reset.data) ? reset.data[0] : reset.data;
     if ((active?.resetId || null) !== (record.resetId || null)) {
       throw new Error('课堂已开始新一轮');
     }
     const ref = collection.doc(`group-${groupId}`);
-    const result = await ref.get();
+    const result = await readOptionalDocument(ref);
     if (result?.code) throw new Error(result.message || '无法读取小组记录');
     const prior = Array.isArray(result.data) ? result.data[0] : result.data;
     const records = Array.isArray(prior?.records) ? prior.records : [];

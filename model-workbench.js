@@ -440,7 +440,8 @@ function withCloudDeadline(work, ms) {
 async function loadClassResetId() {
   const result = await withCloudDeadline((async () => {
     const database = await initializeCloud();
-    return database.collection(CLOUD_COLLECTION).doc("class-reset").get();
+    const {readOptionalDocument} = await import("./student-data.js");
+    return readOptionalDocument(database.collection(CLOUD_COLLECTION).doc("class-reset"));
   })(), 2500);
   if (result?.code) throw new Error(result.message || "课堂轮次读取失败");
   const resetRecord = Array.isArray(result?.data) ? result.data[0] || {} : result?.data || {};
