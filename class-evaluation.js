@@ -1,14 +1,11 @@
-import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js?v=20261109-cloud2';
-import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=20261109-cloud2';
+import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js?v=20261109-ui3';
+import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=20261109-ui3';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
 const symbols=['🔎','🤝','🌱'];
-const discussion=[
- '食物在身体中的旅行要经过哪些器官？它们是如何合作完成食物消化的？',
- '回顾本单元的学习内容，推测一下：食物的消化过程与呼吸有什么联系吗？',
- '我们跳绳时，身体有哪些器官在参与这个活动？'
-];
+import {discussionQuestions} from './discussion-content.js';
+const discussion=discussionQuestions.map(item=>item.question);
 const lessonSlides=new Set(['课题封面','课堂研讨']);
 export function certificate(entry){
  if(entry.awardBasis?.isEncouragement){
@@ -119,7 +116,7 @@ function setupTeacher(){
    }
  }
  async function choose(name){
-   if(lessonSlides.has(name)){showStage(name);return;}
+   if(name==='课题封面'){showStage(name);return;}
    if(busy)return;
    showStage(name);
 
@@ -134,15 +131,15 @@ function setupTeacher(){
        makeAwards(records,next.groups,next.shares).forEach(a=>next.groups[a.groupId]=a);
        await saveFeedback(next);state=next;
      }
-     const phases={'初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards'};
-     await sendClassCommand(state.resetId,phases[name],String(Date.now()));
+     const phases={'初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards','课堂研讨':'discussion'};
+     await sendClassCommand(state.resetId,phases[name],String(Date.now()),name==='课堂研讨'?{discussionIndex}:{});
      status.textContent=name==='专属奖状'?'已颁发，学生端自动展示':'学生端正在进入'+name;
      render();
    }catch(error){status.textContent=error.message;}finally{busy=false;renderStars();}
  }
  ['课题封面','初始模型','AR观察','修正模型','实体拼装','食物旅行','课堂研讨','小组自评','专属奖状'].forEach(name=>{
    const tab=button(name,()=>choose(name));
-   tab.title=lessonSlides.has(name)?'仅在教师端展示':'展示并带领学生进入'+name;
+   tab.title=name==='课题封面'?'仅在教师端展示':'展示并带领学生进入'+name;
    tabs.append(tab);
  });
  tabs.append(fullscreen);
@@ -161,10 +158,12 @@ function setupTeacher(){
      const question=el('p',discussion[discussionIndex],'lesson-discussion');
      const actions=el('div',undefined,'lesson-slide-actions');
      function move(step){
+       if(busy)return;
        discussionIndex+=step;
        renderSlide();
        renderSharing();
        slide.querySelector('h1').focus({preventScroll:true});
+       void choose('课堂研讨');
      }
      const previous=button('← 上一题',()=>move(-1));
      const next=button('下一题 →',()=>move(1),'ev-button primary');
@@ -243,8 +242,10 @@ function setupTeacher(){
          'stomach-locate':'查看胃在身体中的位置','stomach-wrong':'重新辨认胃',
          'stomach-complete':'完成胃部探索','nutrient-absorption':'观察营养移向肠壁',
          'water-absorption':'观察水分吸收','peristalsis':'体验食管蠕动',vomit:'观察食物逆行后重新出发'};
-       const events=journeyEvents(data).filter(e=>labels[e.type]),details=el('details');details.append(el('summary','查看探索过程（'+events.length+' 条）'));
-       events.slice(-30).forEach(e=>details.append(el('p',labels[e.type]+(e.choice?' · 选择“'+e.choice+'”':''))));
+       const events=journeyEvents(data).filter(e=>labels[e.type]),details=el('details',undefined,'journey-details');details.append(el('summary','查看探索过程（'+events.length+' 条）'));
+       const timeline=el('ol',undefined,'journey-timeline');
+       events.slice(-30).forEach(e=>timeline.append(el('li',labels[e.type]+(e.choice?' · '+e.choice:''))));
+       details.append(timeline);
        if(!events.length)details.append(el('p','本次提交记录了旅程完成状态，没有可展开的探索步骤。'));
        if(events.length>30)details.append(el('p','显示最近 30 条；奖状判定仍使用完整提交记录。'));
        card.append(details);

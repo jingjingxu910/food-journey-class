@@ -2,7 +2,7 @@ import {organSegments} from './ar-media-segments.js';
 const isPreview=new URLSearchParams(location.search).get('preview')==='1';
 import {CameraMotion} from './ar-motion.js';
 import {BodyTracker,mapOverlay} from './ar-tracking.js';
-import {groupId,currentRecord,saveRecord,submitRecord,homeUrl} from './student-data.js?v=20261109-cloud2';
+import {groupId,currentRecord,saveRecord,submitRecord,homeUrl} from './student-data.js?v=20261109-ui3';
 const organs=[
  {id:'mouth',name:'口腔',question:'食物在这里怎样变小？',note:'牙齿咀嚼食物，舌帮助搅拌，唾液润湿食物。',feature:'转动、放大观察牙齿、牙龈和舌。'},
  {id:'esophagus',name:'食管',question:'食物怎样沿着这条管道前进？',note:'食管连接咽和胃，管壁蠕动，把食物送向胃。',feature:'转动观察这条细长管道。'},

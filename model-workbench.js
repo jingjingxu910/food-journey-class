@@ -327,7 +327,34 @@ function inferRouteOrder(model) {
     distances[organ.id]=Number(closest.toFixed(3));
     return {id:organ.id,at,distance:closest};
   });
-  return {order:ranked.filter(item=>item.distance<=1).sort((a,b)=>a.at-b.at).map(item=>item.id),distances};
+  const placed=ranked.filter(item=>item.distance<=1).sort((a,b)=>a.at-b.at);
+  const drawn=[];
+  // Freehand structures are evidence too; proximity can locate them, not name them.
+  for(const stroke of model.structureStrokes||[]){
+    const samples=[];
+    for(let i=1;i<stroke.length;i++){
+      const a=stroke[i-1],b=stroke[i],steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,(b.y-a.y)*1.5)));
+      for(let j=0;j<steps;j++)samples.push({x:a.x+(b.x-a.x)*j/steps,y:a.y+(b.y-a.y)*j/steps});
+    }
+    const near=[];
+    for(const p of samples){
+      let best=Infinity,at=0;
+      for(let i=1;i<points.length;i++){
+        const a=points[i-1],b=points[i],dx=b.x-a.x,dy=(b.y-a.y)*1.5,length=dx*dx+dy*dy;
+        const t=length?Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*1.5*dy)/length)):0;
+        const d=Math.hypot(a.x+t*dx-p.x,(a.y-p.y)*1.5+t*dy);
+        if(d<best){best=d;at=i-1+t;}
+      }
+      if(best<=3.5)near.push(at);
+    }
+    if(near.length>=3&&near.length>=samples.length*.3){
+      near.sort((a,b)=>a-b);
+      drawn.push({at:near[Math.floor(near.length/2)],label:'补画的器官 / 通道'});
+    }
+  }
+  const displayOrder=[...placed.map(item=>({at:item.at,label:organById(item.id).name})),...drawn]
+    .sort((a,b)=>a.at-b.at).map(item=>item.label).filter((name,i,all)=>i===0||name!==all[i-1]);
+  return {order:placed.map(item=>item.id),distances,displayOrder,hasDrawn:!!model.structureStrokes?.length,unmatchedDrawn:!!model.structureStrokes?.length&&!drawn.length};
 }
 
 function calculateRouteOrder(model = activeModel()) {
@@ -440,7 +467,7 @@ function withCloudDeadline(work, ms) {
 async function loadClassResetId() {
   const result = await withCloudDeadline((async () => {
     const database = await initializeCloud();
-    const {readOptionalDocument} = await import("./student-data.js?v=20261109-cloud2");
+    const {readOptionalDocument} = await import("./student-data.js?v=20261109-ui3");
     return readOptionalDocument(database.collection(CLOUD_COLLECTION).doc("class-reset"));
   })(), 2500);
   if (result?.code) throw new Error(result.message || "课堂轮次读取失败");
@@ -471,7 +498,7 @@ async function initializeCloud() {
 
 async function syncRecord(record) {
   try {
-    const data = await import("./student-data.js?v=20261109-cloud2");
+    const data = await import("./student-data.js?v=20261109-ui3");
     if (!await data.submitRecord(record, { saveLocal: false })) throw data.lastSubmissionError || new Error("云端未确认保存");
     record.pendingSync = false;
     pendingSubmissionSync = false;
@@ -807,10 +834,11 @@ function openModelPreview(groupId, phaseName) {
   const model = phaseName === "v2" ? record?.v2 : record?.v1;
   if (!model) return;
   const label = phaseName === "v2" ? "观察后修正" : "观察前想法";
-  const routeNames=inferRouteOrder(model).order.map(id=>organById(id).name);
+  const inferred=inferRouteOrder(model);
+  const routeNames=inferred.displayOrder||[];
   const route = routeNames.length ? routeNames.join(" → ") : model.routePoints?.length >= 2 ? "已有笔迹，未识别到经过的器官，请对照上图查看" : "本次提交没有路线笔迹";
   const revision = phaseName === "v2" ? compareModels(record.v1, model) : null;
-  const metrics = `<dl class="model-preview-metrics"><div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>建模用时</dt><dd>${formatDuration(model)}</dd></div><div><dt>所画路线（自动识别）</dt><dd>${route}</dd></div>${revision ? `<div><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div><dt>路线变化</dt><dd>${revision.routeChanged ? "有变化" : "保持原样"}</dd></div>` : ""}</dl>`;
+  const metrics = `<dl class="model-preview-metrics"><div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>建模用时</dt><dd>${formatDuration(model)}</dd></div><div><dt>所画路线（依据图形估计）</dt><dd>${route}${inferred.hasDrawn?'<small class="route-inference-note">'+(inferred.unmatchedDrawn?'另有补画部分，暂无法可靠排入顺序，请结合原图查看。':'已纳入路线附近的补画部分；具体名称请结合小组说明确认。')+'</small>':''}</dd></div>${revision ? `<div><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div><dt>路线变化</dt><dd>${revision.routeChanged ? "有变化" : "保持原样"}</dd></div>` : ""}</dl>`;
   document.querySelector("#preview-model-title").textContent = `第 ${groupId} 组 · ${label}`;
   document.querySelector("#preview-model-content").innerHTML = `<div class="preview-model-image">${miniModel(model, label)}</div>${metrics}`;
   document.querySelector("#model-preview-dialog").showModal();

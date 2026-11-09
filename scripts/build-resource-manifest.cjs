@@ -9,7 +9,7 @@ const excluded=new Set([
  'assets/models/stomach.glb','assets/models/intestines.glb',
  'assets/anatomy/body-outline-generated.png','assets/journey/digestive-system-niddk.jpg'
 ]);
-const pages=['evaluation.html','index.html','model-workbench.html','observation.html','assembly.html','journey.html','journey-game.html','stomach-sample.html','journey-sources.html','ar-sources.html','ar-prepare.html','lesson-shell.html'];
+const pages=['discussion.html','evaluation.html','index.html','model-workbench.html','observation.html','assembly.html','journey.html','journey-game.html','stomach-sample.html','journey-sources.html','ar-sources.html','ar-prepare.html','lesson-shell.html'];
 let files=pages.map(p=>path.join(root,p));
 files.push(...fs.readdirSync(root).filter(p=>/\.(js|css)$/.test(p)&&!['ar-assets-sw.js','resource-manifest.js'].includes(p)).map(p=>path.join(root,p)));
 const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);

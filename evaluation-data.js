@@ -1,4 +1,4 @@
-import {cloudDb, readOptionalDocument} from './student-data.js?v=20261109-cloud2';
+import {cloudDb, readOptionalDocument} from './student-data.js?v=20261109-ui3';
 export const dimensions = ['观察有依据','合作会倾听','遇到问题再尝试'];
 export async function readDocument(id) {
   const db=await cloudDb();
@@ -16,10 +16,10 @@ export async function saveFeedback(state) {
   if(result?.code||!(result?.updated>0||result?.upsertedId||result?.id)) throw new Error('保存失败，请重试。');
 }
 
-export async function sendClassCommand(resetId, phase, commandId) {
+export async function sendClassCommand(resetId, phase, commandId, details={}) {
   if(await roundId()!==(resetId||null))throw new Error('课堂已换轮次，请刷新。');
   const db=await cloudDb();
-  const result=await db.collection('food-journey-groups').doc('class-control').set({resetId,phase,commandId});
+  const result=await db.collection('food-journey-groups').doc('class-control').set({resetId,phase,commandId,...(phase==='discussion'?{discussionIndex:Math.max(0,Math.min(2,Number(details.discussionIndex)||0))}:{})});
   if(result?.code||!(result?.updated>0||result?.upsertedId||result?.id))throw new Error('课堂指令未发送，请再点一次。');
 }
 export async function submittedRecords(resetId) {
