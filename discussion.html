@@ -1,1 +1,33 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>课堂研讨 · 一起想一想</title><script src="frame-entry.js"></script><link rel="stylesheet" href="discussion.css"><script type="module" src="discussion.js"></script></head><body><main><header><span>课堂研讨</span><span id="question-number"></span></header><div class="discussion-art" aria-hidden="true">💬 <span>✦</span></div><p class="eyebrow">一起想一想</p><h1 id="question"></h1><section class="hint-section" aria-label="思考提示"><p>点亮小灯泡，找一条思考线索</p><div id="hints"></div><p id="hint-text" role="status">先和伙伴说说我们的想法吧。</p></section><footer>认真听一听，让不同的想法相遇。</footer></main></body></html>
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>课堂研讨 · 一起想一想</title>
+  <script src="frame-entry.js"></script>
+  <link rel="stylesheet" href="discussion.css">
+  <script type="module" src="discussion.js"></script>
+</head>
+<body>
+  <main>
+    <header><span>课堂研讨</span><span id="question-number"></span></header>
+    <section class="discussion" aria-labelledby="question">
+      <p class="eyebrow">一起想一想</p>
+      <div id="hints" class="hint-layout">
+        <h1 id="question"></h1>
+      </div>
+      <p class="instructions">点一点题目周围的小灯泡，看看思考提示。</p>
+    </section>
+    <footer>认真听一听，让不同的想法相遇。</footer>
+  </main>
+  <template id="hint-template">
+    <div class="hint">
+      <button type="button" class="bulb"><span aria-hidden="true">💡</span></button>
+      <div class="hint-note" tabindex="-1" hidden>
+        <span class="hint-label"></span>
+        <p></p>
+      </div>
+    </div>
+  </template>
+</body>
+</html>
