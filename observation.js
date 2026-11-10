@@ -14,6 +14,8 @@ for(const [id,name,note] of [['nasal-cavity','鼻腔','观察鼻腔与鼻咽的�
 for(const [id,name]of [['liver','肝'],['pancreas','胰'],['gallbladder','胆囊'],['heart','心脏'],['submandibular','下颌下腺'],['left-kidney','左肾'],['right-kidney','右肾'],['bladder','膀胱']])organs.push({id,name,question:'观察它与周围器官的位置关系。',feature:'转动放大观察形态与空间关系。',note:'比较外形、位置及局部结构。'});
 const $=s=>document.querySelector(s),asset=(id,ext)=>id==='mouth'&&ext==='glb'?'assets/models/ar-detail/mouth-antipov.glb':`assets/models/${ext==='glb'?(id==='large-intestine'&&(!isPreview||window.__previewColonVariant!=='hra')?'ar-connected':['mouth','small-intestine','large-intestine','liver','pancreas'].includes(id)?'ar-detail':'ar-connected'):'ar'}/${id}.${ext}`;
 const tracker=new BodyTracker(),buttons=new Map(),displayed=new Map();
+const inferenceCanvas=document.createElement('canvas');
+const inferenceContext=inferenceCanvas.getContext('2d');
 let record,observation,selected=null,selectedAt=0,stream,worker,mainDetector,observationSubmitting=false;
 let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,lastSent=0,lastPose=0,targets=null;
 let workerReady=false,starting=false,saveTimer,viewerDispose,viewerGeneration=0,captureWidth=384,interval=100,meanCost=0,lastPaint=0;
@@ -97,7 +99,12 @@ async function sendFrame(now){
  const video=$('#camera-video');if(busy||video.readyState<2||video.currentTime===lastFrame)return;
  busy=true;sentMotion={...motion.snapshot(),width:video.videoWidth,height:video.videoHeight};lastFrame=video.currentTime;lastSent=now;
  if(workerReady){try{const bitmap=await createImageBitmap(video,{resizeWidth:captureWidth,resizeHeight:Math.round(captureWidth*video.videoHeight/video.videoWidth),resizeQuality:'low'});if(!running||!worker){bitmap.close();busy=false;return;}worker.postMessage({type:'frame',bitmap,timestamp:now},[bitmap]);}catch(error){busy=false;console.warn('Camera frame skipped',error);}}
- else if(mainDetector){const start=performance.now();try{const result=mainDetector.detectForVideo(video,now);receivePose({points:result.landmarks?.[0]||null,worldPoints:result.worldLandmarks?.[0]||null,timestamp:now,costMs:performance.now()-start});}catch(error){busy=false;console.warn('Pose frame skipped',error);}}
+ else if(mainDetector){const start=performance.now();try{
+  const height=Math.max(1,Math.round(captureWidth*video.videoHeight/video.videoWidth));
+  if(inferenceCanvas.width!==captureWidth||inferenceCanvas.height!==height){inferenceCanvas.width=captureWidth;inferenceCanvas.height=height;}
+  inferenceContext.drawImage(video,0,0,captureWidth,height);
+  const result=mainDetector.detectForVideo(inferenceCanvas,now);receivePose({points:result.landmarks?.[0]||null,worldPoints:result.worldLandmarks?.[0]||null,timestamp:now,costMs:performance.now()-start});
+ }catch(error){busy=false;console.warn('Pose frame skipped',error);}}
 }
 function trackingHold(){
  return Math.min(1200,Math.max(650,interval+meanCost*2+100));
@@ -110,7 +117,7 @@ function paint(now){
  const visible=targets&&age<trackingHold()&&targetMotion.sceneRevision===motion.sceneRevision&&targetMotion.width===video.videoWidth&&targetMotion.height===video.videoHeight;
  if(targets&&!visible){targets=null;tracker.reset();displayed.clear();}
  const currentTargets=targets?Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,{...p,x:p.x+(coherent&&motion.reliable?motion.x-targetMotion.x:0),y:p.y+(coherent&&motion.reliable?motion.y-targetMotion.y:0)}])):null;
- if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),currentTargets.mouth?mapOverlay(currentTargets.mouth,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight):null);updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
+ if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
   for(const [id,b]of buttons){const point=currentTargets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
    if(prior)for(const key of ['x','y','w','h','angle'])next[key]=prior[key]+(next[key]-prior[key])*alpha;
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
