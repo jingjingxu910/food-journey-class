@@ -7,7 +7,7 @@ const organs = [
 ];
 
 const revisionOnlyIds=new Set(['trachea','lungs','liver','pancreas']);
-organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-atlas.png',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-atlas.png',width:25},{id:'pancreas',name:'胰',image:'assets/organs/pancreas-atlas.png',width:18});
+organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-soft.webp',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-soft.webp',width:25},{id:'pancreas',name:'胰脏',image:'assets/organs/pancreas-soft.webp',width:18});
 const CLOUD_ENV = "motionless-harrier-d7cuz0659ef1a";
 const CLOUD_COLLECTION = "food-journey-groups";
 const LOCAL_CLEAR_SIGNAL_KEY = "foodJourneyClassLocalClear";
@@ -108,7 +108,7 @@ function createOrganButton(organ, placed = false) {
   button.type = "button";
   button.className = placed ? "placed-organ" : "palette-organ";
   button.dataset.organ = organ.id;
-  const label=phase === "v1" && organ.id === "large-intestine" ? "" : phase === "v2" && organ.id === "trachea" ? "气管（前）" : phase === "v2" && organ.id === "esophagus" ? "食管（后）" : organ.name;
+  const label=phase === "v1" && organ.id === "large-intestine" ? "" : organ.name;
   button.setAttribute("aria-label", label || "未命名器官");
   button.innerHTML = `<img src="${organ.image}" alt="" draggable="false"><span>${label}</span>`;
   button.addEventListener("pointerdown", beginOrganDrag);
@@ -311,7 +311,8 @@ function finishRoute(event) {
 function inferRouteOrder(model) {
   const points = model?.routePoints || [], distances = {};
   if (points.length < 2) return {order:[],distances};
-  const ranked = organs.filter(o=>model.positions?.[o.id]).map(organ=>{
+  // Accessory digestive glands and respiratory organs are not food passages.
+  const ranked = organs.filter(o=>!revisionOnlyIds.has(o.id)&&model.positions?.[o.id]).map(organ=>{
     const position=model.positions[organ.id],appearance=appearanceFor(organ,model);
     const rx=Math.max(3,appearance.width/2),ry=Math.max(3,(appearance.height||appearance.width/1.5)/2);
     let closest=Infinity,at=0;
@@ -328,6 +329,13 @@ function inferRouteOrder(model) {
     return {id:organ.id,at,distance:closest};
   });
   const placed=ranked.filter(item=>item.distance<=1).sort((a,b)=>a.at-b.at);
+  // The colon encloses the small bowel: proximity alone reverses their order.
+  const small=placed.find(item=>item.id==='small-intestine');
+  const large=placed.find(item=>item.id==='large-intestine');
+  if(small&&large&&small.at>large.at){
+    [small.at,large.at]=[large.at,small.at];
+    placed.sort((a,b)=>a.at-b.at);
+  }
   const drawn=[];
   // Freehand structures are evidence too; proximity can locate them, not name them.
   for(const stroke of model.structureStrokes||[]){
@@ -361,7 +369,7 @@ function calculateRouteOrder(model = activeModel()) {
   const result=inferRouteOrder(model);
   model.routeOrder=result.order;
   model.routeDistances=result.distances;
-  model.routeOrderVersion=2;
+  model.routeOrderVersion=3;
 }
 
 function undo() {

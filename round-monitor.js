@@ -57,7 +57,7 @@ async function check(force=false){
    failureDelay=2000;retryAfter=0;
    const known=JSON.parse(localStorage.getItem('lesson-known-round')||'null');
    if(command.resetId!==known)return;
-   const stageRoutes={v1:'model-workbench.html?phase=v1',v2:'model-workbench.html?phase=v2',observation:'observation.html',assembly:'assembly.html',journey:'journey.html',discussion:'discussion.html?question='+Math.max(0,Math.min(2,Number(command.discussionIndex)||0))};
+   const stageRoutes={cover:'index.html?classroom=cover',v1:'model-workbench.html?phase=v1',v2:'model-workbench.html?phase=v2',observation:'observation.html',assembly:'assembly.html',journey:'journey.html',discussion:'discussion.html?question='+Math.max(0,Math.min(2,Number(command.discussionIndex)||0))};
    const route=stageRoutes[command.phase];
    if(route){
      const key=JSON.stringify([known,command.phase,command.commandId]);
