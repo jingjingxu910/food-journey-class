@@ -8,6 +8,8 @@
 
 ## 原始参考素材
 
+`nasal-cavity-soft.webp`：使用内置 imagegen，以 `stomach.png` 为柔和立体画风参考、已有 `ar-thumbnails/nasal-cavity.png` 为形态参考。提示词要求正面成对鼻腔、鼻中隔与卷曲鼻甲，珊瑚粉组织、透明背景，无外鼻、面部、文字或其他器官；最长边 512 像素。形态参考来源见 `assets/models/ar-connected/ATTRIBUTION-NASAL.md`；本衍生教学图同样以 CC BY-SA 4.0 提供。
+
 - `lungs-atlas.png`: Human Reference Atlas, lung-female v1.4, Kristen Browne and Heidi Schlehlein. Visible Human Dataset / National Library of Medicine. CC BY 4.0. https://humanatlas.io/3d-reference-library . Selected pulmonary segment surfaces; rendered together in anatomical anterior orientation, with instructional pink material and lighting. No invented organ contour.
 - `trachea-atlas.png`: BodyParts3D, © Database Center for Life Science, CC BY 4.0. https://dbarchive.biosciencedbc.jp/en/bodyparts3d/download.html . FMA7394 trachea, FMA7395 and FMA7396 main bronchi; original shared coordinates, smooth rendering and instructional material.
 - `liver-atlas.png`, `pancreas-atlas.png`: Human Reference Atlas / HuBMAP, VH_Female/v1.2/VH_F_Liver.glb and VH_F_Pancreas.glb from https://github.com/hubmapconsortium/ccf-3d-reference-object-library , CC BY 4.0. Original reference geometry, frontal orthographic rendering, instructional materials and lighting.

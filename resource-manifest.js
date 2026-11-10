@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-f86ed7b106c3d96d",
-  "bytes": 74354619,
+  "version": "20261102-chunks-4bcf51a096dd030d",
+  "bytes": 74392282,
   "files": [
     {
       "path": "app.js",
@@ -875,8 +875,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "assets/organs/ATTRIBUTION.md",
-      "bytes": 2260,
-      "hash": "26bf9d5f1f186135ce285348b39e68db96250d6cfa19301f23255b9e3c483c9d"
+      "bytes": 2707,
+      "hash": "3669495dbc11a3816ef5f6a109dc08f884a7293b884dd2db0ed05360d6ba1c4c"
     },
     {
       "path": "assets/organs/esophagus.png",
@@ -981,6 +981,11 @@ self.LESSON_RESOURCES = {
       "path": "assets/organs/mouth.svg",
       "bytes": 408,
       "hash": "33007dca01f23d1bf802f8a23f5bd98408fe9985a154019773fced86b5c12611"
+    },
+    {
+      "path": "assets/organs/nasal-cavity-soft.webp",
+      "bytes": 37180,
+      "hash": "1fe71422885c7e9dd7d576732842b6584b232564fe7344828c453b33ae6d9264"
     },
     {
       "path": "assets/organs/pancreas-atlas.png",
@@ -1248,8 +1253,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-learning.css",
-      "bytes": 3132,
-      "hash": "2294410339a9121e72539c85df53c297db52c18685c09fc5ac34e6cbdd38ac5d"
+      "bytes": 3225,
+      "hash": "f235d26e4b7efead68ba046212df79a47fa01024e463974f3abd0545825b3ab5"
     },
     {
       "path": "model-workbench.html",
@@ -1258,8 +1263,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-workbench.js",
-      "bytes": 48419,
-      "hash": "fc9dad8ba708893ec356ee95dda5eed043413802d4c8af5c4a9b8b414fa84acf"
+      "bytes": 48519,
+      "hash": "ba530a00eaf7ceda8ddb3ad403c2b8e680776e48c09a605dcc4702b1e4cbf0c1"
     },
     {
       "path": "observation.html",
@@ -1333,8 +1338,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "tablet.css",
-      "bytes": 13614,
-      "hash": "de43138474e8c5ac233cbe3e2458d72548f647a808970cb79ffee4c44f9777b5"
+      "bytes": 13457,
+      "hash": "d845af3a8429a4637e2d2ae6aee49145424abe0019a0b443bb3be4cef60edca2"
     },
     {
       "path": "vendor/BufferGeometryUtils.js",
@@ -1662,7 +1667,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-f86ed7b106c3d96d"
+      "hash": "manifest-20261102-chunks-4bcf51a096dd030d"
     }
   ]
 };

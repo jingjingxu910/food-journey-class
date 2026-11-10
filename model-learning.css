@@ -22,3 +22,4 @@
 .model-page .placed-organ[data-organ=lungs],.model-page .mini-model>img.organ-lungs{z-index:5}
 .model-page .placed-organ[data-organ=trachea],.model-page .mini-model>img.organ-trachea{z-index:6}
 .model-page .placed-organ[data-organ=mouth],.model-page .mini-model>img.organ-mouth{z-index:7}
+.model-page .placed-organ[data-organ=nose],.model-page .mini-model>img.organ-nose{z-index:7}

@@ -6,7 +6,8 @@ const organs = [
   { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.webp", width: 23.5 },
 ];
 
-const revisionOnlyIds=new Set(['trachea','lungs','liver','pancreas']);
+const revisionOnlyIds=new Set(['nose','trachea','lungs','liver','pancreas']);
+organs.push({id:'nose',name:'鼻腔',image:'assets/organs/nasal-cavity-soft.webp',width:8});
 organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-soft.webp',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-soft.webp',width:25},{id:'pancreas',name:'胰脏',image:'assets/organs/pancreas-soft.webp',width:18});
 const CLOUD_ENV = "motionless-harrier-d7cuz0659ef1a";
 const CLOUD_COLLECTION = "food-journey-groups";
