@@ -103,14 +103,14 @@ function trackingHold(){
  return Math.min(1200,Math.max(650,interval+meanCost*2+100));
 }
 function paint(now){
- if(!running)return;frame=requestAnimationFrame(paint);if(hidden)return;
+ if(!running)return;frame=requestAnimationFrame(paint);if(hidden||now-lastPaint<30)return;
  const video=$('#camera-video'),stage=$('#camera-stage'),age=now-lastPose;motion.update(video,now);
  const coherent=targetMotion?.sequence===motion.sequence;
  // A missed inference or a low-texture image must not immediately hide the body.
  const visible=targets&&age<trackingHold()&&targetMotion.sceneRevision===motion.sceneRevision&&targetMotion.width===video.videoWidth&&targetMotion.height===video.videoHeight;
  if(targets&&!visible){targets=null;tracker.reset();displayed.clear();}
  const currentTargets=targets?Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,{...p,x:p.x+(coherent&&motion.reliable?motion.x-targetMotion.x:0),y:p.y+(coherent&&motion.reliable?motion.y-targetMotion.y:0)}])):null;
- if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
+ if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),currentTargets.mouth?mapOverlay(currentTargets.mouth,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight):null);updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
   for(const [id,b]of buttons){const point=currentTargets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
    if(prior)for(const key of ['x','y','w','h','angle'])next[key]=prior[key]+(next[key]-prior[key])*alpha;
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
