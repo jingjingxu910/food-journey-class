@@ -28,7 +28,7 @@
 #journey-minimap.expanded{width:min(48vw,390px);height:min(74%,690px);z-index:32}#journey-side-map.expanded{width:min(75vw,760px);height:min(70%,620px);z-index:32}
 .map-trail{stroke:#159b82;stroke-width:11;stroke-linecap:round;opacity:.75}.map-halo{fill:#ffd45b88;stroke:#fff;stroke-width:5}.map-dot{fill:#ffb21f;stroke:#754a12;stroke-width:4}
 #forward,#back{top:auto;bottom:calc(var(--mini-height) + 48px);z-index:26;width:78px;height:85px}#forward{right:16px}#back{right:108px}
-#detail{left:18px;bottom:40px;font-size:22px}#stage[data-scene=pharynx] #detail{display:none!important}#stage[data-scene=pharynx] #fixed-scene{top:calc(var(--guide-height) + 20px);height:calc(100% - var(--guide-height) - 20px)}#stage[data-scene=pharynx] #food-display{top:60%;width:clamp(170px,24vh,240px)}
+#detail{left:18px;bottom:40px;font-size:22px}#stage[data-scene=pharynx] #detail{display:none!important}#stage[data-scene=pharynx] #food-display{top:60%;width:clamp(170px,24vh,240px)}
 #question{position:absolute;inset:auto 50% 24px auto;transform:translateX(50%);margin:0;z-index:40;max-height:48%;box-shadow:0 12px 90px #142c2a88;padding:20px}#question h2{margin:5px 0 12px}#question .eyebrow,#question-text,#answer-hint{display:none}
 #finished{padding-top:calc(var(--guide-height) + 30px)}#finished .award{max-height:100%}
 @media(orientation:portrait){#stage{--mini-height:310px;--side-height:240px}#companion{width:96%;gap:10px;top:12px}#companion-help{width:108px;height:130px}.companion-message{padding:15px 18px}.companion-message p{font-size:25px}#journey-minimap{width:190px;right:12px}#journey-side-map{width:280px;left:12px}#forward{right:12px}#back{right:104px}}
@@ -51,8 +51,8 @@
 @media(orientation:portrait) and (max-height:850px){#stage{--mini-height:clamp(200px,35dvh,320px);--side-height:clamp(155px,26dvh,240px)}}
 
 /* Portrait play: reserve the center for food and keep references at the edges. */
-#stage[data-scene=pharynx]{background:#803c38 url("assets/journey/pharynx-mouth-style-v5.webp") center top/cover no-repeat}
-#stage[data-scene=pharynx] #fixed-scene{mask-image:linear-gradient(transparent,#000 7%)}
+#stage[data-scene=pharynx]{background:#803c38}
+
 #companion-help{background:transparent}
 #stage #food-display{width:min(51%,440px)}
 #stage[data-scene=pharynx] #food-display{width:min(53%,430px);bottom:8%;z-index:24}
@@ -114,3 +114,9 @@
 }
 .companion-message p{font-weight:700;line-height:1.38;text-wrap:pretty}
 #journey-side-map.expanded{height:min(70%,620px,calc(100% - var(--guide-height) - 64px))}
+
+#stage[data-scene=pharynx] #companion{top:6px;width:calc(100% - 20px);gap:10px}
+#stage[data-scene=pharynx] .companion-message{margin-top:0;padding:8px 12px}
+#stage[data-scene=pharynx] .companion-message p{font-size:clamp(14px,3.2vw,23px);line-height:1.25}
+#stage>footer{height:26px;z-index:28}
+#stage>footer #progress{min-width:0;height:8px}

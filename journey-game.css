@@ -20,3 +20,11 @@
 #fork-side p,#micro p,#reflection{text-align:start}
 #reflection .primary{display:block;margin-inline:auto}
 #stage[data-scene="pharynx"] #hint{max-width:min(55%,265px);width:max-content}
+
+#stage.in-passage #passage-view{position:absolute;inset:0;width:100%;height:100%;z-index:13;pointer-events:none}
+#stage.stomach-handoff #food-display{z-index:14;top:61%;transition:top 1.2s ease}
+
+#stage.in-passage #food-display{z-index:14}
+#stage.in-passage #food-caption{visibility:hidden}
+
+#stage #world[hidden],#stage #fixed-scene[hidden],#stage #passage-view[hidden]{display:none!important}

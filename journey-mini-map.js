@@ -18,10 +18,10 @@ export class JourneyMiniMap{
      <path fill="black" d="M269 1058 C267 1027 261 974 273 933 C291 865 336 862 380 862 C426 862 465 880 483 892 C504 887 532 903 567 904 C591 904 621 909 627 921 C626 925 619 927 613 930 C587 945 566 982 538 1001 C521 1013 499 1019 480 1014 C451 1038 405 1054 367 1055 C335 1056 314 1087 287 1088 C272 1090 265 1079 269 1058 Z"/>
     </mask></defs>
     <image href="assets/journey/digestive-system-clean.png" width="951" height="1653"/>
-    <g mask="url(#map-liver-occlusion)"><g class="map-history"></g><path class="map-trail" fill="none"/></g>
+    <g mask="url(#map-liver-occlusion)"><g class="map-history"></g><g class="map-active"></g></g>
     <circle class="map-halo" r="35"/><circle class="map-dot" r="18"/>
    </svg>`;
-  stage.append(this.button);this.path=this.button.querySelector('path.map-trail');this.history=this.button.querySelector('.map-history');this.dots=this.button.querySelectorAll('circle');this.button.onclick=()=>this.toggle();
+  stage.append(this.button);this.active=this.button.querySelector('.map-active');this.history=this.button.querySelector('.map-history');this.dots=this.button.querySelectorAll('circle');this.button.onclick=()=>this.toggle();
   const old=document.querySelector('#fork-side .side-cut');this.side=document.createElement('button');this.side.id='journey-side-map';this.side.hidden=true;this.side.setAttribute('aria-label','咽部侧面图，点击放大');this.side.innerHTML='<span>从侧面看 <small>＋</small></span>'+old.outerHTML.replaceAll('id="side-food"','class="side-food"')+'<em>气管在前 · 食管在后</em>';stage.append(this.side);this.forkMarkup=this.side.innerHTML;
   this.side.onclick=()=>this.toggleSide();
  }
@@ -35,5 +35,30 @@ export class JourneyMiniMap{
   if(expanded!==wasExpanded)this.onSideChange?.(expanded,this.scene);
  }
  toggle(force){const on=force??!this.button.classList.contains('expanded');this.button.classList.toggle('expanded',on);this.button.setAttribute('aria-expanded',String(on));this.button.querySelector('small').textContent=on?'－':'＋';if(on)this.toggleSide(false);}
- update(scene,progress=0,foodImage){this.button.hidden=scene==='outside'||scene==='done';this.side.hidden=!['pharynx','small'].includes(scene);if(this.scene!==scene){this.scene=scene;const keys=Object.keys(journeyRoutes);const prior=keys.slice(0,keys.indexOf(scene));this.history.innerHTML=prior.map(key=>'<path class="map-trail'+'" fill="none" d="'+journeyRoutes[key]+'"/>').join('');this.side.innerHTML=scene==='small'?'<div class="villi-pair"><img src="assets/journey/small-intestine.webp" alt="小肠内壁"><img src="assets/journey/villi-micrograph.jpg" alt="小肠绒毛显微图"></div><small>＋</small>':this.forkMarkup;this.side.setAttribute('aria-label',scene==='small'?'小肠绒毛图，点击放大':'咽部侧面图，点击放大');this.path.setAttribute('d',journeyRoutes[scene]||journeyRoutes.mouth);this.length=this.path.getTotalLength();this.toggle(false);this.side.classList.remove('expanded');}const p=Math.max(0,Math.min(1,progress));const point=this.path.getPointAtLength(this.length*p);for(const dot of this.dots){dot.setAttribute('cx',point.x);dot.setAttribute('cy',point.y);}this.path.style.strokeDasharray=String(this.length);this.path.style.strokeDashoffset=String(this.length*(1-p));if(foodImage&&scene==='pharynx')this.side.querySelector('.side-food').setAttribute('href',foodImage);}
+ update(scene,progress=0,foodImage){this.button.hidden=scene==='outside'||scene==='done';this.side.hidden=!['pharynx','small'].includes(scene);if(this.scene!==scene){this.scene=scene;const keys=Object.keys(journeyRoutes);const prior=keys.slice(0,keys.indexOf(scene));this.history.innerHTML=prior.map(key=>'<path class="map-trail'+'" fill="none" d="'+journeyRoutes[key]+'"/>').join('');this.side.innerHTML=scene==='small'?'<div class="villi-pair"><img src="assets/journey/small-intestine.webp" alt="内壁上的突起"><img src="assets/journey/villi-micrograph.jpg" alt="内壁突起的显微图"></div><small>＋</small>':this.forkMarkup;this.side.setAttribute('aria-label',scene==='small'?'内壁观察图，点击放大':'咽部侧面图，点击放大');const sections=(journeyRoutes[scene]||journeyRoutes.mouth).match(/M[^M]+/g);
+   this.active.innerHTML=sections.map(d=>'<path class="map-trail" fill="none" d="'+d+'"/>').join('');
+   this.length=0;
+   this.sections=[...this.active.children].map(path=>{
+    const length=path.getTotalLength();
+    const section={path,length,start:this.length};
+    this.length+=length;
+    path.style.strokeDasharray=String(length);
+    return section;
+   });
+   this.toggle(false);
+   this.side.classList.remove('expanded');
+  }
+  const distance=this.length*Math.max(0,Math.min(1,progress));
+  let position=this.sections[0].path.getPointAtLength(0);
+  for(const {path,length,start} of this.sections){
+   const visible=Math.max(0,Math.min(length,distance-start));
+   path.style.visibility=visible>0?'visible':'hidden';
+   path.style.strokeDashoffset=String(length-visible);
+   if(visible>0)position=path.getPointAtLength(visible);
+  }
+  for(const dot of this.dots){
+   dot.setAttribute('cx',position.x);
+   dot.setAttribute('cy',position.y);
+  }
+  if(foodImage&&scene==='pharynx')this.side.querySelector('.side-food').setAttribute('href',foodImage);}
 }

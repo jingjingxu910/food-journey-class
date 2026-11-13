@@ -33,12 +33,12 @@ const route=new THREE.CatmullRomCurve3([
 const points={entry:route.getPointAt(.17),pool:new THREE.Vector3(.1,-1.7,0),exit:route.getPointAt(.82)};
 const routeRadii=[[0,.59],[.15,.65],[.26,1.35],[.38,2.22],[.52,2.35],[.62,2.02],[.7,1.45],[.76,.9],[.84,.43],[1,.55]];
 function radius(u){for(let i=1;i<routeRadii.length;i++)if(u<=routeRadii[i][0]){const [a,x]=routeRadii[i-1],[b,y]=routeRadii[i];const f=THREE.MathUtils.smoothstep(u,a,b);return THREE.MathUtils.lerp(x,y,f);}return .55;}
-function hint(text,kind='hint'){$('hint').textContent=text.replaceAll('周围的液体','下方的液体').replace('呢？再观察','呢？\n再观察');voyageMessage('hint',{text:$('hint').textContent,kind});}
+function hint(text,kind='hint',opening=false){$('hint').textContent=text.replaceAll('周围的液体','下方的液体').replace('呢？再观察','呢？\n再观察');voyageMessage('hint',{text:$('hint').textContent,kind,opening});}
 function record(type){state.seen.add(type);try{sessionStorage.setItem('stomach-sample-observation',JSON.stringify({fluid:state.fluid,mixed:state.mixed,wrong:state.wrong,back:state.back,seen:[...state.seen]}));}catch{}voyageMessage('progress',{event:type});}
 function progress(n,label){$('progress').value=n;$('step-label').textContent=label;}
 function setFoodDepthTest(value){for(const s of [bolusSprite,chymeSprite,wetCoat,wetSheen])if(s&&s.material.depthTest!==value){s.material.depthTest=value;s.material.needsUpdate=true;}}
 let evidenceKey;
-function evidence(){const lines=[];if(state.fluid)lines.push('✓ 食物与胃液接触，更湿润了');if(state.mixed>.35)lines.push('✓ 碎块分散，反复翻动、混合');if(state.mixed>.9)lines.push('✓ 颗粒变细，逐渐成为食糜');const key=lines.join('|');if(key===evidenceKey)return;evidenceKey=key;$('evidence').replaceChildren(...lines.map(t=>{const d=document.createElement('div');d.textContent=t;return d;}));$('observation').hidden=!lines.length;}
+function evidence(){const lines=[];if(state.fluid)lines.push('✓ 食物碰到液体后，更湿润了');if(state.mixed>.35)lines.push('✓ 碎块分散，反复翻动、混合');if(state.mixed>.9)lines.push('✓ 颗粒变细，逐渐成为食糜');const key=lines.join('|');if(key===evidenceKey)return;evidenceKey=key;$('evidence').replaceChildren(...lines.map(t=>{const d=document.createElement('div');d.textContent=t;return d;}));$('observation').hidden=!lines.length;}
 function noiseTexture(){
  const c=document.createElement('canvas');c.width=c.height=512;const ctx=c.getContext('2d'),image=ctx.createImageData(512,512);
  for(let y=0;y<512;y++)for(let x=0;x<512;x++){
@@ -126,7 +126,7 @@ function foodTexture(){
  const c=document.createElement('canvas');c.width=c.height=256;const ctx=c.getContext('2d');ctx.fillStyle='#e5b976';ctx.fillRect(0,0,256,256);
  let seed=9;for(let i=0;i<3000;i++){seed=(seed*16807)%2147483647;const x=seed%256;seed=(seed*16807)%2147483647;const y=seed%256;ctx.fillStyle=i%3?'#f2cd9299':'#a66b3699';ctx.fillRect(x,y,1+i%3,1+i%2);}const texture=new THREE.CanvasTexture(c),image=new Image();image.onload=()=>{ctx.drawImage(image,image.width*.18,image.height*.32,image.width*.13,image.height*.26,0,0,256,256);texture.needsUpdate=true;};image.src='assets/journey/stomach-food-sample.webp';return texture;
 }
-function enterVoyage(){begin();animateFood(elapsed);placeFood();renderScene();}
+function enterVoyage(options){begin(options);animateFood(elapsed);placeFood();renderScene();}
 function worldFrame(){food.traverse(o=>o.layers.set(1));if(inVoyage&&state.phase==='ready')cardia.shutter.visible=false;if(materialShader){materialShader.uniforms.uTime.value=elapsed;materialShader.uniforms.uMotion.value=state.motion;}if(liquidShader){liquidShader.uniforms.uTime.value=elapsed;liquidShader.uniforms.uMotion.value=state.motion;}camera.layers.set(0);renderer.render(scene,camera);return renderer.domElement;}
 function capturePassage(){const source=worldFrame(),frame=document.createElement('canvas');frame.width=source.width;frame.height=source.height;frame.getContext('2d').drawImage(source,0,0);camera.updateMatrixWorld(true);const a=wall.geometry.attributes.position,m=wall.geometry.parameters.radialSegments,start=a.count-m-1,points=[];for(let i=0;i<m;i+=2){const v=new THREE.Vector3().fromBufferAttribute(a,start+i).project(camera);points.push({x:(v.x+1)/2,y:(1-v.y)/2});}const v=route.getPointAt(1).project(camera);return{frame,points,focus:{x:(v.x+1)/2,y:(1-v.y)/2}};}
 function captureFood(){
@@ -188,35 +188,56 @@ function resize(){if(!renderer)return;const w=host.clientWidth,h=host.clientHeig
 function nearestYaw(value,from){return from+Math.atan2(Math.sin(value-from),Math.cos(value-from));}
 function orient(target){orientationProbe.position.copy(camera.position);q.copy(target);if(Math.abs(q.z-camera.position.z)<.001)q.z-=.35;orientationProbe.lookAt(q);desiredYaw=nearestYaw(orientationProbe.rotation.y,viewYaw);desiredPitch=orientationProbe.rotation.x;}
 function look(target,duration=1.1){lookPoint.copy(target);const dummy=camera.clone(false);dummy.rotation.order='YXZ';dummy.lookAt(target);viewTween={fromYaw:viewYaw,fromPitch:viewPitch,toYaw:nearestYaw(dummy.rotation.y,viewYaw),toPitch:dummy.rotation.x,start:elapsed,duration};}
-function restartInStomach(){if(state.phase!=='vomited')return;Object.assign(state,{phase:'ready',fluid:false,motion:0,mixed:0,back:0,identified:false,finished:false,routeProgress:0,foodStage:'bolus',mixing:false});voyageRestore=null;held=false;wetUntil=0;camera.position.copy(route.getPointAt(.0125));orient(route.getPointAt(.06));state.seen.clear();gate.dot.hidden=true;gate.shutter.visible=true;food.visible=true;setFoodDepthTest(false);voyageMessage('retry');enterVoyage();}
+function restartInStomach(){
+ if(state.phase!=='vomited')return;
+ Object.assign(state,{phase:'explore',fluid:false,motion:0,mixed:0,back:0,identified:false,finished:false,routeProgress:.22,foodStage:'bolus',mixing:false});
+ voyageRestore=null;
+ held=false;
+ viewTween=null;
+ state.seen.clear();
+ camera.position.copy(route.getPointAt(.43));
+ orient(route.getPointAt(.475));
+ cardia.shutter.visible=true;
+ cardia.dot.hidden=false;
+ gate.shutter.visible=true;
+ gate.dot.hidden=true;
+ food.visible=true;
+ setFoodDepthTest(false);
+ $('chapter').textContent='仔细观察';
+ voyageMessage('retry');
+ wetFood({announce:false});
+ hint('食物吐出来了。我们回到刚才的地方，再试一次。');
+}
 function travel(from,to,duration,done){moving={from:from.clone(),to:to.clone(),start:elapsed,duration,done};}
-function begin(){
+function begin({handoff=false}={}){
  if(state.phase!=='ready')return;
  $('intro').hidden=true;state.phase='entering';$('food-caption').hidden=false;$('chapter').textContent='穿过入口';progress(1,'进入');cardia.shutter.visible=false;
- hint('入口打开啦，我们进去看看。');
+ if(handoff)food.visible=false;
+ else hint('入口打开啦，我们进去看看。');
  travel(camera.position,new THREE.Vector3(-.8,.45,1),inVoyage?1.7:4.4,()=>{
   state.phase='explore';state.routeProgress=.22;setFoodDepthTest(false);cardia.shutter.visible=true;cardia.dot.hidden=false;
   if(!inVoyage){
    for(const id of ['views','forward','back','map'])$(id).hidden=false;
   }
-  $('chapter').textContent='仔细观察';hint('食团碰到底下的液体，会发生什么呢？');look(new THREE.Vector3(2,-1.2,-1));progress(2,'观察食物');
-  if(inVoyage&&voyageRestore){state.fluid=!!voyageRestore.fluid;state.mixed=Math.min(1,Number(voyageRestore.mixed)||0);state.wrong=Number(voyageRestore.wrong)||0;state.back=Number(voyageRestore.back)||0;state.identified=!!voyageRestore.identified;evidence();if(state.identified){state.phase='exit';gate.dot.hidden=false;hint('找找看，食糜接下来从哪儿出去。');}else if(state.mixed>=1)setTimeout(()=>showQuestion(),500);else if(state.fluid)hint('点“前进”，看看胃壁怎么搅动食物。');}
+  $('chapter').textContent='仔细观察';hint('食团碰到底下的液体，会发生什么呢？','hint',true);look(new THREE.Vector3(2,-1.2,-1));progress(2,'观察食物');
+  if(inVoyage&&voyageRestore){state.fluid=!!voyageRestore.fluid;state.mixed=Math.min(1,Number(voyageRestore.mixed)||0);state.wrong=Number(voyageRestore.wrong)||0;state.back=Number(voyageRestore.back)||0;state.identified=!!voyageRestore.identified;evidence();if(state.identified){state.phase='exit';gate.dot.hidden=false;hint('找找看，食糜接下来从哪儿出去。');}else if(state.mixed>=1)setTimeout(()=>showQuestion(),500);else if(state.fluid)hint('点击“前进”，看看这里的内壁怎么搅动食物。');}
   state.routeProgress=.22+state.mixed*.56;
   state.foodStage=state.mixed>=1?'chyme':state.fluid?'wet-fragments':'bolus';
+  if(handoff){food.visible=true;voyageMessage('handoff-food');}
   if(!state.fluid)wetFood();
  });
 }
 function openKnowledge(title,text){if(inVoyage){voyageMessage('report',{title,text,label:state.phase==='vomited'?'重新出发 →':'继续观察 →'});return;}hint(title+'。'+text,'report');$('knowledge-title').textContent=title;$('knowledge-text').textContent=text;$('knowledge').showModal();}
-function wetFood(){
+function wetFood({announce=true}={}){
  if(state.phase!=='explore'||state.fluid)return;state.fluid=true;wetUntil=elapsed+1.35;record('fluid');evidence();
  $('food-name').textContent='食团';$('food-note').textContent='和刚才相比，有什么不同？';
- hint('食物一碰到胃液，就变得更湿了。点“前进”，看看胃壁怎么搅动食物。','feedback');
+ if(announce)hint('食团碰到液体后变得更湿了。点击“前进”，看看内壁怎么搅动食物。','feedback');
  for(let i=0;i<drops.length;i++){drops[i].visible=true;drops[i].userData.born=elapsed+i*.016;}
  look(points.pool);progress(3,'观察混合');
 }
 function startMixing(){
  if(state.phase!=='explore'||state.mixing||state.mixed>=1)return;
- wetFood();if(state.foodStage==='bolus')return;state.mixing=true;held=true;state.foodStage='dispersed-fragments';record('wall');hint('胃壁开始蠕动啦！看，碎块散开了，跟着胃液一起翻动，慢慢混到了一起。','feedback');
+ wetFood();if(state.foodStage==='bolus')return;state.mixing=true;held=true;state.foodStage='dispersed-fragments';record('wall');hint('内壁开始一收一放啦！看，碎块散开了，跟着液体一起翻动。','feedback');
 }
 function showAnatomy(reveal=false){
  if(!reveal)record('locate');$('anatomy-title').textContent=reveal?'把局部放回身体中':'看看当前位置';$('anatomy-text').hidden=!reveal;$('anatomy-text').textContent=reveal?'刚才观察的胃位于腹部上方，偏身体左侧。':'';$('close-anatomy').textContent='返回继续观察 →';
@@ -234,20 +255,29 @@ function answer(value){
 function forward(){
  if(moving||state.finished)return;
  if(state.phase==='explore'){
+  const heading=viewTween?.toYaw??desiredYaw;
+  if(Math.cos(heading-exitYaw())<0)look(points.exit,.6);
   if(state.mixed<.99){startMixing();return;}
   showQuestion();return;
  }
- if(state.phase==='exit'){look(points.exit,.6);leave();}
+ if(state.phase==='exit')leave();
+}
+function exitYaw(){
+ orientationProbe.position.copy(camera.position);
+ orientationProbe.lookAt(points.exit);
+ return orientationProbe.rotation.y;
 }
 function leave(){
  if(state.phase!=='exit'||moving)return;viewYaw=Math.atan2(Math.sin(viewYaw),Math.cos(viewYaw));desiredYaw=viewYaw;desiredPitch=viewPitch;state.phase='leaving';voyageMessage('advance');setFoodDepthTest(false);$('views').hidden=true;gate.shutter.visible=false;gate.dot.hidden=true;
- $('food-name').textContent='即将离开的食糜';hint('看看食糜怎么从前面的开口出去。');viewTween=null;
+ $('food-name').textContent='即将离开的食糜';hint('出口打开啦，看看食糜怎么出去。');viewTween=null;
  travel(camera.position,route.getPointAt(inVoyage?.92:.95),inVoyage?2.2:4.5,finish);
+ moving.startYaw=viewYaw;
+ moving.startPitch=viewPitch;
 }
 function backward(){
- if(moving||state.finished)return;state.back++;record('back');look(points.entry);
- hint('回头看看，刚才的入口还开着吗？\n食团还能从这儿退回去吗？');
- if(state.back>=2){held=false;viewTween=null;state.phase='vomiting';cardia.shutter.visible=false;cardia.dot.hidden=true;gate.dot.hidden=true;for(const id of ['forward','back','views','map','observation'])$(id).hidden=true;hint('呕吐了！看，食团正沿着来时的路往上退。');travel(camera.position,route.getPointAt(.04),3.8,()=>{state.phase='vomited';food.visible=false;hint('刚才发生了什么？');$('close-knowledge').textContent='重新出发 →';if(inVoyage){hint('食物吐出来了。我们回到胃里再试一次。');restartInStomach();}else openKnowledge('食物往回走了','食物从胃返回食管，再从嘴里吐出，这就是呕吐。');});}
+ if(moving||state.finished)return;state.back++;record('back');
+ if(state.back===1){look(points.entry);hint('回头看看，刚才的入口还开着吗？\n食团还能从这儿退回去吗？');return;}
+ if(state.back>=2){held=false;viewTween=null;state.phase='vomiting';cardia.shutter.visible=false;cardia.dot.hidden=true;gate.dot.hidden=true;for(const id of ['forward','back','views','map','observation'])$(id).hidden=true;hint('呕吐了！食团沿着来时的路往上退。');travel(camera.position,route.getPointAt(.04),3.8,()=>{state.phase='vomited';food.visible=false;if(inVoyage){restartInStomach();return;}$('close-knowledge').textContent='重新出发 →';openKnowledge('食物往回走了','食物从胃返回食管，再从嘴里吐出，这就是呕吐。');});}
 }
 function finish(){
  if(inVoyage){state.finished=true;state.phase='done';state.routeProgress=1;state.mixing=false;held=false;record('complete');voyageMessage('complete');return;}
@@ -294,26 +324,51 @@ function draw(ms){
  if(document.hidden||!$('failure').hidden||document.querySelector('dialog[open]'))return;
  if(inVoyage&&state.phase==='ready'&&voyageParams.get('autostart')==='0')return;
  elapsed+=dt;
- if(moving){const k=Math.min(1,(elapsed-moving.start)/moving.duration),e=k*k*(3-2*k);moving.progress=k;if(state.phase==='entering'||state.phase==='leaving'){const entering=state.phase==='entering',u=entering?THREE.MathUtils.lerp(inVoyage?.0125:.05,.43,e):THREE.MathUtils.lerp(.43,inVoyage?.92:.95,e);camera.position.copy(route.getPointAt(u));if(entering)orient(route.getPointAt(Math.min(.999,u+.045)));else{orientationProbe.position.copy(camera.position);orientationProbe.lookAt(route.getPointAt(1));desiredYaw=nearestYaw(orientationProbe.rotation.y,viewYaw);desiredPitch=orientationProbe.rotation.x;}}else camera.position.lerpVectors(moving.from,moving.to,e);if(k>=1){const done=moving.done;moving=null;done?.();}}
+ let finishPassage;
+ if(moving){
+  const k=Math.min(1,(elapsed-moving.start)/moving.duration);
+  const eased=k*k*(3-2*k);
+  moving.progress=k;
+  if(state.phase==='entering'||state.phase==='leaving'){
+   const entering=state.phase==='entering';
+   const u=entering?THREE.MathUtils.lerp(inVoyage?.0125:.05,.43,eased):THREE.MathUtils.lerp(.43,inVoyage?.92:.95,eased);
+   camera.position.copy(route.getPointAt(u));
+   const ahead=route.getPointAt(Math.min(1,u+.045));
+   if(entering)orient(ahead);
+   else{
+    orientationProbe.position.copy(camera.position);
+    orientationProbe.lookAt(ahead);
+    const alignment=Math.min(1,k*4);
+    desiredYaw=THREE.MathUtils.lerp(moving.startYaw,nearestYaw(orientationProbe.rotation.y,moving.startYaw),alignment);
+    desiredPitch=THREE.MathUtils.lerp(moving.startPitch,orientationProbe.rotation.x,alignment);
+   }
+  }else camera.position.lerpVectors(moving.from,moving.to,eased);
+  if(k>=1){
+   const done=moving.done;
+   moving=null;
+   if(state.phase==='leaving')finishPassage=done;
+   else done?.();
+  }
+ }
  if(moving&&state.phase==='vomiting'){const u=THREE.MathUtils.lerp(.43,.04,THREE.MathUtils.smoothstep(moving.progress,0,1));camera.position.copy(route.getPointAt(u));orient(route.getPointAt(Math.max(0,u-.04)));}
  if(viewTween){const k=Math.min(1,(elapsed-viewTween.start)/viewTween.duration),e=k*k*(3-2*k);desiredYaw=THREE.MathUtils.lerp(viewTween.fromYaw,viewTween.toYaw,e);desiredPitch=THREE.MathUtils.lerp(viewTween.fromPitch,viewTween.toPitch,e);if(k===1)viewTween=null;}
  const viewBlend=1-Math.exp(-dt*7);viewYaw+=(nearestYaw(desiredYaw,viewYaw)-viewYaw)*viewBlend;viewPitch+=(desiredPitch-viewPitch)*viewBlend;camera.rotation.set(viewPitch,viewYaw,0,'YXZ');
  state.motion+=(Number(held)-state.motion)*(1-Math.exp(-dt*6.5));
  if(state.phase==='explore'&&state.fluid&&state.foodStage==='bolus'&&elapsed>=wetUntil){state.foodStage='wet-fragments';voyageMessage('visual');}
- if(state.mixing&&state.fluid&&state.phase==='explore'&&state.mixed<1){state.mixed=Math.min(1,state.mixed+dt*.14);state.routeProgress=.22+state.mixed*.56;evidence();if(state.mixed>=1){held=false;state.mixing=false;state.foodStage='chyme';hint('看，碎块跟胃液混在一起，慢慢变成了更细、更软的食糜。','report');$('food-name').textContent='变化后的食团';$('food-note').textContent='回想刚进入时的形状和颗粒';record('mixed');setTimeout(()=>{if(state.phase==='explore'&&!$('knowledge').open)showQuestion();},1600);}}
+ if(state.mixing&&state.fluid&&state.phase==='explore'&&state.mixed<1){state.mixed=Math.min(1,state.mixed+dt*.14);state.routeProgress=.22+state.mixed*.56;evidence();if(state.mixed>=1){held=false;state.mixing=false;state.foodStage='chyme';hint('看，碎块跟液体混在一起，慢慢变成了更细、更软的食糜。','report');$('food-name').textContent='变化后的食团';$('food-note').textContent='回想刚进入时的形状和颗粒';record('mixed');setTimeout(()=>{if(state.phase==='explore'&&state.mixed>=1&&!$('knowledge').open)showQuestion();},1600);}}
  if(materialShader){materialShader.uniforms.uTime.value=elapsed;materialShader.uniforms.uMotion.value=state.motion;}
  if(liquidShader){liquidShader.uniforms.uTime.value=elapsed;liquidShader.uniforms.uMotion.value=state.motion;}
  animateFood(elapsed);if(!state.finished)placeFood();
  bubbles.forEach((b,i)=>{const a=b.userData.initial;b.position.y=a.y+Math.sin(elapsed*1.9+i)*.025;b.position.x=a.x+Math.sin(elapsed*.5+i)*state.motion*.2;b.updateMatrix();bubbleInstances.setMatrixAt(i,b.matrix);});bubbleInstances.instanceMatrix.needsUpdate=true;
  drops.forEach((d,i)=>{if(!d.visible)return;const age=elapsed-d.userData.born;if(age<0){d.position.set(0,-100,0);return;}if(state.phase==='leaving'||state.phase==='done'){d.visible=false;return;}const f=age/1.15,a=i*2.399;if(f>=1){d.visible=false;return;}const r=1-f;d.position.set(Math.cos(a)*r*1.45,-.78+Math.sin(a)*r*.95+Math.sin(f*Math.PI)*.18,-3.02+Math.sin(a*1.7)*r*.4);d.scale.set(.48*(1-f*.5),.72*(1-f*.5),.48);});
- if(moving&&state.phase==='entering')state.routeProgress=moving.progress*.22;if(moving&&state.phase==='leaving')state.routeProgress=.78+moving.progress*.22;if(elapsed-lastProgressAt>.5){lastProgressAt=elapsed;voyageMessage('visual');}updateLandmark(cardia);updateLandmark(gate);renderScene();
+ if(moving&&state.phase==='entering')state.routeProgress=moving.progress*.22;if(moving&&state.phase==='leaving')state.routeProgress=.78+moving.progress*.22;if(elapsed-lastProgressAt>.5){lastProgressAt=elapsed;voyageMessage('visual');}updateLandmark(cardia);updateLandmark(gate);renderScene();finishPassage?.();
 }
 function hit(event){const box=host.getBoundingClientRect();mouse.set((event.clientX-box.left)/box.width*2-1,-(event.clientY-box.top)/box.height*2+1);raycaster.setFromCamera(mouse,camera);return raycaster.intersectObjects(targets,false)[0];}
 host.addEventListener('pointerdown',e=>{
  if(!ready||moving||state.finished||state.phase==='ready')return;host.setPointerCapture(e.pointerId);const h=hit(e);pointer={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,kind:h?.object.userData.kind,at:performance.now(),drag:false};
 });
 host.addEventListener('pointermove',e=>{if(!pointer||pointer.id!==e.pointerId)return;const dx=e.clientX-pointer.x,dy=e.clientY-pointer.y;if(Math.hypot(e.clientX-pointer.startX,e.clientY-pointer.startY)>9)pointer.drag=true;if(pointer.drag){viewTween=null;desiredYaw-=dx*.005;desiredPitch=THREE.MathUtils.clamp(desiredPitch-dy*.005,-1.5,1.5);}pointer.x=e.clientX;pointer.y=e.clientY;});
-function release(e){if(!pointer||e.pointerId!==pointer.id)return;const tap=!pointer.drag,kind=pointer.kind;pointer=null;if(!tap)return;if(kind==='exit'){if(state.phase==='exit')forward();else hint('点右边的“前进”，看看食物怎么翻动。');}else if(kind==='entry')backward();else if(state.phase==='explore'&&!state.mixing)hint('点右边的“前进”，胃壁就会动起来。');}
+function release(e){if(!pointer||e.pointerId!==pointer.id)return;const tap=!pointer.drag,kind=pointer.kind;pointer=null;if(!tap)return;if(kind==='exit'){if(state.phase==='exit')forward();else hint('点击“前进”，看看这里的内壁怎么搅动食物。');}else if(kind==='entry')backward();else if(state.phase==='explore'&&!state.mixing)hint('点击“前进”，看看这里的内壁怎么搅动食物。');}
 host.addEventListener('pointerup',e=>withPlayerAction(()=>release(e)));host.addEventListener('pointercancel',()=>{pointer=null;});window.addEventListener('blur',()=>{pointer=null;});document.addEventListener('visibilitychange',()=>{pointer=null;clock.getDelta();});
 bindSceneLongPress(host,()=>pointer,()=>{
  if(moving||state.finished||!['explore','exit'].includes(state.phase)||document.querySelector('dialog[open]'))return;
@@ -333,7 +388,7 @@ $('start').onclick=begin;$('forward').onclick=forward;$('back').onclick=backward
 for(const b of document.querySelectorAll('[data-look]'))b.onclick=()=>{record(b.dataset.look);look(b.dataset.look==='entry'?points.entry:b.dataset.look==='pool'?points.pool:points.exit);};
 for(const b of document.querySelectorAll('[data-answer]'))b.onclick=()=>answer(b.dataset.answer);
 $('close-anatomy').onclick=()=>{$('anatomy').close();clearTimeout(anatomyTimer);};$('close-knowledge').onclick=()=>{if(state.phase==='vomited'){if(inVoyage)voyageMessage('restart');else location.reload();}else $('knowledge').close();};
-$('replay').onclick=()=>location.reload();$('fullscreen').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();try{await screen.orientation?.lock('portrait');}catch{} }catch{hint('可以点浏览器的全屏按钮。');}};
+$('replay').onclick=()=>location.reload();$('fullscreen').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();try{await screen.orientation?.lock('portrait');}catch{} }catch{hint('点击“本组的探索与发现”，一起回顾这趟旅行吧！');}};
 // A read-only diagnostic is deliberately separate from classroom data and stays on this device.
 window.addEventListener('message',e=>{if(!inVoyage||e.origin!==location.origin||e.source!==parent||e.data?.channel!=='food-journey-parent')return;if(e.data.type==='enter'&&ready)enterVoyage();if(e.data.type==='answer')withPlayerAction(()=>answer(e.data.value));if(e.data.type==='navigate'&&['explore','exit'].includes(state.phase)){withPlayerAction(()=>{if(e.data.direction==='forward')forward();else if(e.data.direction==='back')backward();});}if(e.data.type==='knowledge-continue')$('close-knowledge').onclick();});
 window.stomachSample={get visualState(){return{phase:state.phase,yaw:viewYaw,pitch:viewPitch,camera:camera?.position.toArray(),quaternion:camera?.quaternion.toArray()};},enterVoyage,worldFrame,capturePassage,captureFood,captureFrame(){renderScene();return renderer.domElement.toDataURL('image/jpeg',.82);},get foodVisual(){let worldLayerCount=0;food?.traverse(o=>{if((o.isMesh||o.isSprite)&&(o.layers.mask&1))worldLayerCount++;});return{worldLayerCount,center:food?.position.toArray(),rotation:food?.rotation.toArray(),scale:food?.scale.toArray(),solid:false,dispersed:!!(photoFood?.visible||foodInstances?.visible),mixed:state.mixed,motion:state.motion};},get state(){return{...state,seen:[...state.seen]}},get diagnostics(){return renderer?{triangles:renderer.info.render.triangles,calls:renderer.info.render.calls,pixelRatio:renderer.getPixelRatio(),phase:state.phase,webgl:true,held,pickGrid:[.16,.32,.5,.68,.84].flatMap(x=>[.3,.45,.6,.75].map(y=>{raycaster.setFromCamera(new THREE.Vector2(x*2-1,1-y*2),camera);return{x,y,kind:raycaster.intersectObjects(targets,false)[0]?.object.userData.kind};}))}:{};}};

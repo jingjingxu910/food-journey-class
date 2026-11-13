@@ -1,4 +1,4 @@
-import {voiceLines} from './journey-voice-lines.js';
+import {voiceLines} from './journey-voice-lines.js?v=20261113-voice-retake';
 
 const poses={idle:0,greet:1,guide:2,praise:3,think:4,discover:5};
 const reactions={hint:'guide',feedback:'discover',praise:'praise',report:'discover',retry:'think',question:'think',greet:'greet'};
@@ -53,6 +53,24 @@ export class JourneyCompanion{
    }
   }catch{}
  }
+ playCelebration(){
+  if(this.audio?.state!=='running')return 0;
+  const start=this.audio.currentTime;
+  for(const [index,frequency] of [523.25,659.25,783.99,1046.5].entries()){
+   const at=start+index*.075;
+   const note=this.audio.createOscillator();
+   const envelope=this.audio.createGain();
+   note.type='sine';
+   note.frequency.value=frequency;
+   envelope.gain.setValueAtTime(.0001,at);
+   envelope.gain.exponentialRampToValueAtTime(.085,at+.013);
+   envelope.gain.exponentialRampToValueAtTime(.0001,at+.19);
+   note.connect(envelope).connect(this.audio.destination);
+   note.start(at);
+   note.stop(at+.2);
+  }
+  return .45;
+ }
  stopVoice(){
   const voice=this.voice;
   this.voice=null;
@@ -61,9 +79,9 @@ export class JourneyCompanion{
   voice?.request.abort();
   voice?.source?.stop();
  }
- async playVoice(text){
+ async playVoice(text,delay=0,opening=false){
   const file=voiceLines.get(text.replace(/\s+/g,' ').trim());
-  const voice={request:new AbortController()};
+  const voice={request:new AbortController(),opening};
   this.voice=voice;
   const done=()=>{
    if(this.voice!==voice)return;
@@ -76,13 +94,14 @@ export class JourneyCompanion{
    if(this.voice===voice)voice.timer=setTimeout(done,Math.max(1800,[...text].length*170));
   };
   if(!file||!this.audio){allowReading();return;}
+  const earliestStart=this.audio.currentTime+delay;
   voice.timer=setTimeout(()=>{
    voice.request.abort();
    done();
   },8000);
   try{
    const url=new URL('./assets/audio/xiaoya/'+file,import.meta.url);
-   url.searchParams.set('v','mouth-cough');
+   url.searchParams.set('v','review');
    const response=await fetch(url,{signal:voice.request.signal});
    if(!response.ok)throw new Error('Voice clip unavailable');
    const buffer=await this.audio.decodeAudioData(await response.arrayBuffer());
@@ -92,28 +111,28 @@ export class JourneyCompanion{
    source.buffer=buffer;
    source.connect(this.audio.destination);
    source.onended=done;
-   source.start();
+   source.start(earliestStart);
    voice.source=source;
    clearTimeout(voice.timer);
   }catch{clearTimeout(voice.timer);allowReading();}
  }
  say(text,kind='hint',options={}){
   if(!text)return;
-  if(options.immediate)this.stopVoice();
+  if(options.immediate&&!this.voice?.opening&&!this.pending.some(([, , line])=>line.opening))this.stopVoice();
   else if(this.voice){
    this.pending.push([text,kind,options]);
    return;
   }
   this.showLine(text,kind,options);
  }
- showLine(text,kind,{action=null,label='继续 →',onShow}){
+ showLine(text,kind,{action=null,label='继续 →',onShow,celebrate=false,opening=false}){
   if(onShow?.()===false){
    const next=this.pending.shift();
    if(next)this.showLine(...next);
    return;
   }
   this.node.hidden=false;this.last=text;this.text.textContent=text;this.node.dataset.kind=kind;this.next.hidden=!action;this.next.textContent=label;this.next.onclick=()=>{this.next.hidden=true;this.stopVoice();action?.();};
-  this.playVoice(text);
+  this.playVoice(text,celebrate?this.playCelebration():0,opening);
   this.react(reactions[kind]||'guide');
   this.node.classList.remove('arriving');void this.node.offsetWidth;this.node.classList.add('arriving');
  }
