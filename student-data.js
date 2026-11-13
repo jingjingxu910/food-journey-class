@@ -1,3 +1,4 @@
+import {isLocalPreview,previewDb} from './local-preview-db.js';
 export function cloudErrorText(error) {
   const code = error?.code || error?.name;
   const message = error?.message || String(error || '原因未知');
@@ -100,6 +101,7 @@ export async function currentRecord() {
 
 let cloudReady;
 export async function cloudDb() {
+  if(isLocalPreview)return previewDb;
   if (!cloudReady) cloudReady = (async () => {
     if (window.loadClassCloud) await window.loadClassCloud();
     if (!window.cloudbase) throw new Error('CloudBase SDK unavailable');

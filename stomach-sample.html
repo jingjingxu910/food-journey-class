@@ -1,11 +1,12 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
+<script>if(new URLSearchParams(location.search).get('voyage')==='1' && window.parent!==window)document.documentElement.dataset.voyage='true';</script>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#173d3b"><link rel="icon" href="data:,"><title>胃的旅行样片｜食物在身体里的旅行</title>
-<link rel="stylesheet" href="stomach-sample.css">
+<link rel="stylesheet" href="stomach-sample.css?v=20261113-single-nav">
 <link rel="stylesheet" href="journey-anatomy-zoom.css">
-<script type="module" src="stomach-sample.js"></script>
+<script type="module" src="stomach-sample.js?v=20261113-long-press"></script>
 </head>
 <body>
 <main id="experience">
@@ -22,7 +23,7 @@
   <button id="back" class="direction" hidden>↓<span>后退</span></button>
   <button id="map" class="map" hidden>◎ 我在哪儿</button>
   <div id="intro" class="veil">
-   <article class="intro-card"><span class="eyebrow">一口饼干 · 下一站</span><h1>食团要去哪里？</h1><p>穿过前面的入口，<br>看看它会怎样变化。</p><button id="start" class="primary" disabled>正在准备…</button><small>拖动环顾 · 轻触探索 · 按住观察</small></article>
+   <article class="intro-card"><span class="eyebrow">一口饼干 · 下一站</span><h1>食团要去哪里？</h1><p>穿过前面的入口，<br>看看它会怎样变化。</p><button id="start" class="primary" disabled>正在准备…</button><small>拖动环顾 · 点击前进 · 观察变化</small></article>
   </div>
   <dialog id="question"><form method="dialog"><span class="eyebrow">我们根据线索来判断</span><h2 tabindex="-1" autofocus>这是哪个器官？</h2><p>能暂时容纳食物，内壁会运动，<br>还有帮助消化的液体。</p><div class="answers"><button type="button" data-answer="esophagus">食管</button><button type="button" data-answer="stomach">胃</button><button type="button" data-answer="small">小肠</button></div><p id="answer-hint" role="status"></p></form></dialog>
   <dialog id="anatomy"><div class="anatomy-content"><div class="anatomy-picture"><svg id="body-diagram" viewBox="0 0 951 1653" role="img" aria-label="人体消化系统中的当前位置"><image href="assets/journey/digestive-system-clean.png" width="951" height="1653"/><g id="anatomy-target"><circle class="marker-halo" cx="590" cy="1020" r="62"/><circle id="anatomy-marker" cx="590" cy="1020" r="38"/><path class="marker-cross" d="M590 960v34M590 1046v34M530 1020h34M616 1020h34"/></g></svg><img id="organ-detail" src="assets/organs/stomach.png" alt="胃的完整器官外形" hidden></div><div class="anatomy-copy"><span class="eyebrow">从身体整体看</span><h2 id="anatomy-title">看看当前位置</h2><p id="anatomy-text">黄色标记显示食团现在所在的区域。</p><button class="primary" id="close-anatomy">返回继续观察 →</button></div></div></dialog>

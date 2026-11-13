@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" role="img" aria-label="鼻子示意图">
+  <defs>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffd3c4"/><stop offset=".55" stop-color="#f4b6a8"/><stop offset="1" stop-color="#de8b86"/></linearGradient>
+    <radialGradient id="tip" cx=".4" cy=".3" r=".8"><stop stop-color="#ffdfce"/><stop offset="1" stop-color="#e9a29a"/></radialGradient>
+  </defs>
+  <path d="M72 20C63 54 64 80 49 111c-8 17-24 24-22 43 1 18 21 26 38 19 12 17 38 17 50 0 18 7 37-1 38-19 2-19-14-26-22-43-15-31-14-57-23-91" fill="url(#skin)" stroke="#d88f89" stroke-width="3" stroke-linecap="round"/>
+  <path d="M66 136c-3 15 4 30 24 33 20-3 27-18 24-33-6-20-42-20-48 0" fill="url(#tip)"/>
+  <path d="M42 153c5-7 15-8 24-2M114 151c9-6 19-5 24 2" fill="none" stroke="#b66c6c" stroke-width="7" stroke-linecap="round"/>
+  <path d="M78 40c-4 31-5 56-14 78M76 137c6-6 13-7 21-5" fill="none" stroke="#fff1e5" stroke-width="6" stroke-linecap="round" opacity=".65"/>
+</svg>

@@ -12,3 +12,12 @@
 .mini-model > img.organ-liver{z-index:4}
 .mini-model > img.organ-pancreas{z-index:2}
 .mini-model svg{z-index:5;pointer-events:none}
+/* The route passes behind the colon but stays visible over the small intestine. */
+.model-page .placed-organs{display:contents}
+.model-page .placed-organ{z-index:3}
+.model-page #route-canvas{z-index:5}
+.model-page .placed-organ[data-organ="large-intestine"]{z-index:6}
+.mini-model > img.organ-large-intestine{z-index:6}
+.model-page .front-route-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:7;pointer-events:none}
+.mini-model svg.front-route-svg{z-index:7}
+.model-page .is-moving{visibility:hidden}

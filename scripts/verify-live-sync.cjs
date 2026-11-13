@@ -1,0 +1,22 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+const root=path.join(__dirname,'..');let now=100000,writes=[];const timers=new Map(),handlers=new Map(),storage=new Map();let timerId=0;
+const window={addEventListener(n,f){if(!handlers.has(n))handlers.set(n,new Set());handlers.get(n).add(f);},removeEventListener(n,f){handlers.get(n)?.delete(f);}};
+const ctx=vm.createContext({window,location:{hostname:'localhost',search:'?mode=teacher'},localStorage:{get length(){return storage.size},key:i=>[...storage.keys()][i],getItem:k=>storage.get(k)||null,setItem(k,v){storage.set(k,v);writes.push([k,JSON.parse(v)]);},removeItem:k=>storage.delete(k)},URLSearchParams,queueMicrotask,console,Date:class extends Date{static now(){return now}},setInterval:f=>{timers.set(++timerId,f);return timerId;},clearInterval:id=>timers.delete(id)});
+vm.runInContext(fs.readFileSync(path.join(root,'local-preview-db.js'),'utf8').replaceAll('export ',''),ctx);
+vm.runInContext("const groupId=1;const cloudDb=async()=>previewDb;"+fs.readFileSync(path.join(root,'live-sync.js'),'utf8').replace(/^import .*;\r?\n/gm,'').replaceAll('export ',''),ctx);
+const run=code=>vm.runInContext(code,ctx),settle=()=>new Promise(r=>setImmediate(r));
+(async()=>{
+ run("var states={};var publishers=[];for(let id=1;id<=12;id++){states[id]={phase:'v1',model:{positions:{mouth:{x:50,y:12}}}};publishers.push(createStudentPublisher({groupId:id,getState:()=>states[id]}));}");await settle();
+ await run("writeTeacherFocus({phase:'v1',groups:[1,2,3,4,5,6],token:'a'})");await settle();
+ const liveWrites=()=>writes.filter(([k])=>k.includes(':live-group-'));
+ assert.equal(liveWrites().length,6,'only visible six upload');
+ for(const callback of timers.values())callback();await settle();assert.equal(liveWrites().length,6,'unchanged state does not upload');
+ run("states[1].model.positions.mouth.x=51");now+=1000;for(const f of timers.values())f();await settle();assert.equal(liveWrites().length,6,'overview throttles to 3 seconds');
+ now+=2100;for(const f of timers.values())f();await settle();assert.equal(liveWrites().length,7);
+ await run("writeTeacherFocus({phase:'v1',groups:[2],focus:true,token:'b'})");await settle();let count=liveWrites().length;
+ run("states[1].model.positions.mouth.x=52;states[2].model.positions.mouth.x=52");now+=1100;for(const f of timers.values())f();await settle();assert.equal(liveWrites().length,count+1);assert.equal(liveWrites().at(-1)[1].groupId,2,'focus uploads only selected group');
+ await run("writeTeacherFocus({phase:'v1',groups:[7,8,9,10,11,12],token:'c'})");await settle();assert.equal(liveWrites().length,count+7,'switch page publishes fresh snapshots');
+ count=liveWrites().length;now+=46000;run("states[9].model.positions.mouth.x=53");for(const f of timers.values())f();await settle();assert.equal(liveWrites().length,count,'expired teacher lease stops uploads');
+ run("publishers.forEach(p=>p.close())");assert.equal(timers.size,0);
+ console.log('PASS: local isolation, 12 groups, page selection, 3s/1s throttling, unchanged suppression, focus, page catch-up, lease expiration, cleanup');
+})().catch(e=>{console.error(e);process.exitCode=1});

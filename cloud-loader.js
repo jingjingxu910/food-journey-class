@@ -2,6 +2,7 @@
 (() => {
   let pending;
   window.loadClassCloud = () => {
+    if(['localhost','127.0.0.1','[::1]'].includes(location.hostname))return import('./local-preview-db.js').then(module=>{module.installPreviewCloud();return window.cloudbase;});
     if (window.cloudbase) return Promise.resolve(window.cloudbase);
     if (pending) return pending;
     pending = new Promise((resolve, reject) => {

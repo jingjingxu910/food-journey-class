@@ -10,7 +10,7 @@ const organs=[
  {id:'small-intestine',name:'小肠',question:'为什么这条管道盘绕了这么多圈？',note:'小肠盘曲在腹部，是消化食物和吸收营养的主要场所。',feature:'观察小肠的整体形态。绒毛属于更小尺度的内壁结构。'},
  {id:'large-intestine',name:'大肠',question:'它与小肠的位置有什么关系？',note:'大肠围在小肠外侧，吸收食物残渣中的一部分水分。',feature:'与小肠比较粗细、盘曲方式和位置。'}
 ];
-for(const [id,name,note] of [['nasal-cavity','鼻腔','观察鼻腔与鼻咽的结构。'],['trachea','气管','气管在食管前方，把空气送向肺。'],['right-lung','右肺','肺参与气体交换。食物正常情况下不进入气管和肺。'],['left-lung','左肺','观察肺和消化器官的空间关系。'],['pharynx','咽','咽是空气和食物共同经过的部位。此处模型展示咽部肌肉，不是完整咽腔。']])organs.push({id,name,question:'转动观察它与食管的位置关系。',note,feature:note});
+for(const [id,name,note] of [['nasal-cavity','鼻腔','观察鼻腔与鼻咽的结构。'],['trachea','气管','气管在食管前方，把空气送向肺。'],['right-lung','右肺','肺参与气体交换。食物正常情况下不进入气管和肺。'],['left-lung','左肺','观察肺和消化器官的空间关系。'],['pharynx','咽','咽是空气和食物共同经过的部位。']])organs.push({id,name,question:'转动观察它与食管的位置关系。',note,feature:note});
 for(const [id,name]of [['liver','肝'],['pancreas','胰'],['gallbladder','胆囊'],['heart','心脏'],['submandibular','下颌下腺'],['left-kidney','左肾'],['right-kidney','右肾'],['bladder','膀胱']])organs.push({id,name,question:'观察它与周围器官的位置关系。',feature:'转动放大观察形态与空间关系。',note:'比较外形、位置及局部结构。'});
 const $=s=>document.querySelector(s),asset=(id,ext)=>id==='mouth'&&ext==='glb'?'assets/models/ar-detail/mouth-antipov.glb':`assets/models/${ext==='glb'?(id==='large-intestine'&&(!isPreview||window.__previewColonVariant!=='hra')?'ar-connected':['mouth','small-intestine','large-intestine','liver','pancreas'].includes(id)?'ar-detail':'ar-connected'):'ar'}/${id}.${ext}`;
 const tracker=new BodyTracker(),buttons=new Map(),displayed=new Map();
@@ -91,7 +91,7 @@ async function initDetector(){
    worker.onerror=e=>done(new Error(e.message||'后台识别不可用'));worker.postMessage({type:'init'});
   });
   metrics.mode='worker';worker.onmessage=({data})=>{if(data.type==='pose')receivePose(data);else if(data.type==='error'){busy=false;stopCamera();$('#camera-status').textContent='人体识别中断，请重新开启相机';}};
- }catch(error){worker?.terminate();worker=null;workerReady=false;if(startupController.signal.aborted)throw error;$('#camera-status').textContent='正在切换兼容识别模式…';console.info('Using compatible pose mode',error.message);await initMainDetector();}
+ }catch(error){worker?.terminate();worker=null;workerReady=false;if(startupController.signal.aborted)throw error;$('#camera-status').textContent='正在准备相机…';console.info('Using compatible pose mode',error.message);await initMainDetector();}
 }
 async function sendFrame(now){
  const video=$('#camera-video');if(busy||video.readyState<2||video.currentTime===lastFrame)return;
@@ -126,13 +126,13 @@ async function startCamera(){
   stream=await waitStartup(navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:'environment'},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}}}),45000,'相机开启等待较久，请检查浏览器相机权限',late=>late.getTracks().forEach(t=>t.stop()));
   if(startupController.signal.aborted){stream.getTracks().forEach(t=>t.stop());throw new DOMException('已取消','AbortError');}
   $('#camera-video').srcObject=stream;await waitStartup($('#camera-video').play(),15000,'相机画面未就绪，请重新开启');$('#camera-placeholder').hidden=true;
-  $('#camera-status').textContent='正在检查本机人体识别资源…';
+  $('#camera-status').textContent='正在准备观察…';
   const {preparePoseResources}=await waitStartup(import('./pose-resources.js'),30000,'识别资源程序未加载完成，请检查网络后重试');
   await preparePoseResources(startupController.signal,message=>{$('#camera-status').textContent=message;});
   if(startupController.signal.aborted)throw new DOMException('已取消','AbortError');
   $('#camera-status').textContent='正在准备整套解剖模型…';
   if(!connected){const {createConnectedOverlay}=await import('./ar-connected.js');connected=await waitStartup(createConnectedOverlay($('#anatomy-overlay'),selectOrgan),45000,'解剖模型加载未完成，请重试',late=>late.dispose());}
-  $('#camera-status').textContent='资源已就绪，正在启动人体识别…';await initDetector();
+  $('#camera-status').textContent='请站到镜头前。';await initDetector();
   if(startupController.signal.aborted)throw new DOMException('已取消','AbortError');
   running=true;observation.cameraStarted=true;observation.cameraFacing='environment';saveSoon();$('#start-camera').textContent='相机已开启';$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';lastPose=0;lastSent=0;lastFrame=-1;frame=requestAnimationFrame(paint);
  }catch(error){stopCamera();$('#camera-status').textContent=error.name==='AbortError'?'已取消开启，下载完成的资源已保留':error.name==='NotAllowedError'?'请允许浏览器使用相机':error.name==='NotFoundError'?'未检测到相机。请在有后置相机的平板上用 Chrome 或 Edge 打开':error.name==='NotReadableError'?'相机暂时无法使用，请关闭其他正在使用相机的应用后重试':error.name==='OverconstrainedError'?'没有找到可用的后置相机':`开启未完成：${error.message}`;$('#start-camera').textContent='重新开启';}finally{starting=false;$('#cancel-camera').hidden=true;}

@@ -1,5 +1,6 @@
-importScripts('./resource-manifest.js?v=20261109-discussion','./resource-store.js?v=20261106-student-voice');
+importScripts('./resource-manifest.js?v=20261113-voice-models','./resource-store.js?v=20261113-voice-models');
 const ROOT=new URL('./',self.location.href);
+const localPreview=['localhost','127.0.0.1','[::1]'].includes(ROOT.hostname);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));
 async function withRange(response,range){
  if(!range)return response;
@@ -17,7 +18,7 @@ self.addEventListener('install',()=>self.skipWaiting());
 // Never discard earlier downloads on activation. Valid unchanged files are migrated lazily.
 self.addEventListener('activate',event=>event.waitUntil(self.clients.claim()));
 self.addEventListener('fetch',event=>{
- if(event.request.method!=='GET')return;
+ if(localPreview||event.request.method!=='GET')return;
  const url=new URL(event.request.url);if(url.origin!==ROOT.origin||url.searchParams.has('__lessonHash'))return;
  url.search='';url.hash='';if(url.pathname.endsWith('/'))url.pathname+='index.html';
  const item=files.get(url.href);if(!item)return;

@@ -6,7 +6,8 @@ const organs = [
   { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.webp", width: 23.5 },
 ];
 
-const revisionOnlyIds=new Set(['trachea','lungs','liver','pancreas']);
+const revisionOnlyIds=new Set(['trachea','lungs','liver','pancreas','nose']);
+organs.push({id:'nose',name:'鼻子',image:'assets/organs/nose-gentle.svg',width:9});
 organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-atlas.png',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-atlas.png',width:25},{id:'pancreas',name:'胰',image:'assets/organs/pancreas-atlas.png',width:18});
 const CLOUD_ENV = "motionless-harrier-d7cuz0659ef1a";
 const CLOUD_COLLECTION = "food-journey-groups";
@@ -26,6 +27,11 @@ const placedLayer = document.querySelector("#placed-organs");
 const palette = document.querySelector("#organ-palette");
 const canvas = document.querySelector("#route-canvas");
 const context = canvas.getContext("2d");
+const frontRouteCanvas = document.createElement("canvas");
+frontRouteCanvas.className = "front-route-canvas";
+frontRouteCanvas.setAttribute("aria-hidden","true");
+canvas.after(frontRouteCanvas);
+const frontRouteContext = frontRouteCanvas.getContext("2d");
 const drawButton = document.querySelector("#draw-route-button");
 const submitButton = document.querySelector("#submit-model-button");
 const saveStatus = document.querySelector("#save-status");
@@ -58,6 +64,8 @@ let modelSubmitting = false;
 let discardDraftOnExit = false;
 let lessonExtras = {};
 
+function readLiveModel(){return {phase,model:clone(activeModel()),completed:Boolean(activeModel()?.completedAt)};}
+window.readLiveModel=readLiveModel;
 function createModel() {
   return {
     startedAt: Date.now(),
@@ -164,7 +172,7 @@ function pointerPosition(event) {
 }
 
 function beginOrganDrag(event) {
-  if (drawMode) return;
+  if (drawMode || dragState || event.isPrimary === false || (event.button !== undefined && event.button !== 0)) return;
   event.preventDefault();
   const organId = event.currentTarget.dataset.organ;
   selectedOrgan = organId;
@@ -183,23 +191,26 @@ function beginOrganDrag(event) {
   }
   document.body.append(ghost);
   dragState = {
+    pointerId: event.pointerId,
+    source: event.currentTarget,
     organId,
     from: activeModel().positions[organId] ? clone(activeModel().positions[organId]) : null,
     startedAt: Date.now(),
     ghost,
   };
+  event.currentTarget.setPointerCapture?.(event.pointerId);
   event.currentTarget.classList.add("is-moving");
   moveOrganDrag(event);
 }
 
 function moveOrganDrag(event) {
-  if (!dragState) return;
+  if (!dragState || event.pointerId !== dragState.pointerId) return;
   dragState.ghost.style.left = `${event.clientX}px`;
   dragState.ghost.style.top = `${event.clientY}px`;
 }
 
 function endOrganDrag(event) {
-  if (!dragState) return;
+  if (!dragState || event.pointerId !== dragState.pointerId) return;
   const rect = stage.getBoundingClientRect();
   const inside = event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom;
   dragState.ghost.remove();
@@ -219,6 +230,14 @@ function endOrganDrag(event) {
   dragState = null;
 }
 
+function cancelOrganDrag(event) {
+  if (!dragState || (event?.pointerId !== undefined && event.pointerId !== dragState.pointerId)) return;
+  dragState.ghost.remove();
+  dragState.source?.classList.remove('is-moving');
+  dragState = null;
+  document.querySelectorAll('.organ-drag-ghost').forEach(node=>node.remove());
+}
+
 function resizeCanvas() {
   const rect = stage.getBoundingClientRect();
   const ratio = Math.min(window.devicePixelRatio || 1, 2);
@@ -227,14 +246,62 @@ function resizeCanvas() {
   canvas.style.width = `${rect.width}px`;
   canvas.style.height = `${rect.height}px`;
   context.setTransform(ratio, 0, 0, ratio, 0, 0);
+  frontRouteCanvas.width = canvas.width;
+  frontRouteCanvas.height = canvas.height;
+  frontRouteContext.setTransform(ratio, 0, 0, ratio, 0, 0);
   drawRoute();
+}
+
+// Centreline of the colon artwork. The hollow centre is outside its pipe wall.
+function colonWallDistance(x,y) {
+  const rim=[[-.56,.16],[-.68,-.2],[-.64,-.66],[-.35,-.58],[0,-.48],[.36,-.56],[.65,-.76],[.72,-.3],[.7,.25],[.48,.48],[.1,.44],[0,.82]];
+  let distance=Infinity;
+  for(let i=1;i<rim.length;i++){
+    const a=rim[i-1],b=rim[i],dx=b[0]-a[0],dy=b[1]-a[1];
+    const t=Math.max(0,Math.min(1,((x-a[0])*dx+(y-a[1])*dy)/(dx*dx+dy*dy)));
+    distance=Math.min(distance,Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy)/.24);
+  }
+  return distance;
+}
+
+function routeLayers(model) {
+  const points = model.routePoints || [];
+  const small = model.positions?.['small-intestine'];
+  const colon = model.positions?.['large-intestine'];
+  const unsplit = {behind:points,front:[]};
+  if (!small || !colon || points.length<2) return unsplit;
+  const {width,height} = appearanceFor(organById('small-intestine'),model);
+  const colonAppearance=appearanceFor(organById('large-intestine'),model);
+  const colonRx=Math.max(3,colonAppearance.width/2);
+  const colonRy=Math.max(3,(colonAppearance.height||colonAppearance.width/1.5)/2);
+  let reachedSmall=false;
+  for(let i=1;i<points.length;i++){
+    const a=points[i-1],b=points[i];
+    const steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,(b.y-a.y)*1.5)/.35));
+    for(let j=i===1?0:1;j<=steps;j++){
+      const t=j/steps;
+      const point={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};
+      const onColon=colonWallDistance((point.x-colon.x)/colonRx,(point.y-colon.y)/colonRy)<=1;
+      if(onColon){
+        if(reachedSmall){
+          const front=j===steps?[b,...points.slice(i+1)]:[point,...points.slice(i)];
+          return {behind:[...points.slice(0,i),front[0]],front};
+        }
+      // Touching the edge while approaching the transverse colon is not a visit.
+      }else if(Math.hypot((point.x-small.x)/(width/2),(point.y-small.y)/((height||width/1.5)/2))<=.75){
+        reachedSmall=true;
+      }
+    }
+  }
+  return unsplit;
 }
 
 function drawRoute() {
   const rect = stage.getBoundingClientRect();
   context.clearRect(0, 0, rect.width, rect.height);
-  const points = activeModel().routePoints;
-  const paint=(points,color)=>{
+  frontRouteContext.clearRect(0, 0, rect.width, rect.height);
+  const {behind,front} = routeLayers(activeModel());
+  const paint=(points,color,context)=>{
   if (points.length < 2) return;
   context.beginPath();
   context.moveTo(points[0].x * rect.width / 100, points[0].y * rect.height / 100);
@@ -248,8 +315,9 @@ function drawRoute() {
   context.stroke();
   context.shadowBlur = 0;
   };
-  for(const stroke of activeModel().structureStrokes || []) paint(stroke,activeModel().structureColor || "#2878cf");
-  paint(points,"#17824d");
+  for(const stroke of activeModel().structureStrokes || []) paint(stroke,activeModel().structureColor || "#2878cf",context);
+  paint(behind,"#17824d",context);
+  paint(front,"#17824d",frontRouteContext);
 }
 
 function setDrawMode(enabled) {
@@ -311,18 +379,32 @@ function finishRoute(event) {
 function inferRouteOrder(model) {
   const points = model?.routePoints || [], distances = {};
   if (points.length < 2) return {order:[],distances};
+  // Sample actual segments in canvas coordinates, not the centre of a bounding box.
+  // A colon surrounds an empty space: that space must never count as colon tissue.
+  const samples=[];
+  for(let i=1;i<points.length;i++){
+    const a=points[i-1],b=points[i],steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,(b.y-a.y)*1.5)/.35));
+    for(let j=0;j<=steps;j++)samples.push({x:a.x+(b.x-a.x)*j/steps,y:a.y+(b.y-a.y)*j/steps,at:i-1+j/steps});
+  }
+  const smallPosition=model.positions?.['small-intestine'];
+  const smallAppearance=smallPosition?appearanceFor(organById('small-intestine'),model):null;
+  const firstSmall=smallPosition?samples.find(p=>Math.hypot((p.x-smallPosition.x)/(smallAppearance.width/2),(p.y-smallPosition.y)/((smallAppearance.height||smallAppearance.width/1.5)/2))<=1)?.at:undefined;
+  const lastSmall=firstSmall===undefined?undefined:samples.findLast(p=>Math.hypot((p.x-smallPosition.x)/(smallAppearance.width/2),(p.y-smallPosition.y)/((smallAppearance.height||smallAppearance.width/1.5)/2))<=1)?.at;
   const ranked = organs.filter(o=>model.positions?.[o.id]).map(organ=>{
     const position=model.positions[organ.id],appearance=appearanceFor(organ,model);
     const rx=Math.max(3,appearance.width/2),ry=Math.max(3,(appearance.height||appearance.width/1.5)/2);
-    let closest=Infinity,at=0;
-    // Project onto every actual stroke segment, including sparse pointer samples.
-    for(let i=1;i<points.length;i++){
-      const a={x:(points[i-1].x-position.x)/rx,y:(points[i-1].y-position.y)/ry};
-      const b={x:(points[i].x-position.x)/rx,y:(points[i].y-position.y)/ry};
-      const dx=b.x-a.x,dy=b.y-a.y,length=dx*dx+dy*dy;
-      const t=length?Math.max(0,Math.min(1,-(a.x*dx+a.y*dy)/length)):0;
-      const distance=Math.hypot(a.x+t*dx,a.y+t*dy);
-      if(distance<closest){closest=distance;at=i-1+t;}
+    let closest=Infinity,at=Infinity;
+    for(const point of samples){
+      const x=(point.x-position.x)/rx,y=(point.y-position.y)/ry;
+      let distance=Math.hypot(x,y);
+      if(organ.id==='large-intestine'){
+        distance=colonWallDistance(x,y);
+        // A line descending into the small intestine passes UNDER the transverse
+        // colon. Do not report this visual crossing as entering the large intestine.
+        if(lastSmall!==undefined && point.at<=lastSmall && Math.abs(x)<.52 && y<-.25)continue;
+      }
+      closest=Math.min(closest,distance);
+      if(distance<=1 && at===Infinity)at=point.at;
     }
     distances[organ.id]=Number(closest.toFixed(3));
     return {id:organ.id,at,distance:closest};
@@ -361,7 +443,7 @@ function calculateRouteOrder(model = activeModel()) {
   const result=inferRouteOrder(model);
   model.routeOrder=result.order;
   model.routeDistances=result.distances;
-  model.routeOrderVersion=2;
+  model.routeOrderVersion=3;
 }
 
 function undo() {
@@ -429,6 +511,7 @@ async function saveDraftNow() {
 
 function queueDraftSave() {
   if (mode !== "student") return;
+  window.dispatchEvent(new CustomEvent('lesson-live-state',{detail:readLiveModel()}));
   clearTimeout(draftSaveTimer);
   draftSaveTimer = setTimeout(saveDraftNow, 150);
 }
@@ -476,6 +559,7 @@ async function loadClassResetId() {
 }
 
 async function initializeCloud() {
+  if(['localhost','127.0.0.1','[::1]'].includes(location.hostname))return (await import('./local-preview-db.js')).previewDb;
   if (cloudDatabase) { await cloudLoginPromise; return cloudDatabase; }
   if (window.loadClassCloud) await window.loadClassCloud();
   if (!window.cloudbase) throw new Error("CloudBase SDK unavailable");
@@ -633,7 +717,9 @@ function formatDuration(model) {
 
 function miniModel(model, label, options = {}) {
   if (!model) return `<div class="mini-empty"><strong>${label}</strong><span>尚未提交</span></div>`;
-  const polyline = (model.routePoints || []).map((point) => `${point.x},${point.y*1.5}`).join(" ");
+  const {behind,front}=routeLayers(model);
+  const polyline=behind.map(point=>`${point.x},${point.y*1.5}`).join(" ");
+  const frontLine=front.map(point=>`${point.x},${point.y*1.5}`).join(" ");
   const pieces = organs.map((organ) => {
     const position = model.positions?.[organ.id];
     if (!position) return "";
@@ -642,9 +728,10 @@ function miniModel(model, label, options = {}) {
   }).join("");
   const interactive = Number.isInteger(options.groupId);
   const attributes = interactive ? ` data-group-id="${options.groupId}" data-model-phase="${options.phase}" role="button" tabindex="0" aria-label="放大第 ${options.groupId} 组${label}"` : "";
-  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.webp?v=20261022-7" alt=""><svg viewBox="0 0 100 150" preserveAspectRatio="none">${(model.structureStrokes || []).map(stroke => `<polyline points="${stroke.map(p=>`${p.x},${p.y*1.5}`).join(" ")}" style="stroke:${model.structureColor || '#2878cf'}"/>`).join("")}<polyline points="${polyline}" style="stroke:#17824d"/></svg>${pieces}</div></div>`;
+  return `<div class="${label === "观察前想法" && !model._paired ? "mini-model-single" : "mini-model-item"}${interactive ? " mini-model-clickable" : ""}"${attributes}><strong class="mini-label">${label}</strong><div class="mini-model"><img class="mini-body" src="assets/anatomy/body-outline-generated.webp?v=20261022-7" alt=""><svg viewBox="0 0 100 150" preserveAspectRatio="none">${(model.structureStrokes || []).map(stroke => `<polyline points="${stroke.map(p=>`${p.x},${p.y*1.5}`).join(" ")}" style="stroke:${model.structureColor || '#2878cf'}"/>`).join("")}<polyline points="${polyline}" style="stroke:#17824d"/></svg>${pieces}${front.length>1?`<svg class="front-route-svg" viewBox="0 0 100 150" preserveAspectRatio="none" aria-hidden="true"><polyline points="${frontLine}" style="stroke:#17824d"/></svg>`:""}</div></div>`;
 }
 
+window.renderLiveModel=(model)=>miniModel(model,'当前作品');
 function latestRecord(records, id) {
   return records.filter((record) => Number(record.groupId) === id).sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))[0] || null;
 }
@@ -727,7 +814,7 @@ async function watchTeacherRecords(){
   try{
     const database=await initializeCloud(),collection=database.collection(CLOUD_COLLECTION);
     if(document.hidden||typeof collection.watch!=='function')return;
-    teacherWatcher=collection.watch({
+    teacherWatcher=collection.where({_id:database.command.in([...Array.from({length:12},(_,i)=>`group-${i+1}`),'class-reset','class-feedback'])}).watch({
       onChange(snapshot){
         if(document.hidden||!Array.isArray(snapshot.docs))return;
         const docs=snapshot.docs,reset=docs.find(d=>d._id==='class-reset'||d.id==='class-reset');
@@ -914,10 +1001,9 @@ async function initialize() {
 
 document.addEventListener("pointermove", moveOrganDrag);
 document.addEventListener("pointerup", endOrganDrag);
-document.addEventListener("pointercancel", () => {
-  dragState?.ghost.remove(); dragState = null;
-  document.querySelectorAll(".is-moving").forEach(e => e.classList.remove("is-moving"));
-});
+document.addEventListener("pointercancel", cancelOrganDrag);
+document.addEventListener("lostpointercapture", cancelOrganDrag);
+window.addEventListener("blur",()=>cancelOrganDrag());
 window.addEventListener("pagehide", () => { if (!discardDraftOnExit) void saveDraftNow(); });
 canvas.addEventListener("pointerdown", startRoute);
 canvas.addEventListener("pointermove", moveRoute);

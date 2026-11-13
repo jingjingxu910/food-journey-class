@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-2d297e020d41597e",
-  "bytes": 74275836,
+  "version": "20261102-chunks-b35761f856a71ff1",
+  "bytes": 108344696,
   "files": [
     {
       "path": "app.js",
@@ -44,13 +44,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-prepare.html",
-      "bytes": 1363,
-      "hash": "686bf0f6d895276e4dca60dbcc1d5236807e9b268b2789423346218976d317ac"
+      "bytes": 1413,
+      "hash": "5f28cf530971242118d87811289c2ac4da9575b109fe0fd65ad73ee69b6dac32"
     },
     {
       "path": "ar-prepare.js",
-      "bytes": 3878,
-      "hash": "10812f25b6e40f39591a108eabc55eed3102fdd7aa17c1f7f1709193544d8672"
+      "bytes": 3902,
+      "hash": "33a84c6e96738ad48c326e98274158665b0afe29506a71d4385c9599517ed4af"
     },
     {
       "path": "ar-process.js",
@@ -289,6 +289,366 @@ self.LESSON_RESOURCES = {
       ]
     },
     {
+      "path": "assets/audio/xiaoya/0366eb2c61a9.mp3",
+      "bytes": 102240,
+      "hash": "7cc364ab266cd3ff2d4e190de213a109428a0db8b99436365a9dcf4f61897523"
+    },
+    {
+      "path": "assets/audio/xiaoya/08639e613dea.mp3",
+      "bytes": 154560,
+      "hash": "2359bbf36ad89573430d1f643fd2db5f048e6c8aebb2efdf1c305f4774abdf09"
+    },
+    {
+      "path": "assets/audio/xiaoya/0d902d861a43.mp3",
+      "bytes": 149280,
+      "hash": "2a472d5df6a447b1385308b06a3ff4ef3eab3266125362906c373b9a10bea01f"
+    },
+    {
+      "path": "assets/audio/xiaoya/0ee09455bb12.mp3",
+      "bytes": 330720,
+      "hash": "4f120c6875bbea6ad4327d5806bf9956bec181481e3b88936197b678386d281c"
+    },
+    {
+      "path": "assets/audio/xiaoya/16fb16cca9ef.mp3",
+      "bytes": 196800,
+      "hash": "d2afc529e8fccc7667867d88f08ac216452995b275235ae73e3613c5c4510da5"
+    },
+    {
+      "path": "assets/audio/xiaoya/1996232cf42a.mp3",
+      "bytes": 102240,
+      "hash": "cddc1e12f53a4b4b19884f5af781aeb3f5e987b1c7e4fc06667fa5aacfa1f753"
+    },
+    {
+      "path": "assets/audio/xiaoya/1ea4523597cb.mp3",
+      "bytes": 157920,
+      "hash": "5aea12cbf2a64b536cf74e4bc17ad6c80574a1f2ee983a5df5e1e959cfae3a3b"
+    },
+    {
+      "path": "assets/audio/xiaoya/21bd7c0467e3.mp3",
+      "bytes": 153120,
+      "hash": "26b221a640ba9166a36c5d10572ed66c18e729e1f488758f23d5c1c1973b828b"
+    },
+    {
+      "path": "assets/audio/xiaoya/21bf73f06b6f.mp3",
+      "bytes": 180480,
+      "hash": "1c2b97424f1672e49e7d8346e0a0225e22c0ff3511a8fca01b72543120ef5e7b"
+    },
+    {
+      "path": "assets/audio/xiaoya/2668531ac9a3.mp3",
+      "bytes": 105600,
+      "hash": "e6b22051a8658ec391275720d317f0fd0db355cb6507f59bb301618db53e86c2"
+    },
+    {
+      "path": "assets/audio/xiaoya/2a4f2b250e35.mp3",
+      "bytes": 143520,
+      "hash": "b3c5c22738ef61740ab4bf009c01ceb8ae0d99c7b937179aea2419116aa70eb5"
+    },
+    {
+      "path": "assets/audio/xiaoya/2ae89e8e6974.mp3",
+      "bytes": 94560,
+      "hash": "68a9951a5cab0b2351607a07c29a93445622121e9c303fdb5e965d019f837235"
+    },
+    {
+      "path": "assets/audio/xiaoya/2c0762330de9.mp3",
+      "bytes": 237120,
+      "hash": "331bc5c666b99e3c70ef700fb7a6224b62f6121d972cf94dfc8be09b97e85f65"
+    },
+    {
+      "path": "assets/audio/xiaoya/2e04f6be2ca9.mp3",
+      "bytes": 108000,
+      "hash": "d6edb174ce4a6f2b9dfe8f28ff3bfb8ebdabd773396ee0df6df955059c1c35ea"
+    },
+    {
+      "path": "assets/audio/xiaoya/3a391f13df62.mp3",
+      "bytes": 48480,
+      "hash": "a72a5cf29f9c208ef39332bccef8939c980b5581e86c93aba98e8f2cf817e47c"
+    },
+    {
+      "path": "assets/audio/xiaoya/3c814d993a9e.mp3",
+      "bytes": 192480,
+      "hash": "096a8ea36ce13add8b5e02070fe6ad5c8716790be0fcf2b8abaf43283b4d517b"
+    },
+    {
+      "path": "assets/audio/xiaoya/3e7a8c008730.mp3",
+      "bytes": 169920,
+      "hash": "4518b9ca71398210a13da8f17430d8025ee754a16daa539bdbfcd07561ddea06"
+    },
+    {
+      "path": "assets/audio/xiaoya/41f7aaf3921d.mp3",
+      "bytes": 94560,
+      "hash": "818ee9e449dc758e4b2762da24c24c79a7b5330cace8908fabadfa45e0d31a08"
+    },
+    {
+      "path": "assets/audio/xiaoya/442656cacb4b.mp3",
+      "bytes": 145440,
+      "hash": "03aef603aa60ea4fd8ac9f24e20cee8de347792866661573f259876992519262"
+    },
+    {
+      "path": "assets/audio/xiaoya/4451cc61ec6d.mp3",
+      "bytes": 95520,
+      "hash": "9feffe94cc7c29edc5975a4a707d0ef8695c379ef59562dfcc780a15dcefe15e"
+    },
+    {
+      "path": "assets/audio/xiaoya/44ec6de40fe4.mp3",
+      "bytes": 176640,
+      "hash": "313c12f17a082118f399c0997987c58103e3d1b041c31916e6726f092702b54a"
+    },
+    {
+      "path": "assets/audio/xiaoya/47830a218f4f.mp3",
+      "bytes": 115200,
+      "hash": "654f3ee08ff00cff9c949f1c89a8c3dc1d5981f10fe4dfdd373756259f4836a2"
+    },
+    {
+      "path": "assets/audio/xiaoya/4c492813681e.mp3",
+      "bytes": 67680,
+      "hash": "f2bc1d8705d9b08e768d4508af56b56b138496f7ba86638f9e11b132043c3244"
+    },
+    {
+      "path": "assets/audio/xiaoya/55b9be669994.mp3",
+      "bytes": 124320,
+      "hash": "44e929fdc828bf3d4072b108f9d5b240af26ba0ee949fe92b22e0078f03eff18"
+    },
+    {
+      "path": "assets/audio/xiaoya/570c1b3f97f5.mp3",
+      "bytes": 234720,
+      "hash": "e67f1c00f5207f3f1afb23a0830da6d21abe43144907c0f9f9f59a73143a2d90"
+    },
+    {
+      "path": "assets/audio/xiaoya/5a886d8e4dd9.mp3",
+      "bytes": 297600,
+      "hash": "390a1352071854879724ee8ae4458d79586b83e3363144583f3c9125d3a9c686"
+    },
+    {
+      "path": "assets/audio/xiaoya/5f09887fb1e2.mp3",
+      "bytes": 167040,
+      "hash": "9c83bfd9c5e5488102aee324a044a38fa2c8fcb65a66991d669dd8411ffff82f"
+    },
+    {
+      "path": "assets/audio/xiaoya/5f8a85fbaffc.mp3",
+      "bytes": 168960,
+      "hash": "2d99ff8ff51219138399ed9fc8aa6e43debee450abf44a4fce71a0c2b62c7dec"
+    },
+    {
+      "path": "assets/audio/xiaoya/6018e5cffa6f.mp3",
+      "bytes": 127200,
+      "hash": "9fbcd0cd37a24100d541914ff351b5283274b8228dbb277b85f0adc2da62e883"
+    },
+    {
+      "path": "assets/audio/xiaoya/607e068da002.mp3",
+      "bytes": 124800,
+      "hash": "8facb03d1ae43c01c5c1c7adc39275f2fef5694fa438f2ce99a7aec5ab44950b"
+    },
+    {
+      "path": "assets/audio/xiaoya/60bbc878a17d.mp3",
+      "bytes": 129600,
+      "hash": "0180c2bfe8ea976991ba3d0f44218f5c16791db8286c6fad8d4673043582408f"
+    },
+    {
+      "path": "assets/audio/xiaoya/641a0089660e.mp3",
+      "bytes": 120000,
+      "hash": "7ed7df15c208fec64985420c73999c55a073d67c94cf620e1e359af93440aa49"
+    },
+    {
+      "path": "assets/audio/xiaoya/6ba699300f91.mp3",
+      "bytes": 232320,
+      "hash": "cf6ab368b255fbb245a8642ead0f3ecf1e6144ae627273a2ce2cbbfa128c9bb4"
+    },
+    {
+      "path": "assets/audio/xiaoya/6f32943581c5.mp3",
+      "bytes": 166080,
+      "hash": "638e9f882f40db7d2caa5777e00ee02815dc79f30a15bda88ab8732fdb55e6f7"
+    },
+    {
+      "path": "assets/audio/xiaoya/7364885d0b3b.mp3",
+      "bytes": 143520,
+      "hash": "11ec51d5eb558a51d568a28dd25cd2ffe730cba663bd5436d0010c4802e3e56a"
+    },
+    {
+      "path": "assets/audio/xiaoya/736fe6706bcf.mp3",
+      "bytes": 216000,
+      "hash": "07ab48b275a66c15a348311b2233a546b20ed04ebbcaa6d091f5c5ae31b34e9d"
+    },
+    {
+      "path": "assets/audio/xiaoya/73acb15c45e7.mp3",
+      "bytes": 240480,
+      "hash": "71bf9fae608f6448daa68d61b9559e447cffffdf6423e87c823bdc3c2caa577a"
+    },
+    {
+      "path": "assets/audio/xiaoya/7c6f7acb4324.mp3",
+      "bytes": 237600,
+      "hash": "a12dcfd6ce2a8688f6cff5b261f4b86d9b93e5702839330ae6d7831b6ceee349"
+    },
+    {
+      "path": "assets/audio/xiaoya/8140e270b513.mp3",
+      "bytes": 110400,
+      "hash": "12112d20015c30ebdf8aa7e70fa8660498444be433f48e6a1d946e6bc3cb4200"
+    },
+    {
+      "path": "assets/audio/xiaoya/83a7a9eb5f30.mp3",
+      "bytes": 159360,
+      "hash": "a2c4f49313ea2ec0647938e5ddf1fc689c65bcb7e8d74918ca77e43f914d027b"
+    },
+    {
+      "path": "assets/audio/xiaoya/85db39dc8470.mp3",
+      "bytes": 180000,
+      "hash": "5ec869f7f2e58b228978f00c2657e2dae6436d6f3a9b6c220040f174ac7cd200"
+    },
+    {
+      "path": "assets/audio/xiaoya/89862683cf32.mp3",
+      "bytes": 177600,
+      "hash": "a8f3dd168a6da4033621948e1fe6497ca79ffa6f752587328774d6a935de0513"
+    },
+    {
+      "path": "assets/audio/xiaoya/8a6e9bc9fa1f.mp3",
+      "bytes": 175200,
+      "hash": "b9435875438d865aa6ffceaa67abe8863d5e79a1313e63a6e4111886519eb754"
+    },
+    {
+      "path": "assets/audio/xiaoya/9990c756048e.mp3",
+      "bytes": 165600,
+      "hash": "22c9157e1874429108e66747432204e30dc0a73e1bd89482d9fa518282d266a4"
+    },
+    {
+      "path": "assets/audio/xiaoya/9d8f38ca8c8c.mp3",
+      "bytes": 125760,
+      "hash": "18fec8a0d6f5691569d9792953642ecf8eb5ca50656bd0bef01ee183798a25f6"
+    },
+    {
+      "path": "assets/audio/xiaoya/9f6a5efa4782.mp3",
+      "bytes": 257280,
+      "hash": "38455a6a8c420d66ab1032591274d6c50bfe08bff4542cdbf1f920703ad053ee"
+    },
+    {
+      "path": "assets/audio/xiaoya/b37892c69f5d.mp3",
+      "bytes": 115680,
+      "hash": "0aa78bdb834c2766aab4410e931b3d0347cbcf4bfb85b3a26529a865834c6ba6"
+    },
+    {
+      "path": "assets/audio/xiaoya/b61a241601cc.mp3",
+      "bytes": 180480,
+      "hash": "2ad1056d81b232db82e524342220a5ca4f92d4ca6fb3e56b7ff617a7903e767d"
+    },
+    {
+      "path": "assets/audio/xiaoya/b7098c5caa10.mp3",
+      "bytes": 159360,
+      "hash": "dd129e6aec862170be1180640c4fcf37fe7581c875e8f1328baa9b4bb7a66c1e"
+    },
+    {
+      "path": "assets/audio/xiaoya/b8a6a335ed26.mp3",
+      "bytes": 114240,
+      "hash": "cea5bd7d752d7aef81fe7d6903571d1a657045b259a9a0f1de90069a1d4e856c"
+    },
+    {
+      "path": "assets/audio/xiaoya/bb348eb7a55e.mp3",
+      "bytes": 93600,
+      "hash": "3d4158481f14da2ba22103b4b9e9a12f2c9c4b7ecfdec6b52a398869fd3782a9"
+    },
+    {
+      "path": "assets/audio/xiaoya/bd54727e7053.mp3",
+      "bytes": 163200,
+      "hash": "61ff8443dcf2018b4e334dbee483b70387c98c263e8d5c672e21b86b11479d15"
+    },
+    {
+      "path": "assets/audio/xiaoya/c2b32c3a10dc.mp3",
+      "bytes": 140160,
+      "hash": "d2a002984645d9742ef46ccc09c2cad09f232c456d20c1bb3b23a4ad8cdd23cc"
+    },
+    {
+      "path": "assets/audio/xiaoya/c2c36946851d.mp3",
+      "bytes": 227040,
+      "hash": "8ef12ff691ac6f4acaf5103e7dfb142015140969487c59a5dad38165b1936b55"
+    },
+    {
+      "path": "assets/audio/xiaoya/c3e409622f65.mp3",
+      "bytes": 141600,
+      "hash": "23f3edfda3c4dd9df4c2b743703feb18dd56c5cb7cbd71a301a2774271ff6908"
+    },
+    {
+      "path": "assets/audio/xiaoya/c6031bf57a08.mp3",
+      "bytes": 154560,
+      "hash": "08d94befde0cee132e3cad87dd4712acf84a63f6d3003eedc888f519cc052445"
+    },
+    {
+      "path": "assets/audio/xiaoya/c868e754d212.mp3",
+      "bytes": 102240,
+      "hash": "46ad0795a04712e71264785d848d6f46e96d9f18dea7001d92d26a5028944f90"
+    },
+    {
+      "path": "assets/audio/xiaoya/c99fae56b2c2.mp3",
+      "bytes": 181440,
+      "hash": "65b60364971a8faef01d8e791ab4229b1de37d0f536b3a8629fa03faf47124de"
+    },
+    {
+      "path": "assets/audio/xiaoya/cc4e78277974.mp3",
+      "bytes": 179040,
+      "hash": "350466bebec283ccb91877021b932af80e24f738c533d000070aa1736e147677"
+    },
+    {
+      "path": "assets/audio/xiaoya/ce1cc4d1bf26.mp3",
+      "bytes": 103200,
+      "hash": "413f3a38d9a01f56b6ac9849bb64ba0ea573747e37791acc59fb0e33759574b4"
+    },
+    {
+      "path": "assets/audio/xiaoya/d0f5fccf506b.mp3",
+      "bytes": 119040,
+      "hash": "42f17fc2d30724859537a465853f82045e8e4197294c580e93fc030a59654eeb"
+    },
+    {
+      "path": "assets/audio/xiaoya/d37a4d3a6979.mp3",
+      "bytes": 92160,
+      "hash": "3aa10fbed7cb34f5ad1aaf50fbadee9a01a7a38cae3e3f827dd0837558b0be5d"
+    },
+    {
+      "path": "assets/audio/xiaoya/d39a05e403f8.mp3",
+      "bytes": 121920,
+      "hash": "d8ac119fab6c5f2fd77c812e5fae406384fe207c8ec94476f6da7a770049fe3d"
+    },
+    {
+      "path": "assets/audio/xiaoya/d840fd199103.mp3",
+      "bytes": 180480,
+      "hash": "7a3f0504499aad2aea9ff0c3e9990cb58da4abbb406a426e89e2760f2e5102d3"
+    },
+    {
+      "path": "assets/audio/xiaoya/d9342ea3c176.mp3",
+      "bytes": 160800,
+      "hash": "c309ce46aae334c1a38c2d77f9e5ec5f8240b1b6dbaf97f4e0873635552b5394"
+    },
+    {
+      "path": "assets/audio/xiaoya/e44d8ef8beef.mp3",
+      "bytes": 166080,
+      "hash": "869fd0999e3b0985c33f71e5ab24999c680c0e2ab03f374a4cf797152d7227d1"
+    },
+    {
+      "path": "assets/audio/xiaoya/e55759b4c14f.mp3",
+      "bytes": 156000,
+      "hash": "5604183f45871a72cec2d080bc36842c37aee3be8de5a1a9db2c64129a744308"
+    },
+    {
+      "path": "assets/audio/xiaoya/ed0677cb91e9.mp3",
+      "bytes": 201120,
+      "hash": "5e8ee736fa7b4329b14c7370298ee186d77ac9eb92c8b2ba8499f1ab828cc387"
+    },
+    {
+      "path": "assets/audio/xiaoya/f1263ba82073.mp3",
+      "bytes": 69600,
+      "hash": "490211d6706b5161d8b51ec7a376d9d4bda3bd9ba9f11a8468de020f384801e8"
+    },
+    {
+      "path": "assets/audio/xiaoya/f5c2b46e085e.mp3",
+      "bytes": 150240,
+      "hash": "64c5799d3adb4cb4a07f9cb06f0ce30cf185f3ccb51e3ce8bce30912b1e55379"
+    },
+    {
+      "path": "assets/audio/xiaoya/fcfb8be48393.mp3",
+      "bytes": 115200,
+      "hash": "5e25f024c0f74de7427ec42cdf340fa46fd4f60a7382c5c99c0e30ea3d764137"
+    },
+    {
+      "path": "assets/audio/xiaoya/fdd1b04ca8dd.mp3",
+      "bytes": 208800,
+      "hash": "cabf5167a654bbf9e7a5da9f29eaf69ec6cbfc63442cebfcc2236730f2aa79b4"
+    },
+    {
       "path": "assets/journey/biscuit-fractures-v4.webp",
       "bytes": 582266,
       "hash": "2614a69138a6ff1cc4119dec5d11047511605c0240703f3de93b9e0c9d261b59"
@@ -326,6 +686,33 @@ self.LESSON_RESOURCES = {
       ]
     },
     {
+      "path": "assets/journey/companion-pink-poses.png",
+      "bytes": 2036826,
+      "hash": "99206099c21eb6684e010a54421d65f75712cb1893d7c42dbba3c63557d362fd",
+      "chunks": [
+        {
+          "path": "resource-chunks/8af851cc4a0d6e50158a462d08bb1efc95583da80b0be3df6687de986cf2cc93.bin",
+          "bytes": 524288,
+          "hash": "8af851cc4a0d6e50158a462d08bb1efc95583da80b0be3df6687de986cf2cc93"
+        },
+        {
+          "path": "resource-chunks/f6e864647672ad8d8a82c707fea4f77fc4c694c6c9db1a221d20aefe46ee240d.bin",
+          "bytes": 524288,
+          "hash": "f6e864647672ad8d8a82c707fea4f77fc4c694c6c9db1a221d20aefe46ee240d"
+        },
+        {
+          "path": "resource-chunks/54a2a2f8461bed85cf0f4c75215727c758937951b69469c7a8ca43442a71d9c6.bin",
+          "bytes": 524288,
+          "hash": "54a2a2f8461bed85cf0f4c75215727c758937951b69469c7a8ca43442a71d9c6"
+        },
+        {
+          "path": "resource-chunks/518b7277359ca185bd0c405536cb06d544a8209130ce4bfa0d3fbe6c073f1583.bin",
+          "bytes": 463962,
+          "hash": "518b7277359ca185bd0c405536cb06d544a8209130ce4bfa0d3fbe6c073f1583"
+        }
+      ]
+    },
+    {
       "path": "assets/journey/digestive-system-clean.png",
       "bytes": 1262843,
       "hash": "a6d261f1b524cfe8612ad1cd7f8d400a0522161b988db0d6a0409c9ac57d6f4e",
@@ -358,6 +745,33 @@ self.LESSON_RESOURCES = {
       "hash": "da981424ae74f176d90c76e95cbb9d1884b145d7291104918af76d0137ff85cf"
     },
     {
+      "path": "assets/journey/food-atlas-v5.png",
+      "bytes": 1580220,
+      "hash": "35dabb6ca0a469e1bcf33268a1c822b8a2a325efb573056c291ec6cf20222804",
+      "chunks": [
+        {
+          "path": "resource-chunks/6b4533c879113ccf89ee807a4f404727f497a1b1f6adc304ac404434ba4fb786.bin",
+          "bytes": 524288,
+          "hash": "6b4533c879113ccf89ee807a4f404727f497a1b1f6adc304ac404434ba4fb786"
+        },
+        {
+          "path": "resource-chunks/321f0b4403ec87772cd09369907d432e2e47c6b6554c368cc4a2d73ceae51184.bin",
+          "bytes": 524288,
+          "hash": "321f0b4403ec87772cd09369907d432e2e47c6b6554c368cc4a2d73ceae51184"
+        },
+        {
+          "path": "resource-chunks/08fb20bd90ae4d6ac884dc9dddf5d224f74e6dd68f839b10d4a813a1ef0c5138.bin",
+          "bytes": 524288,
+          "hash": "08fb20bd90ae4d6ac884dc9dddf5d224f74e6dd68f839b10d4a813a1ef0c5138"
+        },
+        {
+          "path": "resource-chunks/90f720e81884ed6a0ff5723a55560f5b41bd236c4e3512d1deab3280a629079f.bin",
+          "bytes": 7356,
+          "hash": "90f720e81884ed6a0ff5723a55560f5b41bd236c4e3512d1deab3280a629079f"
+        }
+      ]
+    },
+    {
       "path": "assets/journey/food-stages-v3.webp",
       "bytes": 299228,
       "hash": "0865d5fe32d706cb659b17daef9b471ff28929dd6f896dea3c0a944e34dddfa3"
@@ -381,6 +795,38 @@ self.LESSON_RESOURCES = {
       "path": "assets/journey/outside.webp",
       "bytes": 138024,
       "hash": "9ddd81b76671acaab51ef3da2849cc7aec8e160d325c7fc2bd1aa39ab74e45b1"
+    },
+    {
+      "path": "assets/journey/pharynx-closed-v1.png",
+      "bytes": 2177651,
+      "hash": "5558fd18faf65d4d033011754e70567cf325c58e2e6edcdbb3dc21fbb08fd4f1",
+      "chunks": [
+        {
+          "path": "resource-chunks/5bf60a9eac0d0242eba0e85c6d65c95d0091f92b851b3b8313b49698bf1a1ee4.bin",
+          "bytes": 524288,
+          "hash": "5bf60a9eac0d0242eba0e85c6d65c95d0091f92b851b3b8313b49698bf1a1ee4"
+        },
+        {
+          "path": "resource-chunks/79ffc2b544321bf52a8cf0cf6f4a83044107124dad3573a7035cc4aedceb8471.bin",
+          "bytes": 524288,
+          "hash": "79ffc2b544321bf52a8cf0cf6f4a83044107124dad3573a7035cc4aedceb8471"
+        },
+        {
+          "path": "resource-chunks/3792080859badf37602145b3139308483b826a072458b94c8d036ccced3dd7e6.bin",
+          "bytes": 524288,
+          "hash": "3792080859badf37602145b3139308483b826a072458b94c8d036ccced3dd7e6"
+        },
+        {
+          "path": "resource-chunks/c46f0a68233440a5349d3946327a70f12767109063e2a718edb75089a9178a91.bin",
+          "bytes": 524288,
+          "hash": "c46f0a68233440a5349d3946327a70f12767109063e2a718edb75089a9178a91"
+        },
+        {
+          "path": "resource-chunks/2baf140ebae7cd4667b3476ca2a98d5f42a0fde0186f9539aec23a16163693c4.bin",
+          "bytes": 80499,
+          "hash": "2baf140ebae7cd4667b3476ca2a98d5f42a0fde0186f9539aec23a16163693c4"
+        }
+      ]
     },
     {
       "path": "assets/journey/pharynx-mouth-style-v5.webp",
@@ -533,6 +979,11 @@ self.LESSON_RESOURCES = {
       "path": "assets/models/ar-connected/manifest.json",
       "bytes": 11241,
       "hash": "28ff7bc580f84418235615c1f0cdc695ae8f9efa3664076f095eb7552b66b740"
+    },
+    {
+      "path": "assets/models/ar-connected/mouth.glb",
+      "bytes": 479404,
+      "hash": "e6710eb4f4e25c174edfc76976c6f2d5863795910bc01369aeca0e94b6e9a0cb"
     },
     {
       "path": "assets/models/ar-connected/nasal-cavity.glb",
@@ -699,6 +1150,53 @@ self.LESSON_RESOURCES = {
       ]
     },
     {
+      "path": "assets/models/ar-detail/mouth.glb",
+      "bytes": 4104548,
+      "hash": "3aa4f05d7b3c56f2ea8dfd773f881976c97730b71b9756a4c8c6ccf0c1651222",
+      "chunks": [
+        {
+          "path": "resource-chunks/779bdd7a252677d186a2ce2e2d9fc24ec794c4dccfc023418978410e3a4a588c.bin",
+          "bytes": 524288,
+          "hash": "779bdd7a252677d186a2ce2e2d9fc24ec794c4dccfc023418978410e3a4a588c"
+        },
+        {
+          "path": "resource-chunks/7d92bb7677e9265ac14ba9e65bc8c04d008b61a35c13e433cf892389f3b63479.bin",
+          "bytes": 524288,
+          "hash": "7d92bb7677e9265ac14ba9e65bc8c04d008b61a35c13e433cf892389f3b63479"
+        },
+        {
+          "path": "resource-chunks/e9960c198916379701dd09c19cac48f32fcc9259a1af04dd2adf663bed83fbdc.bin",
+          "bytes": 524288,
+          "hash": "e9960c198916379701dd09c19cac48f32fcc9259a1af04dd2adf663bed83fbdc"
+        },
+        {
+          "path": "resource-chunks/8f16a8bac7d1634e22d6827a8e1514c6b4310c88dc84535293bdae465933df9b.bin",
+          "bytes": 524288,
+          "hash": "8f16a8bac7d1634e22d6827a8e1514c6b4310c88dc84535293bdae465933df9b"
+        },
+        {
+          "path": "resource-chunks/c760668ef676578b3808818bac60147c776c881815c9d077b22cb4e432759068.bin",
+          "bytes": 524288,
+          "hash": "c760668ef676578b3808818bac60147c776c881815c9d077b22cb4e432759068"
+        },
+        {
+          "path": "resource-chunks/1371d1f7750c63301ea5358d3afb6e3edfab719b7a9e4d99c6ed3d73590ea11e.bin",
+          "bytes": 524288,
+          "hash": "1371d1f7750c63301ea5358d3afb6e3edfab719b7a9e4d99c6ed3d73590ea11e"
+        },
+        {
+          "path": "resource-chunks/729cd55e70731291cc0db287e37c406a32d2a7a990ca9abe1a11403bdc4692c6.bin",
+          "bytes": 524288,
+          "hash": "729cd55e70731291cc0db287e37c406a32d2a7a990ca9abe1a11403bdc4692c6"
+        },
+        {
+          "path": "resource-chunks/78646e0cecfd5b262739365d24523e1c732e8b2b35eb77c6be01f624f0b8c979.bin",
+          "bytes": 434532,
+          "hash": "78646e0cecfd5b262739365d24523e1c732e8b2b35eb77c6be01f624f0b8c979"
+        }
+      ]
+    },
+    {
       "path": "assets/models/ar-detail/pancreas.glb",
       "bytes": 216380,
       "hash": "7aed6a1c35d5bd8514a8b6c77a8b57f02ffd61ba555e83405d037b8ee4e3d2f3"
@@ -859,9 +1357,98 @@ self.LESSON_RESOURCES = {
       "hash": "1c7d7184e2f7a119d9f2619aa3b3a5cfb49df8c52b16484f714f7a0c92da447c"
     },
     {
+      "path": "assets/models/intestines.glb",
+      "bytes": 3280868,
+      "hash": "801245d4294178971a290f724f428fa5d8b313b5978faffaca5e8d7decbe864e",
+      "chunks": [
+        {
+          "path": "resource-chunks/48381decd976b2920d1688c4968fc2fb29db69b940f6c637028208eeb2c4b87f.bin",
+          "bytes": 524288,
+          "hash": "48381decd976b2920d1688c4968fc2fb29db69b940f6c637028208eeb2c4b87f"
+        },
+        {
+          "path": "resource-chunks/7782551e814a9cca19ffebfd195a1983eaecee0efd2ec43118ae63ac54b62023.bin",
+          "bytes": 524288,
+          "hash": "7782551e814a9cca19ffebfd195a1983eaecee0efd2ec43118ae63ac54b62023"
+        },
+        {
+          "path": "resource-chunks/b1191f548a61de6e6b99c523cc5caefdd1bb0fa688d80e1f67bc3ff14337adcb.bin",
+          "bytes": 524288,
+          "hash": "b1191f548a61de6e6b99c523cc5caefdd1bb0fa688d80e1f67bc3ff14337adcb"
+        },
+        {
+          "path": "resource-chunks/7e4312464137b508da13978720eefdf23096727bea751c474a2ccda0838c1b5a.bin",
+          "bytes": 524288,
+          "hash": "7e4312464137b508da13978720eefdf23096727bea751c474a2ccda0838c1b5a"
+        },
+        {
+          "path": "resource-chunks/3e9d6589fcda7abfcc6fb52c100276ccc6507c67894d7751cddb605345402579.bin",
+          "bytes": 524288,
+          "hash": "3e9d6589fcda7abfcc6fb52c100276ccc6507c67894d7751cddb605345402579"
+        },
+        {
+          "path": "resource-chunks/3cf08c92acd3daed4a6f712668ee6103cab9939b96b539ebad97f82a919695ec.bin",
+          "bytes": 524288,
+          "hash": "3cf08c92acd3daed4a6f712668ee6103cab9939b96b539ebad97f82a919695ec"
+        },
+        {
+          "path": "resource-chunks/af0f162fa63b3b89e966a69268eb7250b95cd671ce04b40b60cf7ab03f6a015b.bin",
+          "bytes": 135140,
+          "hash": "af0f162fa63b3b89e966a69268eb7250b95cd671ce04b40b60cf7ab03f6a015b"
+        }
+      ]
+    },
+    {
       "path": "assets/models/journey/ATTRIBUTION.md",
       "bytes": 7430,
       "hash": "b337cd3b008af2b12fc7e7383fafb20434d4dad8a23eee22e62cce2ce6820091"
+    },
+    {
+      "path": "assets/models/journey/mouth-hra.glb",
+      "bytes": 4104548,
+      "hash": "3aa4f05d7b3c56f2ea8dfd773f881976c97730b71b9756a4c8c6ccf0c1651222",
+      "chunks": [
+        {
+          "path": "resource-chunks/779bdd7a252677d186a2ce2e2d9fc24ec794c4dccfc023418978410e3a4a588c.bin",
+          "bytes": 524288,
+          "hash": "779bdd7a252677d186a2ce2e2d9fc24ec794c4dccfc023418978410e3a4a588c"
+        },
+        {
+          "path": "resource-chunks/7d92bb7677e9265ac14ba9e65bc8c04d008b61a35c13e433cf892389f3b63479.bin",
+          "bytes": 524288,
+          "hash": "7d92bb7677e9265ac14ba9e65bc8c04d008b61a35c13e433cf892389f3b63479"
+        },
+        {
+          "path": "resource-chunks/e9960c198916379701dd09c19cac48f32fcc9259a1af04dd2adf663bed83fbdc.bin",
+          "bytes": 524288,
+          "hash": "e9960c198916379701dd09c19cac48f32fcc9259a1af04dd2adf663bed83fbdc"
+        },
+        {
+          "path": "resource-chunks/8f16a8bac7d1634e22d6827a8e1514c6b4310c88dc84535293bdae465933df9b.bin",
+          "bytes": 524288,
+          "hash": "8f16a8bac7d1634e22d6827a8e1514c6b4310c88dc84535293bdae465933df9b"
+        },
+        {
+          "path": "resource-chunks/c760668ef676578b3808818bac60147c776c881815c9d077b22cb4e432759068.bin",
+          "bytes": 524288,
+          "hash": "c760668ef676578b3808818bac60147c776c881815c9d077b22cb4e432759068"
+        },
+        {
+          "path": "resource-chunks/1371d1f7750c63301ea5358d3afb6e3edfab719b7a9e4d99c6ed3d73590ea11e.bin",
+          "bytes": 524288,
+          "hash": "1371d1f7750c63301ea5358d3afb6e3edfab719b7a9e4d99c6ed3d73590ea11e"
+        },
+        {
+          "path": "resource-chunks/729cd55e70731291cc0db287e37c406a32d2a7a990ca9abe1a11403bdc4692c6.bin",
+          "bytes": 524288,
+          "hash": "729cd55e70731291cc0db287e37c406a32d2a7a990ca9abe1a11403bdc4692c6"
+        },
+        {
+          "path": "resource-chunks/78646e0cecfd5b262739365d24523e1c732e8b2b35eb77c6be01f624f0b8c979.bin",
+          "bytes": 434532,
+          "hash": "78646e0cecfd5b262739365d24523e1c732e8b2b35eb77c6be01f624f0b8c979"
+        }
+      ]
     },
     {
       "path": "assets/models/journey/mouth-hra.glb.json",
@@ -869,9 +1456,78 @@ self.LESSON_RESOURCES = {
       "hash": "e9587e044c0989ac4ca6c791271f253a7ac1e871a81d93f75b87453e13f68200"
     },
     {
+      "path": "assets/models/journey/pharynx-bp3d.glb",
+      "bytes": 3234520,
+      "hash": "c9a3d27bf7e6cb12b3f0f7d7c85790b671bfe9e2e27e51dc1acfbe01e01a81c7",
+      "chunks": [
+        {
+          "path": "resource-chunks/738a42b249cf08b0c1cc699374c28552b9d9a68d0555f4d1261a650d15a4c04f.bin",
+          "bytes": 524288,
+          "hash": "738a42b249cf08b0c1cc699374c28552b9d9a68d0555f4d1261a650d15a4c04f"
+        },
+        {
+          "path": "resource-chunks/6591b233a700ccf623f7314c87f6a08a4e3cf0f130f8ab80cbb714bd0bc79f7f.bin",
+          "bytes": 524288,
+          "hash": "6591b233a700ccf623f7314c87f6a08a4e3cf0f130f8ab80cbb714bd0bc79f7f"
+        },
+        {
+          "path": "resource-chunks/18f1c0ee7def3cb619b487f22076f64e9b8b1262d62aa1bfec626aa93bfed376.bin",
+          "bytes": 524288,
+          "hash": "18f1c0ee7def3cb619b487f22076f64e9b8b1262d62aa1bfec626aa93bfed376"
+        },
+        {
+          "path": "resource-chunks/a24c2550c073b22f5a7a5a4888fceedf64f61d6ea71164005835e0e435d6636b.bin",
+          "bytes": 524288,
+          "hash": "a24c2550c073b22f5a7a5a4888fceedf64f61d6ea71164005835e0e435d6636b"
+        },
+        {
+          "path": "resource-chunks/2c860c0ba53e0044d70487f3d236fea921706dd2ec62246627e8f5146c272f3d.bin",
+          "bytes": 524288,
+          "hash": "2c860c0ba53e0044d70487f3d236fea921706dd2ec62246627e8f5146c272f3d"
+        },
+        {
+          "path": "resource-chunks/07811cab96fd659f26b36d0d6f062cb832807e58449f37523bef13bd10c2a20f.bin",
+          "bytes": 524288,
+          "hash": "07811cab96fd659f26b36d0d6f062cb832807e58449f37523bef13bd10c2a20f"
+        },
+        {
+          "path": "resource-chunks/6e5d96dfedb965403fadaff137041711b763dbf49530676794dae22a1c6729e6.bin",
+          "bytes": 88792,
+          "hash": "6e5d96dfedb965403fadaff137041711b763dbf49530676794dae22a1c6729e6"
+        }
+      ]
+    },
+    {
       "path": "assets/models/journey/pharynx-bp3d.glb.json",
       "bytes": 3193,
       "hash": "20de7b090f40f5f1671bb848c51334a9aaa2789ed2e0d68468234a17ad6d17f2"
+    },
+    {
+      "path": "assets/models/stomach.glb",
+      "bytes": 1802428,
+      "hash": "1c9916ce4a22035dc3fa65986321f33e38adb207aaea5613ca1da60e66f575eb",
+      "chunks": [
+        {
+          "path": "resource-chunks/2490be314e0ac914718b9d0c47a20fe4c73852913b5c2f90f68b4f0d9cf0b36c.bin",
+          "bytes": 524288,
+          "hash": "2490be314e0ac914718b9d0c47a20fe4c73852913b5c2f90f68b4f0d9cf0b36c"
+        },
+        {
+          "path": "resource-chunks/a4833ed1d91319458486b214634c63ce0123cd02c5db367fdf1d195ecaa9460e.bin",
+          "bytes": 524288,
+          "hash": "a4833ed1d91319458486b214634c63ce0123cd02c5db367fdf1d195ecaa9460e"
+        },
+        {
+          "path": "resource-chunks/d545080cceb7659285b5e3e0fee61a147bdd35b6dcd6a6fc3a1de05c9aa34f26.bin",
+          "bytes": 524288,
+          "hash": "d545080cceb7659285b5e3e0fee61a147bdd35b6dcd6a6fc3a1de05c9aa34f26"
+        },
+        {
+          "path": "resource-chunks/2ca289e5e9eff289a5fe69434268ff9a5ecdf745327b57e658b44602e8dc757b.bin",
+          "bytes": 229564,
+          "hash": "2ca289e5e9eff289a5fe69434268ff9a5ecdf745327b57e658b44602e8dc757b"
+        }
+      ]
     },
     {
       "path": "assets/organs/ATTRIBUTION.md",
@@ -973,6 +1629,11 @@ self.LESSON_RESOURCES = {
       "hash": "33007dca01f23d1bf802f8a23f5bd98408fe9985a154019773fced86b5c12611"
     },
     {
+      "path": "assets/organs/nose-gentle.svg",
+      "bytes": 1026,
+      "hash": "60d3c36ae050016d052101b778493dc846ea73a2ebf649d5e237a82783a91b16"
+    },
+    {
       "path": "assets/organs/pancreas-atlas.png",
       "bytes": 244288,
       "hash": "8141f6eb81ab6d36ef5465cb727a4e5ce35444babb69ae49060272cbc27de49b"
@@ -1063,13 +1724,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "class-evaluation.js",
-      "bytes": 20019,
-      "hash": "3b2972ea34a2f57cd6451a4f6228029b36890bcb116882f7f4a3542c336fbf83"
+      "bytes": 20536,
+      "hash": "402fd0d43d2c63cbe8eefd43720f990844ea36f63254958297e96868b529f277"
     },
     {
       "path": "cloud-loader.js",
-      "bytes": 895,
-      "hash": "7623950d1027feae1129c368848b096c8388eddac1a1eac3a60623558f6aca7d"
+      "bytes": 1074,
+      "hash": "016c8c1640e73c44356e0beb5bd785e9f157fb2c288a5fa6c697e4fd6cfcfbaf"
     },
     {
       "path": "device-check.js",
@@ -1142,9 +1803,19 @@ self.LESSON_RESOURCES = {
       "hash": "e6702ffd54c93757d9b0406e02aebd3572712e1018a6c17e7586e28bf5bbe2e9"
     },
     {
+      "path": "journey-companion.css",
+      "bytes": 13853,
+      "hash": "887757e5419062125399ad22d5056707b3039e7132df5d7655fe187857b828ae"
+    },
+    {
+      "path": "journey-companion.js",
+      "bytes": 4043,
+      "hash": "fb261f377ed2e501e89596f76aa4be80377d87ac8d2c650502d7c1873c6365d8"
+    },
+    {
       "path": "journey-fixed-scenes.js",
-      "bytes": 6406,
-      "hash": "4aff845cf21af011ca9df691518f5eb58fa95c5ef635b89baad5bab76c0a0827"
+      "bytes": 6881,
+      "hash": "60a2951e938e560dc270c021a18996a27b5c243afa81cf8ee2a020e546f3ecde"
     },
     {
       "path": "journey-game.css",
@@ -1153,13 +1824,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "journey-game.html",
-      "bytes": 6370,
-      "hash": "335cc2c765fe14765ef45fab026127a6d8b1fecbebdfac47155581ed13c4f904"
+      "bytes": 6180,
+      "hash": "7e17b600c7f91459ffde50e9c60f221841ca1bf70fa0592f3c38c73f3e574f3c"
     },
     {
       "path": "journey-game.js",
-      "bytes": 41998,
-      "hash": "6fc01647deda000cae2c7a1349082b0f2976da49c660e0d8e75ff561081fe3aa"
+      "bytes": 48010,
+      "hash": "d251e823246e471b4a9b8a8b9c3cbdb0bcd599803fd84cf866b3da0eadf23d02"
     },
     {
       "path": "journey-head-3d.js",
@@ -1167,9 +1838,19 @@ self.LESSON_RESOURCES = {
       "hash": "bda05886432677382c6af3c54c39c3dc24890a677466c881c8b077e1bbbbf1c6"
     },
     {
+      "path": "journey-long-press.js",
+      "bytes": 649,
+      "hash": "21d894f0337e01658cb61e17021411b40c29e839aa496febae24bb7c5b852743"
+    },
+    {
       "path": "journey-lumen.js",
-      "bytes": 9725,
-      "hash": "d5ed3e1e2bf45f852b2cff27d34dd567f4367c08e67d2d0cbbdf9231d39e67a9"
+      "bytes": 9594,
+      "hash": "1da08b543fa5c2e274f5ed5b3c5de7c69cc8a9f3628cc718f7b7ff41525c7a09"
+    },
+    {
+      "path": "journey-mini-map.js",
+      "bytes": 5436,
+      "hash": "5d45bbe24dc9227ebff812bc0c30f8ba05b52b930cb9fa799a441b71aebc026b"
     },
     {
       "path": "journey-mouth-chew.js",
@@ -1193,8 +1874,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "journey-reflection.js",
-      "bytes": 3930,
-      "hash": "765034505820a78cdd0caa5e6184373edcb9c83d7242edbacc4f43369773c18a"
+      "bytes": 1336,
+      "hash": "19bd302498dad321016416649c766fe0279aa3145841a67736327c9d3cee678c"
     },
     {
       "path": "journey-scenes.js",
@@ -1205,6 +1886,16 @@ self.LESSON_RESOURCES = {
       "path": "journey-sources.html",
       "bytes": 5120,
       "hash": "9c04ae4b0b4edcff27c25915115c111c4d238a51209d93109fa927f58a6c67fb"
+    },
+    {
+      "path": "journey-voice-lines.js",
+      "bytes": 6794,
+      "hash": "61c6d29297e1136d9bf04b55bd4ece6c03d243cdb48230dc4e8d0db3c03fed3b"
+    },
+    {
+      "path": "journey-wall-wave.js",
+      "bytes": 338,
+      "hash": "dba70818564b044b910f55086a5095e9c2018553e246367eb8f63ccfbab49784"
     },
     {
       "path": "journey.css",
@@ -1232,19 +1923,39 @@ self.LESSON_RESOURCES = {
       "hash": "0d2effe49147f1c212582dee739415e2baf39a7af97b20dc9ec2e2a3b0943a51"
     },
     {
+      "path": "live-dashboard.css",
+      "bytes": 4118,
+      "hash": "83fcf4fc2450493e0b4e48a795425f94c7dd63f1d18826ef47af32e1692bd6ba"
+    },
+    {
+      "path": "live-dashboard.js",
+      "bytes": 12061,
+      "hash": "becf24cce03067be849032072d2d02006c7122c7331f404e90f46b50401e5112"
+    },
+    {
+      "path": "live-sync.js",
+      "bytes": 2726,
+      "hash": "fc3913a3b7fd34ccd07be2ca277d64af0ab97e04651c2bdfe160e040fe747e18"
+    },
+    {
+      "path": "local-preview-db.js",
+      "bytes": 2475,
+      "hash": "fa272eab7153cdb9bf5b49844e9aaffb42bf8657524609e801fee15f3c5bb520"
+    },
+    {
       "path": "model-learning.css",
-      "bytes": 2133,
-      "hash": "49ecd8a6967ae6704ecc194915dec637b8ada4522ac99ff5c51e319609b1f2d9"
+      "bytes": 2651,
+      "hash": "216cce4f6380b08dc5ffccddfa65cb3db2614a1d2d7bd69b31544a4711c92348"
     },
     {
       "path": "model-workbench.html",
-      "bytes": 5777,
-      "hash": "efe944e45917112a6b1c5e3bc2ec963146f8e58340a081d063b194ea47044dc8"
+      "bytes": 5903,
+      "hash": "da7916fe6823ea739ee482f7253972478776dc03d4951690231206297f7dfeb6"
     },
     {
       "path": "model-workbench.js",
-      "bytes": 48112,
-      "hash": "ec6829324e8a68a22b7a740f5d354d0aed679e184b8d3b554532557faf4324e7"
+      "bytes": 53236,
+      "hash": "2b80ea7f7f8a5c84679a9b09f543b33128170d448b00fec4c2b2cdc25eb4b44c"
     },
     {
       "path": "observation.html",
@@ -1253,8 +1964,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "observation.js",
-      "bytes": 27657,
-      "hash": "914d95eecbfc6a674214c530a5b2de7c5a3cc2ac11594293d0b9a9693102cf14"
+      "bytes": 27549,
+      "hash": "6b71b97e286cc4239cec4fff2197c611b4720f1f08564ceecae0f35899bacba6"
     },
     {
       "path": "organ-drag.js",
@@ -1273,8 +1984,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "resource-store.js",
-      "bytes": 5246,
-      "hash": "1bd77067930cb57b8c235d15d476883a9c3455b616f4778263e9145361d9f263"
+      "bytes": 5341,
+      "hash": "26664dbc1f1cd5f9b88c710ae86dcfd971310c4e69171bfa0925bcf91e2bf645"
     },
     {
       "path": "round-monitor.js",
@@ -1283,23 +1994,23 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "stomach-sample.css",
-      "bytes": 14838,
-      "hash": "7153866e5309ad05e9908a5d1de68fd3166e0e2964d3abafa3308dc84831d20e"
+      "bytes": 15695,
+      "hash": "c9ce009298994c0d7b5d1f6ea84ec28aac8d111b4e6fbaaf03bda3f25b908614"
     },
     {
       "path": "stomach-sample.html",
-      "bytes": 4670,
-      "hash": "f60be4b5be087482b4e11da41cb716284a2a1aebe3e8c31826d6dd898d70798b"
+      "bytes": 4865,
+      "hash": "c20c061fcb413f968aad327f4192c6a5d1425d916ba9daa97e359d45c7db385a"
     },
     {
       "path": "stomach-sample.js",
-      "bytes": 40677,
-      "hash": "ad1ada01a6205e5555dc457f4bf78d9cc1dc279dd3542724e1f4c508857475cb"
+      "bytes": 42954,
+      "hash": "c5bcd913e964d78a4f476bdedff24e226d6ef78efdf3f051b081757b65b4bc62"
     },
     {
       "path": "student-data.js",
-      "bytes": 7704,
-      "hash": "0622d6e0c25b5c04095329165224556358deda5ac14205859a09004992057925"
+      "bytes": 7806,
+      "hash": "66e56f680b53629524938e4109a88bb11b456c417f081d2dc9180d0205e39788"
     },
     {
       "path": "student-flow.css",
@@ -1647,7 +2358,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-2d297e020d41597e"
+      "hash": "manifest-20261102-chunks-b35761f856a71ff1"
     }
   ]
 };

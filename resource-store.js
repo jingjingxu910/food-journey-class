@@ -47,7 +47,7 @@
       throw new Error('资源完整性校验未通过，请重试');
     }
     const ext=item.path.split('.').pop();
-    const mime={js:'application/javascript',mjs:'application/javascript',wasm:'application/wasm',png:'image/png',jpg:'image/jpeg',webp:'image/webp',glb:'model/gltf-binary',mp4:'video/mp4'}[ext]||'application/octet-stream';
+    const mime={js:'application/javascript',mjs:'application/javascript',wasm:'application/wasm',png:'image/png',jpg:'image/jpeg',webp:'image/webp',glb:'model/gltf-binary',mp4:'video/mp4',mp3:'audio/mpeg'}[ext]||'application/octet-stream';
     const complete=new Response(joined,{headers:{'Content-Type':mime}});
     await cache.put(key(item),complete.clone());
     // Only remove fragments after the verified complete file is durable.
@@ -72,6 +72,7 @@
       }else data=await response.arrayBuffer();
       if(item.path!=='resource-manifest.js' && (data.byteLength!==item.bytes || await digest(data)!==item.hash))throw new Error(`文件版本尚未更新：${item.path}，请稍后重试`);
       const headers=new Headers(response.headers);if(item.path.endsWith('.mp4'))headers.set('Content-Type','video/mp4');
+      if(item.path.endsWith('.mp3'))headers.set('Content-Type','audio/mpeg');
       const complete=new Response(data,{status:200,headers});
       await (await caches.open(CACHE)).put(key(item),complete.clone());return complete;
       }catch(error){if(request.signal.aborted&&!signal?.aborted)throw new Error(`下载长时间没有响应：${item.path}，请重试`);throw error;}

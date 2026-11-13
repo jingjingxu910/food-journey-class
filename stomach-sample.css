@@ -34,3 +34,14 @@ html[data-voyage=true] #intro{display:none!important}
 #anatomy-text{max-width:31em;margin-inline:auto;line-height:1.6}
 dialog::backdrop{backdrop-filter:none;background:#18312c94}
 .veil,#views,#forward,#back{backdrop-filter:none}
+/* The journey shell owns the one companion information area and persistent map. */
+html[data-voyage=true] #hint,html[data-voyage=true] #food-caption,html[data-voyage=true] #observation,html[data-voyage=true] #map,html[data-voyage=true] .topline,html[data-voyage=true] footer{display:none!important}
+html[data-voyage=true] #question{position:absolute;top:auto;bottom:25px;margin:auto;max-height:50%;padding:20px}
+html[data-voyage=true] #question .eyebrow,html[data-voyage=true] #question-text,html[data-voyage=true] #answer-hint{display:none!important}
+html[data-voyage=true] #views{max-width:calc(100% - 155px)}
+#views{display:none!important}
+
+
+html[data-voyage=true] #question[open]{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);margin:0;width:min(90%,650px)}
+
+html[data-voyage=true] :is(#forward,#back){display:none!important}

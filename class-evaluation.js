@@ -180,6 +180,8 @@ function setupTeacher(){
    document.querySelector('#preview-model-content').replaceChildren(img);dialog.showModal();
  }
  function render(){
+   window.currentTeacherLivePhase={'初始模型':'v1','修正模型':'v2','食物旅行':'journey'}[stage]||null;
+   window.dispatchEvent(new CustomEvent('teacher-live-phase',{detail:window.currentTeacherLivePhase}));
    renderSharing();
    [...tabs.children].forEach(b=>{
      if(b===fullscreen||b===sharingControl)return;
@@ -232,8 +234,8 @@ function setupTeacher(){
          card.append(el('p',symbols[i]+' '+name+'  '+'★'.repeat(count),'self-result'));
        });
      }else if(stage==='AR观察'){
-       const names={mouth:'口腔',esophagus:'食管',stomach:'胃','small-intestine':'小肠','large-intestine':'大肠',small:'小肠',large:'大肠'};
-       card.append(el('p','观察过 '+[...new Set((data.views||[]).map(v=>names[v.organId]||v.organId))].join('、')));
+       const names={mouth:'口腔',esophagus:'食管',stomach:'胃','small-intestine':'小肠','large-intestine':'大肠',small:'小肠',large:'大肠','nasal-cavity':'鼻腔',nose:'鼻子',trachea:'气管',lungs:'肺','right-lung':'右肺','left-lung':'左肺',pharynx:'咽',liver:'肝',pancreas:'胰',gallbladder:'胆囊',heart:'心脏',submandibular:'下颌下腺','left-kidney':'左肾','right-kidney':'右肾',bladder:'膀胱',spleen:'脾'};
+       card.append(el('p','观察过 '+[...new Set((data.views||[]).map(v=>names[v.organId]||'其他器官'))].join('、')));
      }else{
        card.append(el('p','已完成食物旅行'));
        const labels={identify:'辨认器官',locate:'借助人体图查找位置',look:'转向观察',

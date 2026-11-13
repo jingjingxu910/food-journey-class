@@ -10,26 +10,45 @@ function tissueTile(file,rect){
 // A wall-only swatch avoids duplicating the source photograph's distant lumen.
 function esophagusWallTexture(){const image=decodedTissue.get('esophagus-wall-v9.webp'),surface=document.createElement('canvas');surface.width=surface.height=1024;const c=surface.getContext('2d');c.setTransform(0,1,1,0,0,0);c.drawImage(image,0,0,1024,1024);const texture=new THREE.CanvasTexture(surface);texture.colorSpace=THREE.SRGBColorSpace;texture.repeat.set(6,2);texture.anisotropy=8;return texture;}
 // Waves use an explicit centerline coordinate independent of material UVs.
+import {stomachWallWave} from './journey-wall-wave.js';
+
+function useDeformedNormals(shader){
+ shader.fragmentShader=shader.fragmentShader.replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
+ vec3 movedNormal=normalize(cross(dFdx(vViewPosition),dFdy(vViewPosition)));
+ if(dot(movedNormal,normal)<0.0)movedNormal=-movedNormal;
+ normal=normalize(mix(normal,movedNormal,.7));`);
+}
+
 // Instanced villi use the same transform as the underlying folded wall.
 function animateTissue(material,shaders,type){
- const esophagus=type==='esophagus';
- const original=material.onBeforeCompile,cacheKey=material.customProgramCacheKey();material.onBeforeCompile=s=>{original(s);s.uniforms.uClock={value:0};s.uniforms.uStrength={value:0};s.uniforms.uSqueeze={value:esophagus?.34:type==='small'?.27:.25};if(esophagus)s.uniforms.uBolusU={value:.315};s.vertexShader=`${esophagus?'uniform float uBolusU;':''}uniform float uClock;uniform float uStrength;uniform float uSqueeze;attribute vec3 lumenCenter;attribute float lumenU;\n`+s.vertexShader;
- s.vertexShader=s.vertexShader.replace('#include <project_vertex>',`vec4 tissuePosition=vec4(transformed,1.0);
- #ifdef USE_INSTANCING
- tissuePosition=instanceMatrix*tissuePosition;
- #endif
- vec3 radial=tissuePosition.xyz-lumenCenter;
- float phase=lumenU*${esophagus?'40.0':'58.0'}-uClock*${esophagus?'4.4':'2.5'};
- ${esophagus?'phase+=.38*radial.y;':''}
- float wave=pow(.5+.5*cos(phase),${type==='esophagus'?'3.0':'4.0'});
- float nextWave=pow(.5+.5*cos(lumenU*${type==='esophagus'?'19.0':'31.0'}-uClock*${type==='esophagus'?'1.2':'1.7'}+1.4),6.0);
- float taper=smoothstep(.105,.20,lumenU)*(1.0-smoothstep(.80,.895,lumenU));
- ${esophagus?`// Fade the travelling wave out over a broad region around the moving bolus.
- float distanceToBolus=lumenU-uBolusU;
- taper*=smoothstep(-.16,-.07,distanceToBolus)*(1.0-smoothstep(.08,.25,distanceToBolus));`:''}
- float contraction=(wave+nextWave*.24)*uSqueeze*${esophagus?'uStrength':'(.18+.82*uStrength)'}*taper;
- tissuePosition.xyz=lumenCenter+radial*(1.0-contraction);
- vec4 mvPosition=modelViewMatrix*tissuePosition;gl_Position=projectionMatrix*mvPosition;`);s.fragmentShader=s.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nvec3 movedNormal=normalize(cross(dFdx(vViewPosition),dFdy(vViewPosition)));if(dot(movedNormal,normal)<0.0)movedNormal=-movedNormal;normal=normalize(mix(normal,movedNormal,.7));');shaders.push(s);};material.customProgramCacheKey=()=>cacheKey+'-lumen-motion-v8-'+type;
+ material.onBeforeCompile=shader=>{
+  shader.uniforms.uClock={value:0};
+  shader.uniforms.uStrength={value:0};
+  const esophagus=type==='esophagus';
+  shader.uniforms.uSqueeze={value:esophagus?1:type==='small'?.27:.25};
+  shader.vertexShader='uniform float uClock;uniform float uStrength;uniform float uSqueeze;attribute vec3 lumenCenter;attribute float lumenU;\n'+shader.vertexShader;
+  if(esophagus){
+   shader.uniforms.uViewOffset={value:0};
+   shader.vertexShader='uniform float uViewOffset;\n'+stomachWallWave+shader.vertexShader;
+  }
+  shader.vertexShader=shader.vertexShader.replace('#include <project_vertex>',`vec4 tissuePosition=vec4(transformed,1.0);
+   #ifdef USE_INSTANCING
+   tissuePosition=instanceMatrix*tissuePosition;
+   #endif
+   vec3 radial=tissuePosition.xyz-lumenCenter;
+   float wave=pow(.5+.5*cos(lumenU*58.0-uClock*2.5),4.0);
+   float nextWave=pow(.5+.5*cos(lumenU*31.0-uClock*1.7+1.4),6.0);
+   float taper=smoothstep(.105,.20,lumenU)*(1.0-smoothstep(.80,.895,lumenU));
+   float contraction=${esophagus
+    ? 'stomachWallWave(lumenU-uViewOffset,uClock)*uSqueeze*uStrength*taper'
+    : '(wave+nextWave*.24)*uSqueeze*(.18+.82*uStrength)*taper'};
+   tissuePosition.xyz=lumenCenter+radial*(1.0-contraction);
+   vec4 mvPosition=modelViewMatrix*tissuePosition;
+   gl_Position=projectionMatrix*mvPosition;`);
+  useDeformedNormals(shader);
+  shaders.push(shader);
+ };
+ material.customProgramCacheKey=()=> 'digestive-wall-motion-v15-'+type;
 }
 export function buildLumen(root,targets,type,shaders){
  const small=type==='small',large=type==='large',points=small?[[0,0,7],[0,0,2],[1.5,-.35,-3],[3.1,.5,-7],[.7,-.15,-11],[-2.7,-.6,-15],[-3.0,.25,-19],[.4,.65,-24],[3,-.25,-29],[1.4,0,-34]]:large?[[0,0,7],[0,0,2],[.3,.2,-4],[1.0,.15,-10],[.2,-.2,-16],[-1.2,-.15,-23],[-1,.2,-29],[.4,0,-34]]:[[0,0,7],[0,0,2],[.2,.05,-7],[.08,-.1,-15],[-.25,.1,-24],[0,0,-31]];
@@ -51,16 +70,16 @@ export function buildLumen(root,targets,type,shaders){
  for(let j=0;j<=rings;j++){const u=j/rings,c=curve.getPointAt(u);for(let i=0;i<=sides;i++){const p=pointAt(u,i/sides*Math.PI*2),k=j*(sides+1)+i;pos.setXYZ(k,p.x,p.y,p.z);centers.push(c.x,c.y,c.z);coordinates.push(u);}}
  geometry.setAttribute('lumenCenter',new THREE.Float32BufferAttribute(centers,3));geometry.setAttribute('lumenU',new THREE.Float32BufferAttribute(coordinates,1));geometry.computeVertexNormals();const normals=geometry.attributes.normal;for(let j=0;j<=rings;j++){const a=j*(sides+1),b=a+sides,n=new THREE.Vector3().fromBufferAttribute(normals,a).add(new THREE.Vector3().fromBufferAttribute(normals,b)).normalize();normals.setXYZ(a,n.x,n.y,n.z);normals.setXYZ(b,n.x,n.y,n.z);}
  const texture=small?new THREE.Texture(decodedTissue.get('small-mucosa-v3.webp')):large?tissueTile('large-intestine.webp',[35,520,270,245]):esophagusWallTexture();texture.needsUpdate=true;texture.colorSpace=THREE.SRGBColorSpace;texture.wrapS=texture.wrapT=type==='esophagus'?THREE.MirroredRepeatWrapping:THREE.RepeatWrapping;if(small)texture.repeat.set(14,3);
- const material=type==='esophagus'?new THREE.MeshStandardMaterial({color:0xffe7da,map:texture,bumpMap:texture,bumpScale:.012,roughness:.46,emissive:0xffdacf,emissiveMap:texture,emissiveIntensity:.035,side:THREE.DoubleSide}):new THREE.MeshStandardMaterial({color:small?0xffe3cc:0xfff3eb,map:texture,bumpMap:texture,bumpScale:small?.030:.045,emissive:0xffe1d4,emissiveMap:texture,emissiveIntensity:small?.035:.12,roughness:small?.39:.32,side:THREE.DoubleSide});animateTissue(material,shaders,type);
+ const material=type==='esophagus'?new THREE.MeshStandardMaterial({color:0xffe7da,map:texture,bumpMap:texture,bumpScale:.004,roughness:.46,emissive:0xffdacf,emissiveMap:texture,emissiveIntensity:.035,side:THREE.DoubleSide}):new THREE.MeshStandardMaterial({color:small?0xffe3cc:0xfff3eb,map:texture,bumpMap:texture,bumpScale:small?.030:.045,emissive:0xffe1d4,emissiveMap:texture,emissiveIntensity:small?.035:.12,roughness:small?.39:.32,side:THREE.DoubleSide});animateTissue(material,shaders,type);
  // The two ends share the same narrow mucosal sleeve, material and UV phase.
  // Hand-offs happen within these sleeves, while the next cavity is still ahead.
  const first=Math.round(rings*.025),last=rings-first,indexPerRing=sides*6;geometry.clearGroups();geometry.addGroup(0,first*indexPerRing,1);geometry.addGroup(first*indexPerRing,(last-first)*indexPerRing,0);geometry.addGroup(last*indexPerRing,(rings-last)*indexPerRing,1);blendNeck(material);const wall=new THREE.Mesh(geometry,[material,neckMaterial()]);wall.userData.kind='wall';root.add(wall);targets.push(wall);
  let villi=null;
  if(small){
-  const vg=new THREE.SphereGeometry(1,5,3),vm=mucosaMaterial(0xc77f6b,.42),count=12000,instances=new THREE.InstancedMesh(vg,vm,count),dummy=new THREE.Object3D(),up=new THREE.Vector3(0,1,0),ic=[],iu=[];animateTissue(vm,shaders,type);
-  for(let i=0;i<count;i++){const random=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);},u=.105+random(i+.41)*.765,a=random(i+201.7)*Math.PI*2,surface=pointAt(u,a),c=curve.getPointAt(u),ds=.00025,da=.001,tangent=pointAt(u+ds,a).sub(pointAt(u-ds,a)),around=pointAt(u,a+da).sub(pointAt(u,a-da)),towards=tangent.cross(around).normalize();if(towards.dot(c.clone().sub(surface))<0)towards.negate();const length=.045+random(i+80)*.042;dummy.position.copy(surface).addScaledVector(towards,length*.42);dummy.quaternion.setFromUnitVectors(up,towards);dummy.scale.set(.019+random(i+3)*.009,length*.55,.019+random(i+5)*.008);dummy.updateMatrix();instances.setMatrixAt(i,dummy.matrix);ic.push(c.x,c.y,c.z);iu.push(u);}
+  const vg=new THREE.SphereGeometry(1,5,3),vm=mucosaMaterial(0xc77f6b,.42),count=21000,instances=new THREE.InstancedMesh(vg,vm,count),dummy=new THREE.Object3D(),up=new THREE.Vector3(0,1,0),ic=[],iu=[];animateTissue(vm,shaders,type);
+  for(let i=0;i<count;i++){const random=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);},u=.105+random(i+.41)*.765,a=random(i+201.7)*Math.PI*2,surface=pointAt(u,a),c=curve.getPointAt(u),ds=.00025,da=.001,tangent=pointAt(u+ds,a).sub(pointAt(u-ds,a)),around=pointAt(u,a+da).sub(pointAt(u,a-da)),towards=tangent.cross(around).normalize();if(towards.dot(c.clone().sub(surface))<0)towards.negate();const length=.065+random(i+80)*.055;dummy.position.copy(surface).addScaledVector(towards,length*.42);dummy.quaternion.setFromUnitVectors(up,towards);dummy.scale.set(.019+random(i+3)*.009,length*.55,.019+random(i+5)*.008);dummy.updateMatrix();instances.setMatrixAt(i,dummy.matrix);ic.push(c.x,c.y,c.z);iu.push(u);}
   vg.setAttribute('lumenCenter',new THREE.InstancedBufferAttribute(new Float32Array(ic),3));vg.setAttribute('lumenU',new THREE.InstancedBufferAttribute(new Float32Array(iu),1));instances.instanceMatrix.needsUpdate=true;root.add(instances);instances.userData.kind='wall';villi=instances;
  }
  const entry=new THREE.Object3D(),exit=new THREE.Object3D();entry.position.copy(curve.getPointAt(.025));exit.position.copy(curve.getPointAt(.97));root.add(entry,exit);
- return{curve,entry,exit,wall,villi,start:type==='esophagus'?.24:.14,end:.77,exitU:.9875,type};
+ return{curve,entry,exit,wall,villi,start:type==='esophagus'?.24:.14,end:small?.95:.77,exitU:.9875,type};
 }

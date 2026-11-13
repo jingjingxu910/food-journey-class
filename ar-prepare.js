@@ -1,4 +1,4 @@
-import './resource-store.js';
+import './resource-store.js?v=20261113-voice-models';
 import {selectedResources} from './resource-selection.js';
 const $=s=>document.querySelector(s),store=window.LessonResourceStore;
 const group=Math.max(1,Math.min(12,Number(new URLSearchParams(location.search).get('group'))||1));
