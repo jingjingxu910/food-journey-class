@@ -1,3 +1,4 @@
+import './live-sync.js?v=20261113-four-views';
 import {organSegments} from './ar-media-segments.js';
 const isPreview=new URLSearchParams(location.search).get('preview')==='1';
 import {CameraMotion} from './ar-motion.js';
@@ -20,6 +21,13 @@ let record,observation,selected=null,selectedAt=0,stream,worker,mainDetector,obs
 let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,lastSent=0,lastPose=0,targets=null;
 let workerReady=false,starting=false,saveTimer,viewerDispose,viewerGeneration=0,captureWidth=384,interval=100,meanCost=0,lastPaint=0;
 let startupController,connected;const motion=new CameraMotion();let sentMotion=null,targetMotion=null;
+window.readLiveObservation=()=>isPreview||!observation?null:{
+ phase:'observation',organId:selected||observation.views.at(-1)?.organId,
+ organName:organs.find(organ=>organ.id===(selected||observation.views.at(-1)?.organId))?.name,
+ view:dialogOpen?'organ':observation.cameraStarted?'body':'ready',
+ camera:viewerDispose?.viewState?.(),completed:!!observation.completedAt
+};
+window.captureLessonLive=()=>dialogOpen?viewerDispose?.snapshot?.():null;
 const metrics={samples:0,totalMs:0,maxMs:0,losses:0,mode:null};
 $('#group-label').textContent=`第 ${groupId} 组`;$('#back-link').href=homeUrl();
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
@@ -151,7 +159,7 @@ async function openViewer(){
  const mount=$('#organ-3d');mount.textContent='正在准备模型…';
 
 
- try{const {createOrganViewer}=await import('./ar-organ-viewer.js');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open,id==='mouth'?{initialRotation:[.35,-.18,0]}:{});if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
+ try{const {createOrganViewer}=await import('./ar-organ-viewer.js?v=20261113-four-views');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open,id==='mouth'?{initialRotation:[.35,-.18,0]}:{});if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
  catch(error){if(generation===viewerGeneration)mount.innerHTML=`<img class="model-fallback-image" src="${asset(id,'png')}" alt="${o.name}"><p>模型加载未完成，请关闭后重试。</p>`;console.warn('Organ model failed',error);}
 }
 async function finishObservation(){

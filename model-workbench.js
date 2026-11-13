@@ -264,36 +264,52 @@ function colonWallDistance(x,y) {
   return distance;
 }
 
-function routeLayers(model) {
-  const points = model.routePoints || [];
-  const small = model.positions?.['small-intestine'];
-  const colon = model.positions?.['large-intestine'];
-  const unsplit = {behind:points,front:[]};
-  if (!small || !colon || points.length<2) return unsplit;
-  const {width,height} = appearanceFor(organById('small-intestine'),model);
-  const colonAppearance=appearanceFor(organById('large-intestine'),model);
-  const colonRx=Math.max(3,colonAppearance.width/2);
-  const colonRy=Math.max(3,(colonAppearance.height||colonAppearance.width/1.5)/2);
-  let reachedSmall=false;
+function sampleFoodRoute(points) {
+  const samples=[];
   for(let i=1;i<points.length;i++){
     const a=points[i-1],b=points[i];
     const steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,(b.y-a.y)*1.5)/.35));
     for(let j=i===1?0:1;j<=steps;j++){
       const t=j/steps;
-      const point={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};
-      const onColon=colonWallDistance((point.x-colon.x)/colonRx,(point.y-colon.y)/colonRy)<=1;
-      if(onColon){
-        if(reachedSmall){
-          const front=j===steps?[b,...points.slice(i+1)]:[point,...points.slice(i)];
-          return {behind:[...points.slice(0,i),front[0]],front};
-        }
-      // Touching the edge while approaching the transverse colon is not a visit.
-      }else if(Math.hypot((point.x-small.x)/(width/2),(point.y-small.y)/((height||width/1.5)/2))<=.75){
-        reachedSmall=true;
-      }
+      samples.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,at:i-1+t});
     }
   }
-  return unsplit;
+  return samples;
+}
+
+function routeOrganDistance(point,organ,model) {
+  const position=model.positions[organ.id],appearance=appearanceFor(organ,model);
+  const angle=(appearance.angle||0)*Math.PI/180;
+  const dx=point.x-position.x,dy=(point.y-position.y)*1.5;
+  const x=(dx*Math.cos(angle)+dy*Math.sin(angle))/Math.max(3,appearance.width/2);
+  const y=(dy*Math.cos(angle)-dx*Math.sin(angle))/Math.max(3,(appearance.height||appearance.width/1.5)*.75);
+  return organ.id==='large-intestine'?colonWallDistance(x,y):Math.hypot(x,y);
+}
+
+function intestinalContacts(model,samples) {
+  const small=organById('small-intestine'),colon=organById('large-intestine');
+  const hasSmall=model.positions?.[small.id],hasColon=model.positions?.[colon.id];
+  let reachedSmall=false,startsOnColon=false,colonEntry;
+  const contacts=samples.map((point,index)=>{
+    const colonDistance=hasColon?routeOrganDistance(point,colon,model):Infinity;
+    const smallDistance=hasSmall?routeOrganDistance(point,small,model):Infinity;
+    if(index===0)startsOnColon=colonDistance<=1&&smallDistance>.75;
+    const onColon=colonDistance<=1;
+    if(reachedSmall&&onColon&&colonEntry===undefined)colonEntry=point;
+    if(!onColon&&smallDistance<=.75)reachedSmall=true;
+    return {point,colonDistance,afterSmall:colonEntry!==undefined};
+  });
+  return {contacts,colonEntry,ignoreApproach:reachedSmall&&!startsOnColon};
+}
+
+function routeLayers(model) {
+  const points=model.routePoints||[];
+  const {colonEntry}=intestinalContacts(model,sampleFoodRoute(points));
+  if(!colonEntry)return {behind:points,front:[]};
+  const index=Math.floor(colonEntry.at);
+  const split=Number.isInteger(colonEntry.at)?points[index]:colonEntry;
+  const next=index+1;
+  return {behind:[...points.slice(0,next),...(split===points[index]?[]:[split])],front:[split,...points.slice(next)]};
 }
 
 function drawRoute() {
@@ -379,32 +395,16 @@ function finishRoute(event) {
 function inferRouteOrder(model) {
   const points = model?.routePoints || [], distances = {};
   if (points.length < 2) return {order:[],distances};
-  // Sample actual segments in canvas coordinates, not the centre of a bounding box.
-  // A colon surrounds an empty space: that space must never count as colon tissue.
-  const samples=[];
-  for(let i=1;i<points.length;i++){
-    const a=points[i-1],b=points[i],steps=Math.max(1,Math.ceil(Math.hypot(b.x-a.x,(b.y-a.y)*1.5)/.35));
-    for(let j=0;j<=steps;j++)samples.push({x:a.x+(b.x-a.x)*j/steps,y:a.y+(b.y-a.y)*j/steps,at:i-1+j/steps});
-  }
-  const smallPosition=model.positions?.['small-intestine'];
-  const smallAppearance=smallPosition?appearanceFor(organById('small-intestine'),model):null;
-  const firstSmall=smallPosition?samples.find(p=>Math.hypot((p.x-smallPosition.x)/(smallAppearance.width/2),(p.y-smallPosition.y)/((smallAppearance.height||smallAppearance.width/1.5)/2))<=1)?.at:undefined;
-  const lastSmall=firstSmall===undefined?undefined:samples.findLast(p=>Math.hypot((p.x-smallPosition.x)/(smallAppearance.width/2),(p.y-smallPosition.y)/((smallAppearance.height||smallAppearance.width/1.5)/2))<=1)?.at;
-  const ranked = organs.filter(o=>!revisionOnlyIds.has(o.id)&&model.positions?.[o.id]).map(organ=>{
-    const position=model.positions[organ.id],appearance=appearanceFor(organ,model);
-    const rx=Math.max(3,appearance.width/2),ry=Math.max(3,(appearance.height||appearance.width/1.5)/2);
+  const samples=sampleFoodRoute(points);
+  const {contacts,ignoreApproach}=intestinalContacts(model,samples);
+  const ranked=organs.filter(organ=>!revisionOnlyIds.has(organ.id)&&model.positions?.[organ.id]).map(organ=>{
     let closest=Infinity,at=Infinity;
-    for(const point of samples){
-      const x=(point.x-position.x)/rx,y=(point.y-position.y)/ry;
-      let distance=Math.hypot(x,y);
-      if(organ.id==='large-intestine'){
-        distance=colonWallDistance(x,y);
-        // A line descending into the small intestine passes UNDER the transverse
-        // colon. Do not report this visual crossing as entering the large intestine.
-        if(lastSmall!==undefined && point.at<=lastSmall && Math.abs(x)<.52 && y<-.25)continue;
-      }
+    for(const contact of contacts){
+      const {point,colonDistance,afterSmall}=contact;
+      if(organ.id==='large-intestine'&&ignoreApproach&&!afterSmall)continue;
+      const distance=organ.id==='large-intestine'?colonDistance:routeOrganDistance(point,organ,model);
       closest=Math.min(closest,distance);
-      if(distance<=1 && at===Infinity)at=point.at;
+      if(distance<=1&&at===Infinity)at=point.at;
     }
     distances[organ.id]=Number(closest.toFixed(3));
     return {id:organ.id,at,distance:closest};
@@ -706,7 +706,10 @@ function compareModels(first, second) {
     const b = second.positions[organ.id];
     return Boolean(a) !== Boolean(b) || (a && b && (Math.hypot(a.x-b.x,a.y-b.y)>2.5 || JSON.stringify(appearanceFor(organ,first)) !== JSON.stringify(appearanceFor(organ,second))));
   }).map((organ) => organ.name);
-  return { organs: changedOrgans, routeChanged: JSON.stringify(first.routePoints || []) !== JSON.stringify(second.routePoints || []) };
+  const beforeOrder = inferRouteOrder(first).order;
+  const afterOrder = inferRouteOrder(second).order;
+  const routeChanged = beforeOrder.length !== afterOrder.length || beforeOrder.some((id, index) => id !== afterOrder[index]);
+  return { organs: changedOrgans, routeChanged };
 }
 
 function formatDuration(model) {
@@ -765,7 +768,7 @@ function renderDashboard(records) {
     const before = miniModel(record?.v1?.completedAt ? { ...record.v1, _paired: revisionView } : null, "观察前想法", { groupId: id, phase: "v1" });
     const after = revisionView ? miniModel(record?.v2?.completedAt ? record.v2 : null, "观察后修正", { groupId: id, phase: "v2" }) : "";
     const analysis = !revisionView ? "" : record?.v2?.completedAt
-      ? `${difference.organs.length ? `位置有变化：${difference.organs.join("、")}` : "器官位置未见明显变化"}；${difference.routeChanged ? "食物路线有变化" : "食物路线保持原样"}`
+      ? `${difference.organs.length ? `位置有变化：${difference.organs.join("、")}` : "器官位置未见明显变化"}；${difference.routeChanged ? "经过的器官顺序有变化" : "经过的器官顺序相同"}`
       : "";
     return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${status}</span></header>${before || after ? `<div class="mini-compare ${after ? "has-revision" : "single-model"}">${before}${after}</div>` : ""}${analysis ? `<p class="group-model-analysis">${analysis}</p>` : ""}</article>`;
   }).join("");
@@ -918,16 +921,24 @@ async function exportRecords() {
   URL.revokeObjectURL(url);
 }
 
+function renderSubmittedModelAnalysis(record,phaseName){
+  const model=record?.[phaseName];
+  if(!model)return '';
+  const inferred=inferRouteOrder(model);
+  const routeNames=inferred.displayOrder||[];
+  const route = routeNames.length ? routeNames.join(" → ") : model.routePoints?.length >= 2 ? "已有笔迹，未识别到经过的器官，请对照上图查看" : "本次提交没有路线笔迹";
+  const revision = phaseName === "v2" ? compareModels(record.v1, model) : null;
+  const metrics = `<dl class="model-preview-metrics"><div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>建模用时</dt><dd>${formatDuration(model)}</dd></div><div class="model-metric-route"><dt>所画路线</dt><dd>${route}${inferred.hasDrawn?'<small class="route-inference-note">'+(inferred.unmatchedDrawn?'另有补画部分，暂无法可靠排入顺序，请结合原图查看。':'已纳入路线附近的补画部分；具体名称请结合小组说明确认。')+'</small>':''}</dd></div>${revision ? `<div class="model-metric-revision"><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div class="model-metric-revision"><dt>器官顺序</dt><dd>${revision.routeChanged ? "有变化" : "相同"}</dd></div>` : ""}</dl>`;
+  return metrics;
+}
+window.renderSubmittedModelAnalysis=renderSubmittedModelAnalysis;
+
 function openModelPreview(groupId, phaseName) {
   const record = latestRecord(dashboardRecords, groupId);
   const model = phaseName === "v2" ? record?.v2 : record?.v1;
   if (!model) return;
   const label = phaseName === "v2" ? "观察后修正" : "观察前想法";
-  const inferred=inferRouteOrder(model);
-  const routeNames=inferred.displayOrder||[];
-  const route = routeNames.length ? routeNames.join(" → ") : model.routePoints?.length >= 2 ? "已有笔迹，未识别到经过的器官，请对照上图查看" : "本次提交没有路线笔迹";
-  const revision = phaseName === "v2" ? compareModels(record.v1, model) : null;
-  const metrics = `<dl class="model-preview-metrics"><div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>建模用时</dt><dd>${formatDuration(model)}</dd></div><div><dt>所画路线（依据图形估计）</dt><dd>${route}${inferred.hasDrawn?'<small class="route-inference-note">'+(inferred.unmatchedDrawn?'另有补画部分，暂无法可靠排入顺序，请结合原图查看。':'已纳入路线附近的补画部分；具体名称请结合小组说明确认。')+'</small>':''}</dd></div>${revision ? `<div><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div><dt>路线变化</dt><dd>${revision.routeChanged ? "有变化" : "保持原样"}</dd></div>` : ""}</dl>`;
+  const metrics=renderSubmittedModelAnalysis(record,phaseName);
   document.querySelector("#preview-model-title").textContent = `第 ${groupId} 组 · ${label}`;
   document.querySelector("#preview-model-content").innerHTML = `<div class="preview-model-image">${miniModel(model, label)}</div>${metrics}`;
   document.querySelector("#model-preview-dialog").showModal();

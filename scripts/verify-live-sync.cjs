@@ -17,6 +17,16 @@ const run=code=>vm.runInContext(code,ctx),settle=()=>new Promise(r=>setImmediate
  run("states[1].model.positions.mouth.x=52;states[2].model.positions.mouth.x=52");now+=1100;for(const f of timers.values())f();await settle();assert.equal(liveWrites().length,count+1);assert.equal(liveWrites().at(-1)[1].groupId,2,'focus uploads only selected group');
  await run("writeTeacherFocus({phase:'v1',groups:[7,8,9,10,11,12],token:'c'})");await settle();assert.equal(liveWrites().length,count+7,'switch page publishes fresh snapshots');
  count=liveWrites().length;now+=46000;run("states[9].model.positions.mouth.x=53");for(const f of timers.values())f();await settle();assert.equal(liveWrites().length,count,'expired teacher lease stops uploads');
+ run("states[1]={phase:'observation',organId:'stomach'};states[2]={phase:'journey',stage:'small'};states[3]={phase:'v2',model:{positions:{mouth:{x:50,y:12}}}}");
+ for(const [phase,id] of [['observation',1],['journey',2],['v2',3]]){
+  await run('writeTeacherFocus('+JSON.stringify({phase,groups:[id],token:phase})+')');await settle();
+  assert.equal(liveWrites().at(-1)[1].phase,phase);
+ }
+ count=liveWrites().length;
+ await run("writeTeacherFocus({phase:'v2',groups:[],token:'submitted'})");await settle();
+ run("states[3].model.positions.mouth.x=52");
+ now+=3500;for(const f of timers.values())f();await settle();
+ assert.equal(liveWrites().length,count,'submitted group removed from focus stops uploads');
  run("publishers.forEach(p=>p.close())");assert.equal(timers.size,0);
  console.log('PASS: local isolation, 12 groups, page selection, 3s/1s throttling, unchanged suppression, focus, page catch-up, lease expiration, cleanup');
 })().catch(e=>{console.error(e);process.exitCode=1});

@@ -69,12 +69,16 @@ function setupTeacher(){
  const status=el('span','连接课堂中…','ev-status');
  const header=el('div',undefined,'ev-star-heading');
  header.append(el('b','点一下，送一颗星'),el('span','🔎 观察   🤝 合作   🌱 坚持'),status);
- const rows=el('div',undefined,'ev-star-groups');dock.append(header,rows);host.append(panel,dock);
+ const rows=el('div',undefined,'ev-star-groups');dock.append(header,rows);const galleryPages=el('nav',undefined,'gallery-pages live-pages');galleryPages.hidden=true;galleryPages.setAttribute('aria-label','小组分页');
+ host.append(galleryPages,panel,dock);
+ let galleryPage=0;
+ window.addEventListener('resize',()=>render());
  tabs.setAttribute('aria-label','教学页面和学生活动');
  host.insertBefore(tabs,heading);
  host.insertBefore(slide,summary);
  function showStage(name){
    stage=name;
+   galleryPage=0;
    render();
    window.scrollTo(0,0);
    if(lessonSlides.has(stage))slide.querySelector('h1').focus({preventScroll:true});
@@ -179,7 +183,8 @@ function setupTeacher(){
    document.querySelector('#preview-model-content').replaceChildren(img);dialog.showModal();
  }
  function render(){
-   window.currentTeacherLivePhase={'初始模型':'v1','修正模型':'v2','食物旅行':'journey'}[stage]||null;
+   galleryPages.hidden=true;
+   window.currentTeacherLivePhase={'初始模型':'v1','AR观察':'observation','修正模型':'v2','食物旅行':'journey'}[stage]||null;
    window.dispatchEvent(new CustomEvent('teacher-live-phase',{detail:window.currentTeacherLivePhase}));
    renderSharing();
    [...tabs.children].forEach(b=>{
@@ -191,6 +196,7 @@ function setupTeacher(){
    const presenting=lessonSlides.has(stage);
    document.body.classList.toggle('lesson-presenting',presenting);
    slide.hidden=!presenting;
+   if(presenting)slide.style.setProperty('--slide-top',slide.getBoundingClientRect().top+'px');
    heading.hidden=summary.hidden=dock.hidden=presenting;
    fullscreen.hidden=!presenting;
    if(presenting){
@@ -215,11 +221,39 @@ function setupTeacher(){
    window.dispatchEvent(new CustomEvent('teacher-stage-view',{detail:stage==='修正模型'?'v2':'v1'}));
    document.querySelector('#group-dashboard').hidden=!model;
    document.querySelector('.teacher-pagination').hidden=!model;
-   panel.hidden=model;panel.classList.toggle('award-gallery',stage==='专属奖状');panel.replaceChildren();
+   panel.hidden=model;panel.classList.toggle('assembly-gallery',stage==='实体拼装');panel.classList.toggle('award-gallery',stage==='专属奖状');panel.replaceChildren();
    if(model)return;
-   for(let id=1;id<=12;id++){
+   const gallery=['实体拼装','小组自评','专属奖状'].includes(stage);
+   const awards=stage==='专属奖状';
+   const columns=awards?(innerWidth>=680?3:2):innerWidth>=1100?6:innerWidth>=680?3:2;
+   const available=Math.max(100,innerHeight-panel.getBoundingClientRect().top-dock.offsetHeight-62);
+   const rowCount=awards?Math.ceil(6/columns):available>=420?2:1;
+   const perPage=awards?6:gallery?Math.min(12,columns*rowCount):12;
+   if(gallery){
+     galleryPage=Math.min(galleryPage,Math.ceil(12/perPage)-1);
+     panel.style.setProperty('--gallery-columns',columns);
+     panel.style.setProperty('--gallery-height',available+'px');
+     panel.style.setProperty('--gallery-rows',rowCount);
+     galleryPages.hidden=perPage>=12;
+     galleryPages.replaceChildren(...Array.from({length:Math.ceil(12/perPage)},(_,index)=>{
+       const item=button('第 '+(index*perPage+1)+'–'+Math.min(12,(index+1)*perPage)+' 组',()=>{galleryPage=index;render();},'');
+       item.setAttribute('aria-current',index===galleryPage?'page':'false');
+       return item;
+     }));
+   }
+   panel.classList.toggle('paged-gallery',gallery);
+   for(let id=gallery?galleryPage*perPage+1:1;id<=Math.min(12,gallery?(galleryPage+1)*perPage:12);id++){
      const record=records.find(r=>Number(r.groupId)===id),data=record?.[{'AR观察':'observation','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation'}[stage]];
-     if(stage==='专属奖状'&&entry(id).issuedAt){panel.append(certificate({...entry(id),groupId:id}));continue;}
+     if(awards&&entry(id).issuedAt){
+       const award={...entry(id),groupId:id};
+       const tile=button('',()=>{
+         document.querySelector('#preview-model-title').textContent='第 '+id+' 组 · 专属奖状';
+         document.querySelector('#preview-model-content').replaceChildren(certificate(award));
+         document.querySelector('#model-preview-dialog').showModal();
+       },'ev-card teacher-award-tile');
+       tile.append(el('span',awardIcon(award)),el('strong','第 '+id+' 组'),el('span',award.title));
+       panel.append(tile);continue;
+     }
      const card=el('article',undefined,'ev-card');card.append(el('h3','第 '+id+' 组'));
      if(!data?.completedAt){card.append(el('p',stage==='专属奖状'?'等待本组作品':'等待本组提交'));panel.append(card);continue;}
      if(stage==='实体拼装'){

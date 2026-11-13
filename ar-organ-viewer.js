@@ -19,5 +19,5 @@ export async function createOrganViewer(mount,url,resetButton,isCurrent,options=
  const resize=()=>{if(!mount.clientWidth||!mount.clientHeight)return;renderer.setSize(mount.clientWidth,mount.clientHeight,false);const aspect=mount.clientWidth/mount.clientHeight,halfY=1.65/Math.min(1,aspect);camera.left=-halfY*aspect;camera.right=halfY*aspect;camera.top=halfY;camera.bottom=-halfY;camera.updateProjectionMatrix();request();};
  const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;observer?.observe(mount);window.addEventListener('resize',resize);resize();
  resetButton.onclick=()=>{group.rotation.set(...initial);camera.zoom=options.zoom||1;camera.updateProjectionMatrix();request();};
- return ()=>{cancelAnimationFrame(frame);observer?.disconnect();window.removeEventListener('resize',resize);resetButton.onclick=null;disposeModel(group);renderer.dispose();renderer.forceContextLoss();mount.replaceChildren();};
+ const dispose=()=>{cancelAnimationFrame(frame);observer?.disconnect();window.removeEventListener('resize',resize);resetButton.onclick=null;disposeModel(group);renderer.dispose();renderer.forceContextLoss();mount.replaceChildren();};
 }

@@ -2,7 +2,7 @@ import {bindSceneLongPress} from './journey-long-press.js';
 import * as THREE from './vendor/three.module.js';
 import {JourneyCompanion} from './journey-companion.js?v=20261113-opening-queue';
 import {JourneyMiniMap} from './journey-mini-map.js?v=20261113-map-sync';
-import './live-sync.js';
+import './live-sync.js?v=20261113-four-views';
 import {prepareMucosa} from './journey-anatomy-v2.js';
 import {prepareFixedScenes,FixedScenes,fixedStage} from './journey-fixed-scenes.js?v=20261113-pharynx-wall';
 import {buildLumen,prepareLumenAssets} from './journey-lumen.js?v=20261113-stomach-wave';
@@ -50,7 +50,32 @@ const atlas=new Image(),stomachFood=new Image(),newFoodAtlas=new Image();newFood
 for(const a of document.querySelectorAll('#home,#end-home'))a.href=homeUrl();
 function persist(){if(!started)return;log.stage=where;try{localStorage.setItem(storageKey,JSON.stringify(log));}catch{}}
 function event(type,extra={}){log.events.push({type,scene:where,at:Date.now(),...extra});persist();}
-function liveState(){const progress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;window.dispatchEvent(new CustomEvent('lesson-live-state',{detail:{phase:'journey',stage:where,food:foodCurrent,foodName:$('food-name').textContent,progress,hint:companion.last,identified:log.identified,completed:!!log.completedAt}}));return progress;}
+window.captureLessonLive=()=>{
+ if(!started||transport||where==='done')return null;
+ let source;
+ if(where==='outside')source=$('outside-photo');
+ else if(fixedStage(where))source=fixedCanvas;
+ else if(where==='stomach')source=stomachFrame?.contentWindow.stomachSample?.worldFrame();
+ else if(canal){renderer.render(scene,camera);source=renderer.domElement;}
+ if(!source)return null;
+ const width=source.naturalWidth||source.width,height=source.naturalHeight||source.height;
+ if(!width||!height)return null;
+ const canvas=document.createElement('canvas');
+ const scale=Math.min(320/width,360/height);
+ canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));
+ const context=canvas.getContext('2d');
+ context.drawImage(source,0,0,canvas.width,canvas.height);
+ const frame=stage.getBoundingClientRect();
+ const food=$('food-display').getBoundingClientRect();
+ if(frame.width&&frame.height&&food.width){
+  context.drawImage($('food-canvas'),(food.left-frame.left)*canvas.width/frame.width,(food.top-frame.top)*canvas.height/frame.height,food.width*canvas.width/frame.width,food.height*canvas.height/frame.height);
+ }else if(where==='stomach'&&foodArt[foodCurrent]){
+  const size=Math.min(canvas.width*.51,canvas.height*.39);
+  context.drawImage(foodArt[foodCurrent],(canvas.width-size)/2,canvas.height*.61-size/2,size,size);
+ }
+ return canvas.toDataURL('image/jpeg',.68);
+};
+function liveState(){const progress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;window.dispatchEvent(new CustomEvent('lesson-live-state',{detail:{phase:'journey',stage:where,food:foodCurrent,foodName:$('food-name').textContent,progress:Math.round(progress*20)/20,hint:companion.last,identified:log.identified,completed:!!log.completedAt}}));return progress;}
 function hint(s,kind='hint',options={}){
  if(!started)return;
  const {immediate=playerAction,onShow,...presentation}=options;

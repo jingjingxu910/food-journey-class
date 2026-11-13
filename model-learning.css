@@ -30,3 +30,7 @@
 .model-page .placed-organ[data-organ=trachea],.model-page .mini-model>img.organ-trachea{z-index:6}
 .model-page .placed-organ[data-organ=mouth],.model-page .mini-model>img.organ-mouth{z-index:7}
 .model-page .placed-organ[data-organ=nose],.model-page .mini-model>img.organ-nose{z-index:7}
+
+/* Foreground organs cover both the entry route and the colon route. */
+.model-page .placed-organ:is([data-organ=nose],[data-organ=trachea],[data-organ=lungs],[data-organ=liver],[data-organ=pancreas]),
+.model-page .mini-model > img:is(.organ-nose,.organ-trachea,.organ-lungs,.organ-liver,.organ-pancreas){z-index:13}

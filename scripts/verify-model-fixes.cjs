@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../model-workbench.js'),'utf8');
 function extract(name){const start=source.indexOf('function '+name+'('),body=source.indexOf('{',start);let depth=1,i=body+1;for(;depth&&i<source.length;i++){if(source[i]==='{')depth++;if(source[i]==='}')depth--;}return source.slice(start,i);}
 const context=vm.createContext({});
-vm.runInContext(source.slice(0,source.indexOf('const CLOUD_ENV'))+'\n'+['organById','appearanceFor','colonWallDistance','inferRouteOrder','routeLayers'].map(extract).join('\n')+'\nthis.infer=inferRouteOrder;this.layers=routeLayers;',context);
+vm.runInContext(source.slice(0,source.indexOf('const CLOUD_ENV'))+'\n'+['organById','appearanceFor','colonWallDistance','sampleFoodRoute','routeOrganDistance','intestinalContacts','inferRouteOrder','routeLayers','compareModels'].map(extract).join('\n')+'\nthis.infer=inferRouteOrder;this.layers=routeLayers;this.compare=compareModels;',context);
 const model={positions:{'small-intestine':{x:50,y:60},'large-intestine':{x:50,y:60}},routePoints:[]};
 const order=points=>Array.from(context.infer({...model,routePoints:points.map(([x,y])=>({x,y}))}).order);
 assert.deepEqual(order([[50,40],[50,60],[42,60],[42,52]]),['small-intestine','large-intestine'],'Passing behind transverse colon must reach small intestine first');
@@ -22,6 +22,16 @@ assert.deepEqual(order([[40,60],[42,60],[50,60]]),['large-intestine','small-inte
 assert.deepEqual(order([[10,10],[12,12]]),[],'Unrelated stroke must not hit organs');
 const noSmall={positions:{'large-intestine':{x:50,y:60}},routePoints:[{x:50,y:40},{x:50,y:60}]};
 assert.deepEqual(Array.from(context.infer(noSmall).order),['large-intestine'],'Transverse colon remains a valid organ when not passing into small intestine');
+const dashboard=fs.readFileSync(require('node:path').join(__dirname,'../live-dashboard.js'),'utf8');
+vm.runInContext(dashboard.slice(dashboard.indexOf('function demoState('))+'\nthis.demo=demoState;',context);
+for(const phase of ['v1','v2']){
+ const submitted=context.demo(4,phase).model;
+ assert.deepEqual(Array.from(context.infer(submitted).order),['mouth','esophagus','stomach','small-intestine','large-intestine']);
+ assert(context.layers(submitted).front.length>1,'The distal route rises above the colon after reaching the small intestine');
+}
+const first=context.demo(4,'v1').model,second=context.demo(4,'v2').model;
+assert.equal(context.compare(first,second).routeChanged,false,'A shifted stomach waypoint does not change the organ sequence');
+assert.equal(context.compare(first,{...first,routePoints:[...first.routePoints].reverse()}).routeChanged,true,'Reversing the organ sequence changes the route');
 const ar=fs.readFileSync(require('node:path').join(__dirname,'../class-evaluation.js'),'utf8');
 assert(!ar.includes('names[v.organId]||v.organId'),'AR report must not leak internal English organ identifiers');
 const drag=vm.createContext({});

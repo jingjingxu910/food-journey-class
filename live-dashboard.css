@@ -11,3 +11,106 @@
 .live-card .mini-compare,.live-focus .mini-compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
 .live-card .mini-compare .mini-label,.live-focus .mini-compare .mini-label{display:block}
 .live-focus .mini-compare .mini-model{width:100%}
+
+.live-grid[data-phase="journey"],.ev-grid.assembly-gallery{grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+.assembly-gallery .ev-card{padding:12px;min-height:0}
+.assembly-gallery .ev-card h3{margin:0 0 8px;font-size:18px}
+.assembly-gallery .ev-photo-button{padding:4px}
+.assembly-gallery .ev-photo-button img{height:clamp(90px,19vh,205px);width:100%;object-fit:contain}
+.live-grid[data-phase="journey"] .live-card{padding:9px}
+.live-grid[data-phase="journey"] .live-empty,.live-grid[data-phase="journey"] .live-scene{height:clamp(105px,20vh,220px)}
+.live-scene.live-capture>img{object-fit:contain}
+.live-card.is-unread{border-color:#159454;box-shadow:0 0 0 3px #34b47655}
+.live-card.is-new{animation:live-submit-glow .8s ease-in-out 4}
+@media(max-width:700px){.live-grid[data-phase="journey"],.ev-grid.assembly-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.live-completed{display:grid;align-content:center;gap:12px;min-height:120px;text-align:center}.live-completed>div{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.live-completed .live-food-sprite{position:static;width:100%}
+
+.evaluation-teacher .live-wall{height:var(--live-height);margin:8px 0 0;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:8px}
+.evaluation-teacher .live-toolbar,.evaluation-teacher .live-notice{margin:0}
+.evaluation-teacher .live-grid[data-phase]{grid-row:3;grid-template-columns:repeat(var(--live-columns),minmax(0,1fr));grid-template-rows:repeat(var(--live-rows),minmax(0,1fr));gap:10px}
+.evaluation-teacher .live-card{display:flex;flex-direction:column;min-height:0}
+.evaluation-teacher .live-card header{flex-wrap:wrap;flex:none;width:100%}
+.evaluation-teacher .live-card :is(.live-empty,.live-scene,.mini-model-item,.mini-compare,.live-completed,.live-findings){flex:1;min-height:0;width:100%;height:auto}
+.evaluation-teacher .live-focus .mini-model,.evaluation-teacher .live-focus .mini-compare .mini-model{height:auto;width:min(100%,32vh,320px);aspect-ratio:2/3;margin-inline:auto}
+.evaluation-teacher .live-card .live-scene>img{object-fit:contain}
+.live-analysis{font-size:clamp(11px,1.2vw,15px);min-width:0}
+.live-analysis ul,.live-analysis ol{margin:6px 0;padding-inline-start:1.4em}
+.live-analysis .model-preview-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:6px 0 0}
+.model-preview-metrics .model-metric-route{grid-column:1/-1}
+.live-analysis .model-preview-metrics>div{padding:5px 8px;border-radius:8px;background:#edf5f1}
+.live-analysis .model-preview-metrics>div.model-metric-route{background:#f5f5e9}
+.live-analysis .model-preview-metrics>div.model-metric-revision{background:#edf2fa}
+.live-analysis .model-preview-metrics dt{font-size:clamp(11px,1vw,13px)}
+.live-analysis .model-preview-metrics dd{font-size:clamp(12px,1vw,15px);line-height:1.35}
+.live-focus .live-analysis .model-preview-metrics{gap:10px}
+.live-focus .live-analysis .model-preview-metrics>div{padding:10px 12px}
+.live-focus .live-analysis .model-preview-metrics dd{font-size:16px}
+.live-analysis dd{margin:0;overflow-wrap:anywhere}
+.live-card .live-analysis .route-inference-note{display:none}
+.live-focus .live-analysis{font-size:16px}
+.teacher-award-tile{display:grid;place-content:center;justify-items:center;gap:5px;text-align:center;color:inherit;cursor:zoom-in;min-height:0}
+.teacher-award-tile>span:first-child{font-size:clamp(16px,6vh,65px);line-height:1}
+.teacher-award-tile>span:last-child{font-weight:700;overflow-wrap:anywhere}
+.evaluation-teacher .live-card .live-game-copy{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;min-height:0}
+.evaluation-teacher .live-card .live-progress{flex:none}
+.live-findings{display:flex;flex-direction:column;gap:8px;padding-top:10px}
+.live-findings>div{display:grid;grid-template-columns:repeat(auto-fit,minmax(60px,1fr));gap:6px;min-height:0}
+.live-findings figure{margin:0;text-align:center;background:#edf6ee;border-radius:8px;padding:3px;font-size:12px}
+.live-findings img{width:100%;height:clamp(30px,7vh,88px);object-fit:contain;display:block}
+.live-focus .live-findings img{height:clamp(60px,14vh,155px)}
+.live-card.is-unread{border-color:#db9b16;background:#fff6d8;box-shadow:inset 0 0 0 2px #edb23d,0 0 0 2px #edb23d}
+.live-card.is-unread .live-status{background:#a66200;font-weight:800;font-size:14px}
+.live-card.is-new{animation:submission-flash .85s ease-in-out 4}
+@keyframes submission-flash{50%{background:#ffe59c;box-shadow:inset 0 0 0 4px #ffbc2d,0 0 15px #ffbc2d}}
+@media(prefers-reduced-motion:reduce){.live-card.is-new{animation:none}}
+.evaluation-teacher .paged-gallery{grid-template-columns:repeat(var(--gallery-columns),minmax(0,1fr));max-height:var(--gallery-height);gap:10px;padding:0}
+.evaluation-teacher .live-pages{justify-content:flex-end;flex-wrap:wrap;margin-inline-start:auto}
+.evaluation-teacher .live-pages button{white-space:nowrap}
+.evaluation-teacher .gallery-pages{margin-block:8px}
+.evaluation-teacher .gallery-pages[hidden]{display:none}
+@media(max-height:780px){.evaluation-teacher .teacher-model-heading{margin-block:4px}.evaluation-teacher .teacher-model-heading h1{font-size:clamp(24px,5vh,44px)}.evaluation-teacher .teacher-summary{margin-block:4px}.evaluation-teacher .ev-tabs{margin-block:4px}}
+
+.evaluation-teacher .paged-gallery{height:var(--gallery-height);grid-template-rows:repeat(var(--gallery-rows),minmax(0,1fr));align-items:stretch}
+.evaluation-teacher .assembly-gallery .ev-card{display:flex;flex-direction:column;min-height:0}
+.evaluation-teacher .assembly-gallery .ev-photo-button{flex:1;min-height:0}
+.evaluation-teacher .assembly-gallery .ev-photo-button img{height:100%;display:block}
+.evaluation-teacher .assembly-gallery .ev-card>p{margin-block:5px}
+.evaluation-teacher .live-card .live-findings>div{grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);flex:1}
+.evaluation-teacher .live-card .live-findings figure{display:flex;flex-direction:column;min-height:0}
+.evaluation-teacher .live-card .live-findings img{flex:1;min-height:0;height:auto}
+body.evaluation-teacher{padding-bottom:0!important}
+.evaluation-teacher .model-shell{padding-bottom:0}
+.evaluation-teacher .lesson-slide{min-height:0;height:calc(100dvh - var(--slide-top,120px) - 16px)}
+@media(max-height:700px){
+ .evaluation-teacher .lesson-slide{gap:8px;padding-block:12px}
+ .evaluation-teacher .lesson-slide h1{font-size:clamp(28px,8vh,58px)}
+ .evaluation-teacher .lesson-slide-prompt{font-size:clamp(17px,4vh,28px)}
+}
+.live-card .live-analysis{overflow:hidden}
+.live-card .live-analysis dd{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* Fit the entire model canvas, including its organ positions and route layers. */
+.evaluation-teacher .live-card > .mini-compare{margin:6px 0;min-height:0;grid-template-rows:minmax(0,1fr)}
+.evaluation-teacher .live-card :is(.mini-model-item,.mini-model-single){
+ container-type:size;
+ display:flex;
+ flex-direction:column;
+ justify-content:center;
+ align-items:center;
+ min-width:0;
+ min-height:0;
+}
+.evaluation-teacher .live-card > :is(.mini-model-item,.mini-model-single){flex:1;width:100%}
+.evaluation-teacher .live-card :is(.mini-model-item,.mini-model-single) > .mini-model{
+ flex:none;
+ width:min(100cqw,calc(100cqh * 2 / 3));
+ max-width:none;
+ height:auto;
+ aspect-ratio:2 / 3;
+ margin:0;
+}
+.evaluation-teacher .live-card .mini-compare .mini-model{
+ width:min(100cqw,calc((100cqh - 28px) * 2 / 3));
+}
+.evaluation-teacher .live-card .live-analysis{flex:0 0 auto;max-height:55%}
