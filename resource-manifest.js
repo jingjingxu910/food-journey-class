@@ -1,16 +1,16 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-964366058d3f4cb2",
-  "bytes": 104881973,
+  "version": "20261102-chunks-f03559ee2262549f",
+  "bytes": 104997724,
   "files": [
     {
       "path": "app.js",
-      "bytes": 2190,
-      "hash": "7e340627bac76ccc2b09ff2be7c81c22bf08b486eb4298f4a478636ae875f6ca"
+      "bytes": 2289,
+      "hash": "8f78161b676b3e383c3c286427f483f91dc7befd231b45bf95d0df35b749ddac"
     },
     {
       "path": "ar-connected.js",
-      "bytes": 5025,
-      "hash": "13c65d7f9dbea0997b9c33c8b85d059fff9266ca861303f8c07685fa484e5c95"
+      "bytes": 5598,
+      "hash": "34108b17e2f5f05900645bee4c909fb92e98de2ad6d70b537c2dc07134bbac1d"
     },
     {
       "path": "ar-entry.js",
@@ -34,8 +34,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-organ-viewer.js",
-      "bytes": 3877,
-      "hash": "0ed8db184600dc6fb8f813ccf741ffd10812a3069c856c54200afd69b4a9022f"
+      "bytes": 3882,
+      "hash": "f624a127a15eaa23b828812355e332a167dd1952dc9622f1e4669f25043f005a"
     },
     {
       "path": "ar-pose-worker.js",
@@ -1526,8 +1526,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "assets/organs/ATTRIBUTION.md",
-      "bytes": 1537,
-      "hash": "f80a809e6ea2c43f215f310f30ca829ef78078339d9f9128044414d097330b37"
+      "bytes": 2707,
+      "hash": "3669495dbc11a3816ef5f6a109dc08f884a7293b884dd2db0ed05360d6ba1c4c"
     },
     {
       "path": "assets/organs/esophagus.png",
@@ -1582,9 +1582,19 @@ self.LESSON_RESOURCES = {
       "hash": "232fa95e1a753bbffc38852f8de7210e2785e8fbfe04f9f140aa6e97c4507ad7"
     },
     {
+      "path": "assets/organs/liver-soft.webp",
+      "bytes": 15882,
+      "hash": "a1c0ec7cd2051d3421ddd8d8150cdc921af03420dffa276a0aa72afc9ef996a3"
+    },
+    {
       "path": "assets/organs/lungs-atlas.png",
       "bytes": 253498,
       "hash": "1c4c27819edc71028d03e882e36fa94cb3a16ab54b1e27b1344a275f6fb12e57"
+    },
+    {
+      "path": "assets/organs/lungs-soft.webp",
+      "bytes": 40554,
+      "hash": "2907a7ee2d7c669e2c51708af40cd02df8f805d649abfe8c5f03fe0119718b79"
     },
     {
       "path": "assets/organs/mouth-gentle.svg",
@@ -1624,6 +1634,11 @@ self.LESSON_RESOURCES = {
       "hash": "33007dca01f23d1bf802f8a23f5bd98408fe9985a154019773fced86b5c12611"
     },
     {
+      "path": "assets/organs/nasal-cavity-soft.webp",
+      "bytes": 37180,
+      "hash": "1fe71422885c7e9dd7d576732842b6584b232564fe7344828c453b33ae6d9264"
+    },
+    {
       "path": "assets/organs/nose-gentle.svg",
       "bytes": 1026,
       "hash": "60d3c36ae050016d052101b778493dc846ea73a2ebf649d5e237a82783a91b16"
@@ -1632,6 +1647,11 @@ self.LESSON_RESOURCES = {
       "path": "assets/organs/pancreas-atlas.png",
       "bytes": 244288,
       "hash": "8141f6eb81ab6d36ef5465cb727a4e5ce35444babb69ae49060272cbc27de49b"
+    },
+    {
+      "path": "assets/organs/pancreas-soft.webp",
+      "bytes": 16836,
+      "hash": "5b76c62594eb1bc87f63647f89e05ca08f84292f57067255bd673dcf55bc4434"
     },
     {
       "path": "assets/organs/small-intestine.png",
@@ -1714,13 +1734,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "class-evaluation.css",
-      "bytes": 11772,
-      "hash": "242b9ffc49b072babd92841f69356828e1396e0edf1d0370771e90121728cf8d"
+      "bytes": 12141,
+      "hash": "b025e3b4aff1bbee090738b067f154eaf60c7ec1feae89496cb497ee231d5b72"
     },
     {
       "path": "class-evaluation.js",
-      "bytes": 20780,
-      "hash": "7fab103b944a64d7d857602983d8cb1f7d4dc6bcfcb560548b55da50fba69ab9"
+      "bytes": 20996,
+      "hash": "9f82cc9a8bd9227aee5c162e47c6932e4ee547fd4eeb39b83868c4aebf74371c"
     },
     {
       "path": "cloud-loader.js",
@@ -1769,8 +1789,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "index.html",
-      "bytes": 4356,
-      "hash": "54c8bf087b298b96240565003f70af0deed73973f80c34f5bc1ae9bf94e87d23"
+      "bytes": 4367,
+      "hash": "d71608603ec1a3e3b7ccb42b787910affd7e2a521c6b890a7958fb17da2426db"
     },
     {
       "path": "journey-3d.js",
@@ -1939,8 +1959,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-learning.css",
-      "bytes": 2651,
-      "hash": "216cce4f6380b08dc5ffccddfa65cb3db2614a1d2d7bd69b31544a4711c92348"
+      "bytes": 3552,
+      "hash": "342e7670226d8723ccad196581df77c6e9bd5713ca0870d09b70a93cce4a767a"
     },
     {
       "path": "model-workbench.html",
@@ -1949,8 +1969,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-workbench.js",
-      "bytes": 53445,
-      "hash": "6901a8741c1186f505a7c67299c9e540fb30b2a9726af041d04741d95c5115b4"
+      "bytes": 53348,
+      "hash": "d97544f524ccd7f3dcb3e2f6471de2ebd210437806a57694bd7546f976e61cf4"
     },
     {
       "path": "observation.html",
@@ -1959,8 +1979,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "observation.js",
-      "bytes": 27549,
-      "hash": "6b71b97e286cc4239cec4fff2197c611b4720f1f08564ceecae0f35899bacba6"
+      "bytes": 27987,
+      "hash": "9dfee798c1ec4afa112715f1d2af699ba1bc2feda6509eee12d4c46a5e8ed1e2"
     },
     {
       "path": "organ-drag.js",
@@ -1984,8 +2004,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "round-monitor.js",
-      "bytes": 4821,
-      "hash": "662b1b66eeeb89b850091c0f977759a38f3ee550420ef6e2bc3f6472a1e5ada0"
+      "bytes": 4856,
+      "hash": "4cf7757cb22afe5cb3f3275b5d6896b0910c22455ceac53b0cfa58a4ed5012f6"
     },
     {
       "path": "stomach-sample.css",
@@ -2029,8 +2049,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "tablet.css",
-      "bytes": 11878,
-      "hash": "20556f31b765ff1546847e3f6b3a6f3b3b67a7f46ce98b636cab3b6811a8e008"
+      "bytes": 13457,
+      "hash": "d845af3a8429a4637e2d2ae6aee49145424abe0019a0b443bb3be4cef60edca2"
     },
     {
       "path": "vendor/BufferGeometryUtils.js",
@@ -2358,7 +2378,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-964366058d3f4cb2"
+      "hash": "manifest-20261102-chunks-f03559ee2262549f"
     }
   ]
 };

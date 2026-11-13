@@ -6,9 +6,9 @@ const organs = [
   { id: "large-intestine", name: "大肠", image: "assets/organs/large-intestine.webp", width: 23.5 },
 ];
 
-const revisionOnlyIds=new Set(['trachea','lungs','liver','pancreas','nose']);
+const revisionOnlyIds=new Set(['nose','trachea','lungs','liver','pancreas']);
 organs.push({id:'nose',name:'鼻子',image:'assets/organs/nose-gentle.svg',width:9});
-organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-atlas.png',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-atlas.png',width:25},{id:'pancreas',name:'胰',image:'assets/organs/pancreas-atlas.png',width:18});
+organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-soft.webp',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-soft.webp',width:25},{id:'pancreas',name:'胰脏',image:'assets/organs/pancreas-soft.webp',width:18});
 const CLOUD_ENV = "motionless-harrier-d7cuz0659ef1a";
 const CLOUD_COLLECTION = "food-journey-groups";
 const LOCAL_CLEAR_SIGNAL_KEY = "foodJourneyClassLocalClear";
@@ -116,7 +116,7 @@ function createOrganButton(organ, placed = false) {
   button.type = "button";
   button.className = placed ? "placed-organ" : "palette-organ";
   button.dataset.organ = organ.id;
-  const label=phase === "v1" && organ.id === "large-intestine" ? "" : phase === "v2" && organ.id === "trachea" ? "气管（前）" : phase === "v2" && organ.id === "esophagus" ? "食管（后）" : organ.name;
+  const label=phase === "v1" && organ.id === "large-intestine" ? "" : organ.name;
   button.setAttribute("aria-label", label || "未命名器官");
   button.innerHTML = `<img src="${organ.image}" alt="" draggable="false"><span>${label}</span>`;
   button.addEventListener("pointerdown", beginOrganDrag);
@@ -390,7 +390,7 @@ function inferRouteOrder(model) {
   const smallAppearance=smallPosition?appearanceFor(organById('small-intestine'),model):null;
   const firstSmall=smallPosition?samples.find(p=>Math.hypot((p.x-smallPosition.x)/(smallAppearance.width/2),(p.y-smallPosition.y)/((smallAppearance.height||smallAppearance.width/1.5)/2))<=1)?.at:undefined;
   const lastSmall=firstSmall===undefined?undefined:samples.findLast(p=>Math.hypot((p.x-smallPosition.x)/(smallAppearance.width/2),(p.y-smallPosition.y)/((smallAppearance.height||smallAppearance.width/1.5)/2))<=1)?.at;
-  const ranked = organs.filter(o=>model.positions?.[o.id]).map(organ=>{
+  const ranked = organs.filter(o=>!revisionOnlyIds.has(o.id)&&model.positions?.[o.id]).map(organ=>{
     const position=model.positions[organ.id],appearance=appearanceFor(organ,model);
     const rx=Math.max(3,appearance.width/2),ry=Math.max(3,(appearance.height||appearance.width/1.5)/2);
     let closest=Infinity,at=Infinity;

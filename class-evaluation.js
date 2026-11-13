@@ -116,7 +116,6 @@ function setupTeacher(){
    }
  }
  async function choose(name){
-   if(name==='课题封面'){showStage(name);return;}
    if(busy)return;
    showStage(name);
 
@@ -131,7 +130,7 @@ function setupTeacher(){
        makeAwards(records,next.groups,next.shares).forEach(a=>next.groups[a.groupId]=a);
        await saveFeedback(next);state=next;
      }
-     const phases={'初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards','课堂研讨':'discussion'};
+     const phases={'课题封面':'cover','初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards','课堂研讨':'discussion'};
      await sendClassCommand(state.resetId,phases[name],String(Date.now()),name==='课堂研讨'?{discussionIndex}:{});
      status.textContent=name==='专属奖状'?'已颁发，学生端自动展示':'学生端正在进入'+name;
      render();
@@ -139,7 +138,7 @@ function setupTeacher(){
  }
  ['课题封面','初始模型','AR观察','修正模型','实体拼装','食物旅行','课堂研讨','小组自评','专属奖状'].forEach(name=>{
    const tab=button(name,()=>choose(name));
-   tab.title=name==='课题封面'?'仅在教师端展示':'展示并带领学生进入'+name;
+   tab.title=name==='课题封面'?'展示封面并带领学生回到课堂初始页':'展示并带领学生进入'+name;
    tabs.append(tab);
  });
  tabs.append(fullscreen);
@@ -255,6 +254,7 @@ function setupTeacher(){
      panel.append(card);
    }
  }
+ let coverCommandRound;
  window.addEventListener('lesson-records',async event=>{
    ready=false;renderStars();
    const round=event.detail.resetId||null;
@@ -267,6 +267,10 @@ function setupTeacher(){
      if(local?.resetId===round){state=local;dirty=true;}else localStorage.removeItem('teacher-evaluation-draft');
      ready=true;status.textContent='每项最多 5 星 · 自动保存';
      if(dirty)schedule();
+     if(stage==='课题封面'&&coverCommandRound!==JSON.stringify(round)){
+       await sendClassCommand(round,'cover',String(Date.now()));
+       coverCommandRound=JSON.stringify(round);
+     }
    }catch(error){console.error('教师评分读取失败',error);status.textContent='连接失败：'+cloudErrorText(error);status.title='连接版本 1109-2 · '+location.origin;}
    renderStars();render();
  });

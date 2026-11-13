@@ -31,7 +31,8 @@ function nextStep(record) {
 }
 
 function showProgress(record) {
-  const step = nextStep(record);
+  const step = params.get('classroom') === 'cover' ? 0 : nextStep(record);
+  document.body.classList.toggle('home-start',step===0);
   document.querySelectorAll('.module-card[data-step]').forEach((card) => {
     const index = Number(card.dataset.step);
     card.hidden = index > step;
