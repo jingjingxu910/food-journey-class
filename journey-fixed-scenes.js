@@ -1,6 +1,6 @@
 const W=1536,H=1024,clamp=x=>Math.max(0,Math.min(1,x)),smooth=(x,a,b)=>{const t=clamp((x-a)/(b-a));return t*t*(3-2*t);};
 const canvas=()=>Object.assign(document.createElement('canvas'),{width:W,height:H});
-let mouth,pharynx,closedPharynx,upper,lower,oralPortal,pharynxFrame,pharynxPortal,mouthChew;
+let mouth,pharynx,closedPharynx,upper,lower,oralPortal,pharynxFrame,pharynxPortal,mouthChew,swallowOverlay;
 export const fixedStage=name=>name==='mouth'||name==='pharynx';
 export function lowerJawPath(ctx){ctx.beginPath();ctx.moveTo(0,H*.40);ctx.bezierCurveTo(W*.05,H*.42,W*.10,H*.43,W*.16,H*.43);ctx.bezierCurveTo(W*.18,H*.43,W*.22,H*.50,W*.24,H*.56);ctx.bezierCurveTo(W*.30,H*.50,W*.40,H*.51,W*.50,H*.515);ctx.bezierCurveTo(W*.60,H*.51,W*.70,H*.50,W*.76,H*.56);ctx.bezierCurveTo(W*.78,H*.50,W*.82,H*.43,W*.84,H*.43);ctx.bezierCurveTo(W*.90,H*.43,W*.95,H*.42,W,H*.40);ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();}
 export async function prepareFixedScenes(){
@@ -15,6 +15,16 @@ export async function prepareFixedScenes(){
  // The scene uses the mouth-style generated mucosal illustration.
  // It remains a teaching illustration rather than a clinical photograph.
  pharynxFrame=canvas();pharynxFrame.getContext('2d').drawImage(pharynx,0,0,W,H);
+ // Preserve the original upper passage while the epiglottis closes below it.
+ swallowOverlay=canvas();
+ const overlay=swallowOverlay.getContext('2d');
+ overlay.drawImage(closedPharynx,0,0,W,H);
+ const fade=overlay.createLinearGradient(0,H*.24,0,H*.36);
+ fade.addColorStop(0,'transparent');
+ fade.addColorStop(1,'black');
+ overlay.globalCompositeOperation='destination-in';
+ overlay.fillStyle=fade;
+ overlay.fillRect(0,0,W,H);
  pharynxPortal=canvas();const p=pharynxPortal.getContext('2d');p.fillStyle='#fff';p.beginPath();p.ellipse(W*.5,H*.151,W*.155,H*.026,0,0,Math.PI*2);p.fill();
 }
 export class FixedScenes{
@@ -31,13 +41,12 @@ export class FixedScenes{
  drawSource(source,scale=1,focus={x:.5,y:.5}){const c=this.canvas,fit=Math.max(c.width/W,c.height/H),w=W*fit*scale,h=H*fit*scale;this.ctx.drawImage(source,c.width*.5-focus.x*w,c.height*.5-focus.y*h,w,h);}
  pharynxView(){
   if(!this.swallow)return pharynxFrame;
-  if(this.swallow>=1)return closedPharynx;
   const c=this.frame.getContext('2d');
   const blend=smooth(this.swallow,0,1);
   c.drawImage(pharynxFrame,0,0,W,H);
   c.save();
   c.globalAlpha=blend;
-  c.drawImage(closedPharynx,0,0,W,H);
+  c.drawImage(swallowOverlay,0,0,W,H);
   c.restore();
   return this.frame;
  }

@@ -23,12 +23,14 @@ export async function sendClassCommand(resetId, phase, commandId, details={}) {
   if(result?.code||!(result?.updated>0||result?.upsertedId||result?.id))throw new Error('课堂指令未发送，请再点一次。');
 }
 export async function submittedRecords(resetId) {
-  const db=await cloudDb(),result=await db.collection('food-journey-groups').get();
-  if(result?.code)throw new Error('作品读取失败，请再试一次。');
-  return (result.data||[]).flatMap(d=>Array.isArray(d.records)?d.records:[])
-    .filter(r=>(r.resetId||null)===(resetId||null))
-    .sort((a,b)=>b.updatedAt-a.updatedAt)
-    .filter((r,i,all)=>all.findIndex(x=>Number(x.groupId)===Number(r.groupId))===i);
+  const groups=await Promise.all(Array.from({length:12},async(_,index)=>{
+    const groupId=index+1;
+    const document=await readDocument('group-'+groupId);
+    return (Array.isArray(document.records)?document.records:[])
+      .filter(record=>Number(record.groupId)===groupId&&(record.resetId||null)===(resetId||null))
+      .sort((a,b)=>b.updatedAt-a.updatedAt)[0];
+  }));
+  return groups.filter(Boolean);
 }
 
 const evidenceIcons = {

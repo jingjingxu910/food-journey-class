@@ -23,8 +23,17 @@ export class JourneyMiniMap{
    </svg>`;
   stage.append(this.button);this.path=this.button.querySelector('path.map-trail');this.history=this.button.querySelector('.map-history');this.dots=this.button.querySelectorAll('circle');this.button.onclick=()=>this.toggle();
   const old=document.querySelector('#fork-side .side-cut');this.side=document.createElement('button');this.side.id='journey-side-map';this.side.hidden=true;this.side.setAttribute('aria-label','咽部侧面图，点击放大');this.side.innerHTML='<span>从侧面看 <small>＋</small></span>'+old.outerHTML.replaceAll('id="side-food"','class="side-food"')+'<em>气管在前 · 食管在后</em>';stage.append(this.side);this.forkMarkup=this.side.innerHTML;
-  this.side.onclick=()=>{const on=this.side.classList.toggle('expanded');this.side.setAttribute('aria-expanded',String(on));this.side.querySelector('small').textContent=on?'－':'＋';if(on)this.toggle(false);this.onSideChange?.(on,this.scene);};
+  this.side.onclick=()=>this.toggleSide();
  }
- toggle(force){const on=force??!this.button.classList.contains('expanded');this.button.classList.toggle('expanded',on);this.button.setAttribute('aria-expanded',String(on));this.button.querySelector('small').textContent=on?'－':'＋';if(on){const wasExpanded=this.side.classList.contains('expanded');this.side.classList.remove('expanded');this.side.setAttribute('aria-expanded','false');this.side.querySelector('small').textContent='＋';if(wasExpanded)this.onSideChange?.(false,this.scene);}}
+ toggleSide(force){
+  const wasExpanded=this.side.classList.contains('expanded');
+  const expanded=force??!wasExpanded;
+  this.side.classList.toggle('expanded',expanded);
+  this.side.setAttribute('aria-expanded',String(expanded));
+  this.side.querySelector('small').textContent=expanded?'－':'＋';
+  if(expanded)this.toggle(false);
+  if(expanded!==wasExpanded)this.onSideChange?.(expanded,this.scene);
+ }
+ toggle(force){const on=force??!this.button.classList.contains('expanded');this.button.classList.toggle('expanded',on);this.button.setAttribute('aria-expanded',String(on));this.button.querySelector('small').textContent=on?'－':'＋';if(on)this.toggleSide(false);}
  update(scene,progress=0,foodImage){this.button.hidden=scene==='outside'||scene==='done';this.side.hidden=!['pharynx','small'].includes(scene);if(this.scene!==scene){this.scene=scene;const keys=Object.keys(journeyRoutes);const prior=keys.slice(0,keys.indexOf(scene));this.history.innerHTML=prior.map(key=>'<path class="map-trail'+'" fill="none" d="'+journeyRoutes[key]+'"/>').join('');this.side.innerHTML=scene==='small'?'<div class="villi-pair"><img src="assets/journey/small-intestine.webp" alt="小肠内壁"><img src="assets/journey/villi-micrograph.jpg" alt="小肠绒毛显微图"></div><small>＋</small>':this.forkMarkup;this.side.setAttribute('aria-label',scene==='small'?'小肠绒毛图，点击放大':'咽部侧面图，点击放大');this.path.setAttribute('d',journeyRoutes[scene]||journeyRoutes.mouth);this.length=this.path.getTotalLength();this.toggle(false);this.side.classList.remove('expanded');}const p=Math.max(0,Math.min(1,progress));const point=this.path.getPointAtLength(this.length*p);for(const dot of this.dots){dot.setAttribute('cx',point.x);dot.setAttribute('cy',point.y);}this.path.style.strokeDasharray=String(this.length);this.path.style.strokeDashoffset=String(this.length*(1-p));if(foodImage&&scene==='pharynx')this.side.querySelector('.side-food').setAttribute('href',foodImage);}
 }

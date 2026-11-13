@@ -1,4 +1,4 @@
-importScripts('./resource-manifest.js?v=20261113-voice-models','./resource-store.js?v=20261113-voice-models');
+importScripts('./resource-manifest.js?v=20261113-awards','./resource-store.js?v=20261113-voice-models');
 const ROOT=new URL('./',self.location.href);
 const localPreview=['localhost','127.0.0.1','[::1]'].includes(ROOT.hostname);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));

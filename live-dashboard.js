@@ -26,7 +26,13 @@ function setup(){
   if(saved)return phase==='journey'?{phase,stage:saved.stage||'done',hint:'本组已保存的探索记录',completed:!!saved.completedAt,progress:saved.completedAt?1:0}:{phase,model:saved,completed:!!saved.completedAt};
   return null;
  }
- function preview(state){
+ function preview(state,id,submitted){
+  if(phase==='v2'){
+   const record=recordFor(id);
+   const before=demo?demoState(id,'v1').model:record?.v1?.completedAt?record.v1:null;
+   const after=submitted?(demo?state?.model:record?.v2):null;
+   return window.renderLiveComparison?.(before,after)||'';
+  }
   if(!state)return '<div class="live-empty"><span>◌</span><b>等待本组进入</b><small>收到操作后会显示当前画面</small></div>';
   if(state.phase!=='journey')return window.renderLiveModel?.(state.model)||'<div class="live-empty">模型正在准备</div>';
   const scene=scenes[state.stage]||scenes.outside;
@@ -46,12 +52,12 @@ function setup(){
   wall.querySelector('h2').textContent=stageLabel()+' · '+(focus?'单组关注':'六组预览');
   wall.querySelector('.live-meta').textContent=(demo?'本地演示 · ':'')+(focus?'仅第 '+focus+' 组同步，约 1 秒更新':'当前页有变化时约 3 秒更新')+' · 提交即时提醒 · 点击小组放大';
   for(const button of wall.querySelectorAll('[data-page]')){const p=Number(button.dataset.page),count=[...unread.keys()].filter(key=>key.startsWith(phase+':')&&Math.floor((Number(key.split(':')[1])-1)/6)===p).length;button.innerHTML=`第 ${p*6+1}–${p*6+6} 组${count?`<small>${count} 组新提交</small>`:''}`;button.setAttribute('aria-current',p===page?'page':'false');}
-  const grid=wall.querySelector('.live-grid');grid.innerHTML=Array.from({length:6},(_,i)=>page*6+i+1).map(id=>{
+  const grid=wall.querySelector('.live-grid');grid.dataset.phase=phase;grid.innerHTML=Array.from({length:6},(_,i)=>page*6+i+1).map(id=>{
    const submitted=demo?(id%4===0||demoSubmitted.has(phase+':'+id)):!!completion(id),key=phase+':'+id,isUnread=unread.has(key),flash=Date.now()-(flashes.get(key)||0)<3200;
-   return `<button type="button" class="live-card${submitted?' is-submitted':''}${isUnread?' is-unread':''}${flash?' is-new':''}" data-group="${id}" aria-label="放大第 ${id} 组"><header><strong>第 ${id} 组</strong><span class="live-status">${isUnread?'✓ 新提交':submitted?'✓ 已提交':stateFor(id)?'探索中':'等待进入'}</span></header>${preview(stateFor(id))}<p class="live-updated">${escape(updateAge(id))}</p></button>`;
+   return `<button type="button" class="live-card${submitted?' is-submitted':''}${isUnread?' is-unread':''}${flash?' is-new':''}" data-group="${id}" aria-label="放大第 ${id} 组"><header><strong>第 ${id} 组</strong><span class="live-status">${isUnread?'✓ 新提交':submitted?'✓ 已提交':phase==='v2'?'尚未提交':stateFor(id)?'探索中':'等待进入'}</span></header>${preview(stateFor(id),id,submitted)}<p class="live-updated">${escape(updateAge(id))}</p></button>`;
   }).join('');
   focusedNotice.textContent=wall.querySelector('.live-notice').textContent;
-  if(focus){dialog.querySelector('h2').textContent=`第 ${focus} 组 · ${stageLabel()}`;dialog.querySelector('.live-focus-content').innerHTML=preview(stateFor(focus))+`<p class="live-updated">${escape(updateAge(focus))}</p>`;}
+  if(focus){dialog.querySelector('h2').textContent=`第 ${focus} 组 · ${stageLabel()}`;dialog.querySelector('.live-focus-content').innerHTML=preview(stateFor(focus),focus,demo?(focus%4===0||demoSubmitted.has(phase+':'+focus)):!!completion(focus))+`<p class="live-updated">${escape(updateAge(focus))}</p>`;}
  }
  async function control(force=false){
   const groups=demo?[]:visible(),signature=JSON.stringify([phase,groups,focus,resetId]);

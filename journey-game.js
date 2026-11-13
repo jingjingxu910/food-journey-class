@@ -1,10 +1,10 @@
 import {bindSceneLongPress} from './journey-long-press.js';
 import * as THREE from './vendor/three.module.js';
-import {JourneyCompanion} from './journey-companion.js?v=20261113-voice';
-import {JourneyMiniMap} from './journey-mini-map.js?v=20261113-picture-guide';
+import {JourneyCompanion} from './journey-companion.js?v=20261113-mouth-cough';
+import {JourneyMiniMap} from './journey-mini-map.js?v=20261113-quiz-guide';
 import './live-sync.js';
 import {prepareMucosa} from './journey-anatomy-v2.js';
-import {prepareFixedScenes,FixedScenes,fixedStage} from './journey-fixed-scenes.js?v=20261113-closed-pharynx';
+import {prepareFixedScenes,FixedScenes,fixedStage} from './journey-fixed-scenes.js?v=20261113-mouth-cough';
 import {buildLumen,prepareLumenAssets} from './journey-lumen.js?v=20261113-stomach-wave';
 import {PassageView,openingMask} from './journey-passage-view.js';
 import {showAnatomyView,cancelAnatomyView} from './journey-anatomy-zoom.js';
@@ -13,16 +13,23 @@ import {groupId,homeUrl,allRecords,currentRecord,saveRecord,submitRecord} from '
 
 const $=id=>document.getElementById(id),host=$('world'),stage=$('stage');
 const companion=new JourneyCompanion(stage),miniMap=new JourneyMiniMap(stage);
-let queuedHint=null, suppressHint=false;
+let queuedHint=null, suppressHint=false, playerAction=false;
+function onPlayerAction(action){
+ return (...args)=>{
+  const previous=playerAction;
+  playerAction=true;
+  try{return action(...args);}finally{playerAction=previous;}
+ };
+}
 let motionRunning=false,chewRun=null,swallowRun=null,reportWaiting=false,lastLive=0;
 const hintCounts=new Map();
 const sequence=['outside','mouth','pharynx','esophagus','stomach','small','large'];
 const organs={
- mouth:{name:'口腔',point:[307,374],image:'assets/organs/mouth.png',prompt:'食物的形状和干湿发生了什么变化？',options:['口腔','胃','食管'],fact:'牙齿把食物嚼碎，唾液让它变湿润，也开始帮助消化。',wrong:'回想刚才看到的牙齿、舌和食物的变化。'},
- esophagus:{name:'食管',point:[455,690],image:'assets/organs/esophagus.png',prompt:'这里的形状和内壁的运动，给了我们什么线索？',options:['气管','食管','小肠'],fact:'食管的肌肉一段段收缩，通过蠕动把食团送往胃。',wrong:'观察食团周围的管壁：它在怎样推动食团？'},
- stomach:{name:'胃',prompt:'哪个器官能暂时容纳食物，并通过内壁运动和液体帮助消化？',options:['食管','胃','小肠'],point:[590,1020],image:'assets/organs/stomach.png',fact:'胃壁运动与胃液共同参与消化，食物逐渐成为更细软的食糜。'},
- small:{name:'小肠',point:[480,1280],image:'assets/organs/small-intestine.png',prompt:'内壁的样子和营养物质移动的方向，让你想到了哪里？',options:['大肠','小肠','胃'],fact:'小肠继续消化食物，并吸收大部分营养物质。',wrong:'再想一想：密密的绒毛，与刚才进入内壁的营养物质有什么联系？'},
- large:{name:'大肠',point:[295,1210],image:'assets/organs/large-intestine.png',prompt:'这里的内壁与上一处有什么不同？留下的食物又怎样了？',options:['食管','胃','大肠'],fact:'大肠吸收一部分水分，剩下的残渣逐渐变干。',wrong:'回想上一处的绒毛，再比较这里的袋状内壁和水分变化。'}
+ mouth:{name:'口腔',point:[307,374],image:'assets/organs/mouth.png',prompt:'食物在这里变湿变软变碎，你认为这是哪个器官？',options:['口腔','胃','食管'],fact:'牙齿把食物嚼碎，唾液让它变湿润，也开始帮助消化。',wrong:'想想刚才看到的牙齿和舌头，还有食物是怎么变的。'},
+ esophagus:{name:'食管',point:[455,690],image:'assets/organs/esophagus.png',prompt:'看看这里是什么形状，管壁又是怎么动的。',options:['气管','食管','小肠'],fact:'食管的肌肉一段段收缩，通过蠕动把食团送往胃。',wrong:'看看食团旁边的管壁，它是怎么把食团往前推的？'},
+ stomach:{name:'胃',prompt:'哪里能先把食物存一会儿，还能一边搅动，一边用液体帮忙消化？',options:['食管','胃','小肠'],point:[590,1020],image:'assets/organs/stomach.png',fact:'胃壁运动与胃液共同参与消化，食物逐渐成为更细软的食糜。'},
+ small:{name:'小肠',point:[480,1280],image:'assets/organs/small-intestine.png',prompt:'看看内壁长什么样，再想想营养物质去了哪儿。',options:['大肠','小肠','胃'],fact:'小肠继续消化食物，并吸收大部分营养物质。',wrong:'想想那些密密的小绒毛。它们跟吸收营养有什么关系？'},
+ large:{name:'大肠',point:[295,1210],image:'assets/organs/large-intestine.png',prompt:'这里的内壁跟刚才有什么不同？剩下的食物变成什么样了？',options:['食管','胃','大肠'],fact:'大肠吸收一部分水分，剩下的残渣逐渐变干。',wrong:'想想刚才看到的绒毛，再看看这里像一节节小袋子的内壁。水分去哪儿了？'}
 };
 const storageKey=`food-journey-game-v3-group-${groupId}`;
 let saved=null;try{saved=JSON.parse(localStorage.getItem(storageKey));}catch{}
@@ -43,19 +50,29 @@ for(const a of document.querySelectorAll('#home,#end-home'))a.href=homeUrl();
 function persist(){if(!started)return;log.stage=where;try{localStorage.setItem(storageKey,JSON.stringify(log));}catch{}}
 function event(type,extra={}){log.events.push({type,scene:where,at:Date.now(),...extra});persist();}
 function liveState(){const progress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;window.dispatchEvent(new CustomEvent('lesson-live-state',{detail:{phase:'journey',stage:where,food:foodCurrent,foodName:$('food-name').textContent,progress,hint:companion.last,identified:log.identified,completed:!!log.completedAt}}));return progress;}
-function hint(s,kind='hint',options={}){if(!started)return;if(suppressHint){queuedHint=[s,kind,options];return;}$('hint').textContent=s;companion.say(s,kind,options);liveState();}
+function hint(s,kind='hint',options={}){
+ if(!started)return;
+ const {immediate=playerAction,onShow,...presentation}=options;
+ if(suppressHint){queuedHint=[s,kind,{...options,immediate}];return;}
+ companion.say(s,kind,{...presentation,immediate,onShow:()=>{
+  if(onShow?.()===false)return false;
+  $('hint').textContent=s;
+  queueMicrotask(liveState);
+ }});
+}
 let recapHint=0;
-function help(){if(miniMap.side.classList.contains('expanded')){explainSideMap(true,where);return;}if(where==='done'){
- const tips=['对照每一格的器官和食物图，说说饼干一路发生了哪些变化。','比一比口腔和食管里的食团：形状变了吗？食管做了什么？','从胃、小肠和大肠各找一处变化，再用自己的话讲讲这趟旅行。'];
+function help(){if($('question').open)return;if(miniMap.side.classList.contains('expanded')){explainSideMap(true,where);return;}if(where==='done'){
+ const tips=['看看每一格的图，说说饼干一路上都有什么变化。','比一比口腔和食管里的食团。它的样子变了吗？食管做了什么？','在胃、小肠和大肠里各找一个变化，再用自己的话讲讲这趟旅行。'];
  hint(tips[recapHint++%tips.length]);return;
-}if(busy||reportWaiting)return;const key=where+':'+(where==='mouth'?log.chews:where==='small'?log.digested:'');const n=(hintCounts.get(key)||0)+1;hintCounts.set(key,n);const direct={outside:'点击张开的嘴巴，我们从这里进入身体。',mouth:log.saliva?'食团已经湿润了，点击右侧“前进”。':'点击牙齿试试看！',pharynx:'上方扁扁的开口通向食管，中间的开口通向气管。点击上方的食管入口。',esophagus:'点击右侧“前进”，看看管壁怎样一段段推动食团。',small:'点击右侧“前进”，跟着食糜观察营养物质怎样移向内壁。',large:'点击右侧“前进”，观察水分移向内壁、残渣变干的过程。',stomach:'点击右侧“前进”，靠近胃液后食物会自动混入胃液。'};hint(direct[where]||'点击“本组的探索与发现”，回顾我们的旅程。');}
-companion.onHelp=help;
+}if(busy||reportWaiting)return;const key=where+':'+(where==='mouth'?log.chews:where==='small'?log.digested:'');const n=(hintCounts.get(key)||0)+1;hintCounts.set(key,n);const direct={outside:'点一下张开的嘴巴，我们从这里进去。',mouth:log.saliva?'食团已经湿润了。点右边的“前进”吧。':'点击牙齿试试看！',pharynx:'上面扁扁的开口连着食管，中间的开口连着气管。点上面的开口试试。',esophagus:'点右边的“前进”，看看管壁怎么一点点把食团往前推。',small:'点右边的“前进”，看看营养物质去了哪儿。',large:'点右边的“前进”，看看水分去了哪儿，剩下的食物又有什么变化。',stomach:'点右边的“前进”，看看食物碰到胃液后会怎么样。'};hint(direct[where]||'点一下“本组的探索与发现”，一起回顾这趟旅行。');}
+companion.onHelp=onPlayerAction(help);
 let sideHint=null;
 const sideExplanations={
- small:'看上图：这些像小手指的突起叫小肠绒毛，能帮助小肠吸收营养。下图是显微照片，可以看看绒毛的横切面。',
- pharynx:'从侧面看，气管在前，食管在后。吞咽时，会厌盖住气管入口，食团就能进入食管。'
+ small:'看上图，这些像小手指的突起叫小肠绒毛，能帮小肠吸收营养。下图是显微照片，可以看看绒毛的横切面。',
+ pharynx:'从侧面看，气管在前，食管在后。吞咽的时候，会厌会盖住气管的入口，食团就能进食管了。'
 };
 function explainSideMap(open,scene){
+ if($('question').open)return;
  const explanation=sideExplanations[scene];
  if(open&&explanation){
   if(companion.last!==explanation)sideHint={scene,text:companion.last,kind:companion.node.dataset.kind};
@@ -67,6 +84,8 @@ function explainSideMap(open,scene){
  }
 }
 miniMap.onSideChange=explainSideMap;
+miniMap.side.onclick=onPlayerAction(miniMap.side.onclick);
+miniMap.button.onclick=onPlayerAction(miniMap.button.onclick);
 function controls(show){for(const id of ['forward','back','map'])$(id).hidden=!show;$('views').hidden=!show||fixedStage(where);}
 let evidenceKey;
 function discoveries(lines){
@@ -103,7 +122,7 @@ function init3D(){renderer=new THREE.WebGLRenderer({antialias:false,powerPrefere
 function resize(){if(!renderer||!host.clientWidth||!host.clientHeight)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25,Math.sqrt(900000/(host.clientWidth*host.clientHeight))));renderer.setSize(host.clientWidth,host.clientHeight,false);camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();positionMouth();}
 function positionMouth(){const w=stage.clientWidth,h=stage.clientHeight,scale=Math.max(w/1586,h/992),iw=1586*scale,ih=992*scale;Object.assign($('mouth-entry').style,{left:`${(w-iw)/2+iw*.413}px`,top:`${(h-ih)/2+ih*.49}px`,width:`${iw*.17}px`,height:`${ih*.23}px`});}
 function prepareStomach(restore=false){
- if(stomachFrame)return;stomachReady=false;stomachFrame=$('stomach-frame');stomachFrame.style.transition='none';stomachFrame.hidden=false;stomachFrame.style.opacity='0';stomachFrame.style.pointerEvents='none';const u=new URL('stomach-sample.html',location.href);u.searchParams.set('v','20261113-long-press');u.searchParams.set('voyage','1');u.searchParams.set('autostart','0');u.searchParams.set('group',groupId);if(restore&&log.stomach)u.searchParams.set('restore',JSON.stringify(log.stomach));stomachFrame.src=u.href;
+ if(stomachFrame)return;stomachReady=false;stomachFrame=$('stomach-frame');stomachFrame.style.transition='none';stomachFrame.hidden=false;stomachFrame.style.opacity='0';stomachFrame.style.pointerEvents='none';const u=new URL('stomach-sample.html',location.href);u.searchParams.set('v','20261113-spoken');u.searchParams.set('voyage','1');u.searchParams.set('autostart','0');u.searchParams.set('group',groupId);if(restore&&log.stomach)u.searchParams.set('restore',JSON.stringify(log.stomach));stomachFrame.src=u.href;
 }
 function canalPassage(){
  camera.updateMatrixWorld(true);const g=canal.wall.geometry,a=g.attributes.position,m=g.parameters.radialSegments,start=a.count-m-1,points=[];
@@ -116,6 +135,7 @@ function beginPassage(next,options,spec,duration){
  transport={mode:'passage',next,born:time,duration};sceneTimings.push({type:next,handoffSetupMs:performance.now()-setupStart});
 }
 function go(next,options={}){
+ options={...options,immediate:playerAction};
  if(options.restore||next==='outside'||!started)return commitScene(next,options);
  if(transport||busy)return;
  if(where==='outside'&&next==='mouth')return beginPassage(next,options,outsidePassage(),1.4);
@@ -136,7 +156,8 @@ function advanceTransport(){
  const k=Math.min(1,(time-t.born)/t.approachDuration),aim=where==='small'?k:k*k*(3-2*k);yaw=t.yaw*(t.keepView?1:1-aim);pitch=t.pitch*(t.keepView?1:1-aim);targetYaw=yaw;targetPitch=pitch;canalU=THREE.MathUtils.lerp(t.u,.955,aim);positionCanal(canalU,1-Math.exp(-.05*7));renderer.render(scene,camera);
  if(k===1&&(t.next!=='stomach'||stomachReady))beginPassage(t.next,t.options,canalPassage(),1.55);return true;
 }
-function commitScene(next,{restore=false,deferEntry=false}={}){
+function commitScene(next,{restore=false,deferEntry=false,immediate=false}={}){
+ if(immediate)companion.stopVoice();
  stage.classList.remove('stomach-question');const commitStart=performance.now(),previous=where;arrival=null;motionRunning=false;chewRun=null;swallowRun=null;reportWaiting=false;fixedScenes.swallow=0;fixedCanvas.hidden=true;wallMotion=0;
  camera.fov=72;camera.updateProjectionMatrix();
  clearTimeout(autoQuestion);clearTimeout(bodyTimer);holding=false;pointer=null;busy=false;travel=0;particles.splice(0).forEach(p=>p.node.remove());passages.splice(0).forEach(p=>p.tag.remove());for(const d of document.querySelectorAll('dialog[open]'))d.close();
@@ -144,13 +165,13 @@ function commitScene(next,{restore=false,deferEntry=false}={}){
  where=next;stage.dataset.scene=next;log.stage=next;event('enter');if(organs[next]&&!log.visits.some(v=>v.organId===next))log.visits.push({organId:next,firstAt:Date.now()});
  $('food-display').style.visibility=$('food-caption').style.visibility='visible';disposeEnvironment();canal=null;environment=new THREE.Group();scene.add(environment);yaw=pitch=targetYaw=targetPitch=0;camera.position.set(0,0,1.3);camera.rotation.set(0,0,0);camera.children.find(o=>o.isPointLight).intensity=next==='esophagus'?8:19;controls(next!=='outside');$('hint').style.opacity='1';$('outside-photo').hidden=next!=='outside';$('mouth-entry').hidden=next!=='outside';host.hidden=next==='outside';$('food-display').hidden=false;$('food-caption').hidden=false;$('observation').hidden=true;$('detail').hidden=!['small','pharynx'].includes(next);$('detail').textContent=next==='pharynx'?'⊕ 从侧面看看':'⊕ 凑近观察';$('chapter').textContent=next==='outside'?'寻找入口':'仔细观察';$('step-label').textContent='旅行中';$('progress').value=log.identified.length;
  jaw=flap=null;
- if(next==='outside'){hint('身体的入口在哪里？','greet');food('whole','一块饼干');positionMouth();}
- else if(next==='mouth'){buildMouth();food(log.saliva?'bolus':log.chews>=3?'crumbs':log.chews===2?'pieces':log.chews===1?'chunks':'whole',log.saliva?'湿润的食团':log.chews>=3?'干的碎块':log.chews===2?'更小的饼干块':log.chews===1?'大块的饼干':'一块饼干');hint(log.saliva?'食团和刚进来时相比，有哪些变化？':'这么大的一块饼干，咽不下去呀。看看什么能把它变小？');}
- else if(next==='pharynx'){buildFork();food('bolus','湿润的食团');hint('两条通道！上方扁口通向食管，中间开口通向气管。我们该走哪条？');}
- else if(next==='esophagus'){buildTube(next);prepareStomach();food('bolus','湿润的食团');hint('点击“前进”，观察内壁怎样一段段推动食团。');}
+ if(next==='outside'){hint('从哪儿能进到身体里面呢？','greet');food('whole','一块饼干');positionMouth();}
+ else if(next==='mouth'){buildMouth();food(log.saliva?'bolus':log.chews>=3?'crumbs':log.chews===2?'pieces':log.chews===1?'chunks':'whole',log.saliva?'湿润的食团':log.chews>=3?'干的碎块':log.chews===2?'更小的饼干块':log.chews===1?'大块的饼干':'一块饼干');hint(log.saliva?'跟刚进来的时候比，食团变成什么样了？':'这么大的一块饼干，咽不下去呀。看看什么能把它变小？');}
+ else if(next==='pharynx'){buildFork();food('bolus','湿润的食团');hint('这里有两条路！上面扁扁的开口连着食管，中间的开口连着气管。我们走哪一条呢？');}
+ else if(next==='esophagus'){buildTube(next);prepareStomach();food('bolus','湿润的食团');hint('点“前进”，看看管壁怎么把食团往前推。');}
  else if(next==='stomach'){host.hidden=true;controls(false);$('food-display').hidden=true;$('food-caption').hidden=!deferEntry;$('detail').hidden=true;prepareStomach(restore);stomachFrame.style.opacity='1';stomachFrame.style.pointerEvents='auto';if(stomachReady&&!deferEntry)stomachFrame.contentWindow.postMessage({channel:'food-journey-parent',type:'enter'},location.origin);}
- else if(next==='small'){buildTube(next);food(log.absorbed>=1?'residue':'chyme',log.absorbed>=1?'吸收后留下的内容物':'更细软的食糜');hint(log.digested?'点击“前进”，看看营养物质会去哪里。':'这里的内壁有什么不同？点击“前进”，一起观察食糜的变化。');}
- else if(next==='large'){buildTube(next);food(log.water>=1?'dry':'residue','剩余的内容物');hint('点击“前进”，留意水分去了哪里，剩下的内容物怎样变化。');}
+ else if(next==='small'){buildTube(next);food(log.absorbed>=1?'residue':'chyme',log.absorbed>=1?'吸收后留下的内容物':'更细软的食糜');hint(log.digested?'点“前进”，看看营养物质去了哪儿。':'这里的内壁有什么不一样？点“前进”，一起看看食糜怎么变。');}
+ else if(next==='large'){buildTube(next);food(log.water>=1?'dry':'residue','剩余的内容物');hint('点“前进”，看看水分去了哪儿，剩下的食物变成了什么样。');}
  if(restore){travel=next==='esophagus'?log.push*24:next==='small'?log.absorbed*13:next==='large'?log.water*13:0;if(canal){const progress=next==='esophagus'?log.push:next==='small'?log.absorbed:log.water;canalU=THREE.MathUtils.lerp(canal.start,canal.end,progress||0);positionCanal(canalU,1);}}
  else if(canal&&previous!=='outside'){canalU=.0125;positionCanal(canalU,1);arrival={born:time};busy=true;controls(false);}
  miniMap.update(where,0,where==='pharynx'?foodArt.bolus.toDataURL():null);refreshEvidence();persist();sceneTimings.push({type:next,commitMs:performance.now()-commitStart});
@@ -160,23 +181,27 @@ function hit(e){camera.updateMatrixWorld(true);environment?.updateMatrixWorld(tr
 function spawnFlow(kind,count=34){const b=stage.getBoundingClientRect(),food=$('food-display').getBoundingClientRect(),center={x:food.left+food.width*.5-b.left,y:food.top+food.height*.5-b.top};for(let i=0;i<count;i++){const a=(flowSerial++)*2.399963+Math.random()*.5,r=.30+Math.random()*.14,edge={x:b.width*(.5+Math.cos(a)*r),y:b.height*(.52+Math.sin(a)*(.27+Math.random()*.12))},node=document.createElement('i');node.className='flow-particle '+kind;if(kind==='nutrient'&&flowSerial%3===0)node.classList.add('amino');node.style.left=node.style.top='0';$('effects').append(node);const incoming=kind==='saliva',start=incoming?edge:{x:center.x+(Math.random()-.5)*food.width*.48,y:center.y+(Math.random()-.5)*food.height*.48},end=incoming?{x:center.x+(Math.random()-.5)*food.width*.45,y:center.y+(Math.random()-.5)*food.height*.4}:edge;node.style.opacity='0';node.style.transform='translate3d('+start.x+'px,'+start.y+'px,0) translate(-50%,-50%)';particles.push({node,start,end,bend:(Math.random()-.5)*80,born:time+i*.014,duration:incoming?1.0:1.35,kind});}}
 function chew(){
  if(busy||chewRun||log.saliva)return;if(document.querySelector('dialog[open]'))return;
- chewRun={born:time,step:0};busy=true;event('chew-start');hint('看看饼干在咀嚼时有什么变化。','feedback');
+ chewRun={born:time,step:0};busy=true;event('chew-start');hint('看看牙齿嚼饼干的时候，饼干有什么变化。','feedback');
 }
 function tickChew(){
  if(!chewRun)return;const elapsed=time-chewRun.born,step=Math.min(3,1+Math.floor(elapsed/1.5));
  oralPulse=(Math.sin(elapsed*6)+1)/2;
- if(step!==chewRun.step){chewRun.step=step;log.chews=step;spawnFlow('crumb',10);spawnFlow('saliva',16);food(step===1?'chunks':step===2?'pieces':'bolus',step===1?'湿润的大碎块':step===2?'湿润的小碎块':'湿润的食团');event('chew');if(step===2)hint('快看，饼干一边变碎，一边变湿润！','feedback');}
- if(elapsed>=4.8){chewRun=null;log.saliva=true;busy=false;oralPulse=0;event('saliva');refreshEvidence();hint('做到了！饼干变碎、变湿润了。这里是哪个器官？','praise');setTimeout(()=>ask('mouth'),900);}
+ if(step!==chewRun.step){chewRun.step=step;log.chews=step;spawnFlow('crumb',10);spawnFlow('saliva',16);food(step===1?'chunks':step===2?'pieces':'bolus',step===1?'湿润的大碎块':step===2?'湿润的小碎块':'湿润的食团');event('chew');if(step===2)hint('快看，饼干碎了，也变湿了！','feedback');}
+ if(elapsed>=4.8){chewRun=null;log.saliva=true;busy=false;oralPulse=0;event('saliva');refreshEvidence();setTimeout(()=>ask('mouth'),900);}
 }
 function wetMouth(){help();}
-function beginIntestinalAbsorption(){if(log.digested)return;log.digested=true;log.absorbed=Math.max(log.absorbed,0);spawnFlow('nutrient',28);food('fine-chyme','继续变细的食糜');event('continued-digestion');event('nutrient-absorption-start');hint('仔细看，内壁在吸收营养物质。');refreshEvidence();}
+function beginIntestinalAbsorption(){if(log.digested)return;log.digested=true;log.absorbed=Math.max(log.absorbed,0);spawnFlow('nutrient',28);food('fine-chyme','继续变细的食糜');event('continued-digestion');event('nutrient-absorption-start');hint('仔细看，内壁正在吸收营养物质。');refreshEvidence();}
 const organReveal=document.createElement('figure');organReveal.id='organ-reveal';organReveal.hidden=true;stage.append(organReveal);
 function revealOrgan(name,src){const img=new Image(),caption=document.createElement('figcaption');img.src=src;img.alt='';caption.textContent=name;organReveal.replaceChildren(img,caption);organReveal.hidden=false;}
-function ask(id){if(where!==id||log.identified.includes(id)||document.querySelector('dialog[open]'))return;motionRunning=false;miniMap.toggle(false);const o=organs[id];hint(o.prompt+' 你认为这是哪个器官？','question');$('question-text').textContent=o.prompt;$('answer-hint').textContent='';$('answers').replaceChildren(...o.options.map(name=>{const b=document.createElement('button');b.textContent=name;b.onclick=()=>{event('identify',{organId:id,choice:name});if(id==='stomach'){stomachFrame.contentWindow.postMessage({channel:'food-journey-parent',type:'answer',value:name==='胃'?'stomach':name==='食管'?'esophagus':'small'},location.origin);return;}if(name!==o.name){log.wrong++;hint(o.wrong+' 再选一次。','retry');persist();return;}log.identified.push(id);log.discoveries.push({organId:id,at:Date.now()});$('question').close();revealOrgan(o.name,o.image);hint('点击“前进”，继续我们的旅程。','praise');persist();};return b;}));$('question').show();}
+function ask(id){if(where!==id||log.identified.includes(id)||document.querySelector('dialog[open]'))return;motionRunning=false;const o=organs[id];hint(id==='mouth'?o.prompt:o.prompt+' 你认为这是哪个器官？','question',{onShow:()=>{
+ if(where!==id||busy||transport||log.identified.includes(id)||document.querySelector('dialog[open]'))return false;
+ sideHint=null;miniMap.toggleSide(false);miniMap.toggle(false);$('question-text').textContent=o.prompt;$('question').querySelector('h2').textContent=id==='mouth'?o.prompt:'这是哪个器官？';$('answer-hint').textContent='';$('answers').replaceChildren(...o.options.map(name=>{const b=document.createElement('button');b.textContent=name;b.onclick=onPlayerAction(()=>{event('identify',{organId:id,choice:name});if(id==='stomach'){stomachFrame.contentWindow.postMessage({channel:'food-journey-parent',type:'answer',value:name==='胃'?'stomach':name==='食管'?'esophagus':'small'},location.origin);return;}if(name!==o.name){log.wrong++;hint(o.wrong+' 再选一次。','retry');persist();return;}log.identified.push(id);log.discoveries.push({organId:id,at:Date.now()});$('question').close();revealOrgan(o.name,o.image);hint('点“前进”，我们接着走。','praise');persist();});return b;}));$('question').show();
+ }});
+}
 function showMap(reveal=false){const id=where==='pharynx'||where==='outside'?'mouth':where,o=organs[id];if(!o)return;$('anatomy-target').setAttribute('transform',`translate(${o.point[0]} ${o.point[1]})`);for(const c of $('anatomy-target').querySelectorAll('circle')){c.setAttribute('cx','0');c.setAttribute('cy','0');}$('anatomy-title').textContent=reveal?'把局部放回身体中':'看看当前位置';$('anatomy-text').hidden=!reveal;$('anatomy-text').textContent=reveal?`刚才观察的${o.name}在这里。`:'';showAnatomyView($('anatomy'),{point:o.point,reveal,src:o.image,onReveal:()=>{$('anatomy-title').textContent=o.name;$('anatomy-text').textContent=o.fact;}});}
 function card(title,text,action=null,label='继续看看 →'){motionRunning=false;busy=true;hint(title+' '+text,'report',{action:()=>{busy=false;action?.();},label});}
-function failCough(){log.coughs++;event('airway');busy=true;stage.classList.add('is-changing');hint('咳、咳！食团回到咽部了。点击上方的食管入口。');setTimeout(()=>{stage.classList.remove('is-changing');busy=false;},850);}
-function swallow(){if(busy)return;busy=true;swallowRun={born:time};event('safe-swallow');hint('选对了！会厌正盖向气管入口，帮助食团进入食管。','praise');}
+function failCough(){log.coughs++;event('airway');busy=true;stage.classList.add('is-changing');hint('咳，咳！食团回到咽部了。点上面的食管入口试试。');setTimeout(()=>{stage.classList.remove('is-changing');busy=false;},850);}
+function swallow(){if(busy)return;busy=true;swallowRun={born:time};event('safe-swallow');hint('选对了！会厌盖住气管的入口，食团就能进食管了。','praise');}
 function sendStomachNavigation(direction){
  if(document.querySelector('dialog[open]')||!['explore','exit'].includes(log.stomach?.phase))return;
  stomachFrame?.contentWindow.postMessage({channel:'food-journey-parent',type:'navigate',direction},location.origin);
@@ -188,9 +213,9 @@ function forward(){
  if(!ready){if(where==='mouth')return help();if(motionRunning)return;motionRunning=true;targetYaw=0;targetPitch=0;hint('出发！内壁正在把食物往前推。','feedback');if(where==='small'&&!log.digested)beginIntestinalAbsorption();return;}
  if(!log.identified.includes(where)){ask(where);return;}if(where==='mouth')go('pharynx');else if(where==='esophagus')go('stomach');else if(where==='small')go('large');else finish();
 }
-function backward(){if(busy||!started)return;if(where==='stomach'){sendStomachNavigation('back');return;}if(fixedStage(where)){event('backward');hint(where==='mouth'?(log.chews===0?'食物还在口中。前方有什么能让它发生变化？':log.saliva?'与刚进入时相比，食团有哪些变化？':'饼干已经碎成了几块，接下来还会怎样变化？'):'刚才经过的口腔就在后方。这里的通道怎样与它相连？');return;}event('backward');if(where==='outside')return;targetYaw+=Math.PI;targetPitch=where==='pharynx'?.15:0;wallMotion=1;hint(where==='mouth'?'回头看看，刚才从哪里进来的？':where==='pharynx'?'回头看看，这里和刚才的口腔怎样相连？':where==='esophagus'?'回头还能看见刚才的入口吗？\n食团周围的内壁又在怎样运动？':where==='small'?'刚才经过的开口在哪里？\n这里的内壁与开口另一边有什么不同？':'回头看看这段通道。\n食物到这里时，和刚才相比有什么不同？');}
+function backward(){if(busy||!started)return;if(where==='stomach'){sendStomachNavigation('back');return;}if(fixedStage(where)){event('backward');hint(where==='mouth'?(log.chews===0?'食物还在嘴里。看看前面有什么能让它变小？':log.saliva?'跟刚进来的时候比，食团有什么变化？':'饼干已经碎成了几块，接下来还会怎样变化？'):'回头看看，刚才的口腔就在后面。这条路是怎么连到口腔的？');return;}event('backward');if(where==='outside')return;targetYaw+=Math.PI;targetPitch=where==='pharynx'?.15:0;wallMotion=1;hint(where==='mouth'?'回头看看，刚才从哪里进来的？':where==='pharynx'?'回头看看，这里是怎么连到口腔的？':where==='esophagus'?'回头还能看到刚才的入口吗？\n再看看，食团旁边的管壁是怎么动的？':where==='small'?'刚才的开口在哪儿？\n看看开口两边的内壁有什么不同。':'回头看看这段路。\n食物到了这里，跟刚才有什么不同？');}
 function restart(){const previous=log;log=fresh();log.attempts=[...previous.attempts,{at:Date.now(),reason:'restart',wrong:previous.wrong,events:previous.events}];log.coughs=previous.coughs;log.vomits=previous.vomits;started=true;foodCurrent=foodTo=foodFrom='whole';foodBlend=1;drawFood(0);$('save-status').textContent='';organReveal.hidden=true;$('finished').hidden=true;$('intro').hidden=true;go('outside');}
-function finish(){motionRunning=false;where='done';stage.dataset.scene='done';miniMap.update('done');hint('牙齿把饼干嚼碎，食管把食团送到胃。胃把它搅成食糜，小肠吸收营养，大肠吸收一部分水分。','report');log.stage='done';log.completedAt??=Date.now();holding=false;event('complete');controls(false);$('detail').hidden=true;$('food-display').hidden=true;$('food-caption').hidden=true;$('observation').hidden=true;$('hint').hidden=true;$('progress').value=5;$('step-label').textContent='旅行完成';$('finished').hidden=false;renderReflection(document,organs,log,foodArt);persist();liveState();}
+function finish(){motionRunning=false;where='done';stage.dataset.scene='done';miniMap.update('done');hint('牙齿把饼干嚼碎，食管把食团送进胃。胃把食物搅成食糜。接下来，小肠吸收营养，大肠再吸收一部分水分。','report');log.stage='done';log.completedAt??=Date.now();holding=false;event('complete');controls(false);$('detail').hidden=true;$('food-display').hidden=true;$('food-caption').hidden=true;$('observation').hidden=true;$('hint').hidden=true;$('progress').value=5;$('step-label').textContent='旅行完成';$('finished').hidden=false;renderReflection(document,organs,log,foodArt);persist();liveState();}
 function draw(ms){
  requestAnimationFrame(draw);
  const dt=Math.min(.083,last?(ms-last)/1000:.016);last=ms;
@@ -203,9 +228,9 @@ function draw(ms){
  yaw+=(targetYaw-yaw)*(1-Math.exp(-dt*7));pitch+=(targetPitch-pitch)*(1-Math.exp(-dt*7));camera.rotation.set(pitch,yaw,0,'YXZ');
 
  const active=motionRunning&&started&&!busy&&!document.querySelector('dialog[open]');wallMotion+=(Number(active)-wallMotion)*(1-Math.exp(-dt*6));
- if(active&&where==='esophagus'&&log.push<1){log.push=Math.min(1,log.push+dt/5);travel=log.push*24;refreshEvidence();if(log.push===1){motionRunning=false;hint('你们看到了管壁一段段收缩，食团被推到了胃的入口！','praise');event('peristalsis');setTimeout(()=>ask('esophagus'),900);}}
- if(active&&where==='small'&&log.digested&&log.absorbed<1){log.absorbed=Math.min(1,log.absorbed+dt/35);travel=log.absorbed*13;if(Math.floor(time*6)!==Math.floor((time-dt)*6))spawnFlow('nutrient',3);if(log.absorbed>.55)food('residue','吸收后留下的内容物');refreshEvidence();if(log.absorbed===1){motionRunning=false;hint('这段弯弯曲曲的内壁吸收了食物中的营养物质。','praise');event('nutrient-absorption');setTimeout(()=>ask('small'),900);}}
- if(active&&where==='large'&&log.water<1){log.water=Math.min(1,log.water+dt/12);travel=log.water*13;if(Math.floor(time*6)!==Math.floor((time-dt)*6))spawnFlow('water',3);if(log.water>.55)food('dry','水分减少后的残渣');refreshEvidence();if(log.water===1){motionRunning=false;hint('大肠吸收了一部分水分，剩下的残渣变干了。','praise');event('water-absorption');setTimeout(()=>ask('large'),900);}}
+ if(active&&where==='esophagus'&&log.push<1){log.push=Math.min(1,log.push+dt/5);travel=log.push*24;refreshEvidence();if(log.push===1){motionRunning=false;hint('看，管壁一段一段地收紧，把食团推到了胃的入口！','praise');event('peristalsis');setTimeout(()=>ask('esophagus'),900);}}
+ if(active&&where==='small'&&log.digested&&log.absorbed<1){log.absorbed=Math.min(1,log.absorbed+dt/35);travel=log.absorbed*13;if(Math.floor(time*6)!==Math.floor((time-dt)*6))spawnFlow('nutrient',3);if(log.absorbed>.55)food('residue','吸收后留下的内容物');refreshEvidence();if(log.absorbed===1){motionRunning=false;hint('看，弯弯曲曲的内壁把食物里的营养吸收了。','praise');event('nutrient-absorption');setTimeout(()=>ask('small'),900);}}
+ if(active&&where==='large'&&log.water<1){log.water=Math.min(1,log.water+dt/12);travel=log.water*13;if(Math.floor(time*6)!==Math.floor((time-dt)*6))spawnFlow('water',3);if(log.water>.55)food('dry','水分减少后的残渣');refreshEvidence();if(log.water===1){motionRunning=false;hint('大肠吸收了一些水分，剩下的残渣就变干了。','praise');event('water-absorption');setTimeout(()=>ask('large'),900);}}
  if(canal){const progress=where==='esophagus'?log.push:where==='small'?log.absorbed:log.water;if(arrival){const f=Math.min(1,(time-arrival.born)/1.35),ease=f;canalU=THREE.MathUtils.lerp(arrival.fromU??.0125,canal.start,ease);if(f===1){arrival=null;busy=false;controls(true);}}else canalU+=(THREE.MathUtils.lerp(canal.start,canal.end,progress||0)-canalU)*(1-Math.exp(-dt*3));positionCanal(canalU,1-Math.exp(-dt*5));}for(const s of wallShaders){if(s.uniforms.uClock)s.uniforms.uClock.value=where==='esophagus'?log.push*5:time;s.uniforms.uStrength.value=wallMotion;if(s.uniforms.uViewOffset)s.uniforms.uViewOffset.value=canalU-canal.start;}
  flap?.userData.animate?.(dt);oralPulse=Math.max(0,oralPulse-dt*1.3);if(jaw?.userData.animateChew)jaw.userData.animateChew(Math.sin(oralPulse*Math.PI));if(tongue&&!tongue.userData.referenceAnatomy)tongue.scale.y=.48+Math.sin(oralPulse*Math.PI)*.07;
  for(let i=particles.length-1;i>=0;i--){const p=particles[i],f=(time-p.born)/p.duration;if(f<0){p.node.style.opacity='0';continue;}if(f>=1){p.node.remove();particles.splice(i,1);continue;}const ease=f,x=p.start.x+(p.end.x-p.start.x)*ease+Math.sin(f*Math.PI)*p.bend,y=p.start.y+(p.end.y-p.start.y)*ease-Math.sin(f*Math.PI)*24;p.node.style.transform='translate3d('+x+'px,'+y+'px,0) translate(-50%,-50%)';p.node.style.opacity=String(Math.min(1,f*7,(1-f)*5));}
@@ -213,41 +238,42 @@ function draw(ms){
 }
 host.addEventListener('pointerdown',e=>{if(!started||busy||where==='stomach')return;host.setPointerCapture(e.pointerId);const kind=hit(e);pointer={id:e.pointerId,x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,kind,drag:false,at:performance.now()};});
 host.addEventListener('pointermove',e=>{if(!pointer||pointer.id!==e.pointerId)return;if(Math.hypot(e.clientX-pointer.sx,e.clientY-pointer.sy)>9)pointer.drag=true;if(pointer.drag){holding=false;targetYaw-=(e.clientX-pointer.x)*.004;targetPitch=THREE.MathUtils.clamp(targetPitch-(e.clientY-pointer.y)*.004,-1.5,1.5);}pointer.x=e.clientX;pointer.y=e.clientY;});
-function releasePointer(e){if(!pointer||e.pointerId!==pointer.id)return;const p=pointer;pointer=null;holding=false;if(p.drag||busy||document.querySelector('dialog[open]'))return;event('touch',{target:p.kind||'space',durationMs:Math.round(performance.now()-p.at)});if(log.identified.includes(where)&&['wall','exit','entry','tongue'].includes(p.kind)){forward();return;}if(where==='mouth'){if(p.kind==='teeth')chew();else if(['tongue','saliva'].includes(p.kind)||(p.kind==='wall'&&log.chews>=3))wetMouth();else if(p.kind==='exit')forward();else help();}else if(where==='pharynx'){if(p.kind==='airway')failCough();else if(p.kind==='foodway'){swallow();}else hint('食物应该走哪条通道？从侧面看一看。');}else if(where==='small'&&!log.digested)beginIntestinalAbsorption();persist();}
-host.addEventListener('pointerup',releasePointer);
+function releasePointer(e){if(!pointer||e.pointerId!==pointer.id)return;const p=pointer;pointer=null;holding=false;if(p.drag||busy||document.querySelector('dialog[open]'))return;event('touch',{target:p.kind||'space',durationMs:Math.round(performance.now()-p.at)});if(log.identified.includes(where)&&['wall','exit','entry','tongue'].includes(p.kind)){forward();return;}if(where==='mouth'){if(p.kind==='teeth')chew();else if(['tongue','saliva'].includes(p.kind)||(p.kind==='wall'&&log.chews>=3))wetMouth();else if(p.kind==='exit')forward();else help();}else if(where==='pharynx'){if(p.kind==='airway')failCough();else if(p.kind==='foodway'){swallow();}else hint('食物走哪条路呢？从侧面看看吧。');}else if(where==='small'&&!log.digested)beginIntestinalAbsorption();persist();}
+host.addEventListener('pointerup',onPlayerAction(releasePointer));
 fixedCanvas.addEventListener('pointerdown',e=>{if(!started||busy||!fixedStage(where))return;fixedCanvas.setPointerCapture(e.pointerId);pointer={id:e.pointerId,x:e.clientX,y:e.clientY,sx:e.clientX,sy:e.clientY,kind:fixedScenes.pick(where,e.clientX,e.clientY),drag:false,at:performance.now()};});
 fixedCanvas.addEventListener('pointermove',e=>{if(pointer&&Math.hypot(e.clientX-pointer.sx,e.clientY-pointer.sy)>12)pointer.drag=true;});
-fixedCanvas.addEventListener('pointerup',releasePointer);fixedCanvas.addEventListener('pointercancel',()=>{pointer=null;});
+fixedCanvas.addEventListener('pointerup',onPlayerAction(releasePointer));fixedCanvas.addEventListener('pointercancel',()=>{pointer=null;});
 function advanceFromScene(){
  if($('forward').hidden||busy||reportWaiting||motionRunning||document.querySelector('dialog[open]'))return;
  pointer=null;
  forward();
 }
-bindSceneLongPress(host,()=>pointer,advanceFromScene);
-bindSceneLongPress(fixedCanvas,()=>pointer,advanceFromScene);
+const advanceByHold=onPlayerAction(advanceFromScene);
+bindSceneLongPress(host,()=>pointer,advanceByHold);
+bindSceneLongPress(fixedCanvas,()=>pointer,advanceByHold);
 host.addEventListener('pointercancel',()=>{pointer=null;holding=false;});window.addEventListener('blur',()=>{holding=false;pointer=null;});document.addEventListener('visibilitychange',()=>{holding=false;pointer=null;last=0;persist();});
-$('mouth-entry').onclick=()=>{if(started)go('mouth');};$('outside-photo').onclick=()=>{if(!started)return;const food=$('food-display');food.classList.remove('wrong-entry');void food.offsetWidth;food.classList.add('wrong-entry');hint('这里可进不了身体呀，再找找入口。');event('missed-entry');};
-$('forward').onclick=forward;$('back').onclick=backward;$('map').onclick=()=>{event('locate');showMap(false);};$('close-anatomy').onclick=()=>{clearTimeout(bodyTimer);cancelAnatomyView($('anatomy'));$('anatomy').close();};$('close-knowledge').onclick=()=>{const action=cardAction;cardAction=null;$('knowledge').close();busy=false;action?.();};$('close-micro').onclick=()=>$('micro').close();$('close-fork-side').onclick=()=>$('fork-side').close();$('detail').onclick=()=>{if(where==='small'){$('micro').showModal();event('villi-detail');}else{$('side-food').setAttribute('href',foodArt.bolus.toDataURL());$('fork-side').showModal();event('fork-side-view');}};
+$('mouth-entry').onclick=onPlayerAction(()=>{if(started)go('mouth');});$('outside-photo').onclick=onPlayerAction(()=>{if(!started)return;const food=$('food-display');food.classList.remove('wrong-entry');void food.offsetWidth;food.classList.add('wrong-entry');hint('这里可进不了身体呀，再找找入口。');event('missed-entry');});
+$('forward').onclick=onPlayerAction(forward);$('back').onclick=onPlayerAction(backward);$('map').onclick=()=>{event('locate');showMap(false);};$('close-anatomy').onclick=()=>{clearTimeout(bodyTimer);cancelAnatomyView($('anatomy'));$('anatomy').close();};$('close-knowledge').onclick=()=>{const action=cardAction;cardAction=null;$('knowledge').close();busy=false;action?.();};$('close-micro').onclick=()=>$('micro').close();$('close-fork-side').onclick=()=>$('fork-side').close();$('detail').onclick=()=>{if(where==='small'){$('micro').showModal();event('villi-detail');}else{$('side-food').setAttribute('href',foodArt.bolus.toDataURL());$('fork-side').showModal();event('fork-side-view');}};
 for(const b of document.querySelectorAll('[data-look]'))b.onclick=()=>{const view=b.dataset.look;if(view==='ahead'){targetYaw+=Math.PI/2;targetPitch=0;}else if(view==='behind'){targetYaw+=Math.PI;targetPitch=0;}else targetPitch=view==='up'?.9:-.8;event('look',{direction:view});};
 $('fullscreen').onclick=()=>window.requestLessonFullscreen?.();
-$('start').onclick=()=>{log=fresh();started=true;companion.unlock();$('intro').hidden=true;go('outside');};$('resume').onclick=()=>{log=saved;started=true;companion.unlock();$('intro').hidden=true;if(log.completedAt){finish();}else go(sequence.includes(log.stage)?log.stage:'outside',{restore:true});};$('replay').onclick=()=>{$('hint').hidden=false;restart();};
+$('start').onclick=()=>{log=fresh();started=true;companion.unlock();$('intro').hidden=true;go('outside');};$('resume').onclick=()=>{log=saved;started=true;companion.unlock();$('intro').hidden=true;if(log.completedAt){finish();}else go(sequence.includes(log.stage)?log.stage:'outside',{restore:true});};$('replay').onclick=onPlayerAction(()=>{$('hint').hidden=false;restart();});
 $('submit').onclick=async()=>{if(!log.completedAt)return;const button=$('submit');button.disabled=true;$('save-status').textContent='正在保存本组发现…';try{await import('./cloud-loader.js');const record=await currentRecord();if(log.lessonRecordId&&record.id!==log.lessonRecordId){$('save-status').textContent='课堂已开始新一轮，请返回课堂重新出发。';return;}record.journey={...log,schema:3,phase:'exit',history:log.events,identified:log.identified,activities:{chews:log.chews,saliva:log.saliva,nutrientAbsorption:log.absorbed,waterAbsorption:log.water}};record.pendingSync=true;await saveRecord(record);const ok=await submitRecord(record);if(ok){record.pendingSync=false;await saveRecord(record);}$('save-status').textContent=ok?'本组发现已提交。':'本机已保存，网络恢复后可再次提交。';}catch{$('save-status').textContent='暂时无法提交，请重试；旅行记录仍保留在本机。';}finally{button.disabled=false;}};
 window.addEventListener('message',e=>{
  if(e.origin!==location.origin||!stomachFrame||e.source!==stomachFrame.contentWindow||e.data?.channel!=='food-journey-stomach')return;
  if(e.data.type==='ready'){stomachReady=true;if(where==='stomach'&&transport?.mode!=='passage')stomachFrame.contentWindow.postMessage({channel:'food-journey-parent',type:'enter'},location.origin);return;}
  if(where!=='stomach')return;
- if(e.data.type==='question')ask('stomach');
+ if(e.data.type==='question'){if(e.data.playerAction)onPlayerAction(ask)('stomach');else ask('stomach');}
  if(e.data.type==='advance')organReveal.hidden=true;
  if(e.data.type==='retry'){log.vomits++;event('vomit');organReveal.hidden=true;stage.classList.remove('stomach-question');}
  if(e.data.state){
   const showNavigation=!transport&&['explore','exit'].includes(e.data.state.phase);
   for(const id of ['forward','back'])document.getElementById(id).hidden=!showNavigation;
   const previousWrong=log.stomach?.wrong||0;log.wrong+=Math.max(0,(e.data.state.wrong||0)-previousWrong);log.stomach=e.data.state;foodCurrent=({ 'dispersed-fragments':'gastric','wet-fragments':'gastric' }[e.data.state.foodStage]||e.data.state.foodStage||'bolus');$('food-name').textContent=foodCurrent==='chyme'?'分散细软的食糜':'湿润分散的食物碎块';miniMap.update('stomach',e.data.state.routeProgress||0);liveState();}
- if(e.data.type==='hint')hint(e.data.text,e.data.kind||'hint');
+ if(e.data.type==='hint')hint(e.data.text,e.data.kind||'hint',{immediate:e.data.playerAction});
  else if(e.data.type==='report')card(e.data.title,e.data.text,()=>stomachFrame?.contentWindow.postMessage({channel:'food-journey-parent',type:'knowledge-continue'},location.origin),e.data.label);
  else if(e.data.type==='progress'){if(e.data.event!=='complete')event('stomach-'+e.data.event);}
  else if(e.data.type==='complete'){organReveal.hidden=true;if(!log.identified.includes('stomach')){log.identified.push('stomach');log.discoveries.push({organId:'stomach',at:Date.now()});}event('stomach-complete');go('small');}
- else if(e.data.type==='identified'){$('question').close();revealOrgan('胃',organs.stomach.image);hint('点击“前进”，继续我们的旅程。','praise');}
+ else if(e.data.type==='identified'){$('question').close();revealOrgan('胃',organs.stomach.image);hint('点“前进”，我们接着走。','praise',{immediate:true});}
  else if(e.data.type==='restart'){log.vomits++;event('vomit');log.stomach=null;organReveal.hidden=true;stomachFrame.removeAttribute('src');stomachFrame.hidden=true;stomachFrame=null;stomachReady=false;commitScene('stomach');}
 });
 window.addEventListener('pagehide',persist);

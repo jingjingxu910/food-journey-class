@@ -1,0 +1,17 @@
+button.student-fullscreen {
+  flex: none;
+  align-self: center;
+  min-height: 44px;
+  padding: 7px 13px;
+  border: 1px solid #acd0c6;
+  border-radius: 12px;
+  background: #f6fffc;
+  color: #174f46;
+  font: 700 15px/1.2 "Microsoft YaHei", sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+}
+button.student-fullscreen:focus-visible {
+  outline: 3px solid #238477;
+  outline-offset: 2px;
+}

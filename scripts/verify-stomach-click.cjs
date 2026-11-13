@@ -28,7 +28,7 @@ assert.equal(context.held, true);
 assert.deepEqual(events, ['fluid','wall']);
 vm.runInContext('forward()', context);
 assert.deepEqual(events, ['fluid','wall'], 'Repeated click must not restart the sequence');
-const releaseCode = source.slice(source.indexOf('function release(e){'), source.indexOf("host.addEventListener('pointerup',release)"));
+const releaseCode = source.slice(source.indexOf('function release(e){'), source.indexOf("host.addEventListener('pointerup',"));
 vm.runInContext(releaseCode, context);
 context.pointer = {id:1,drag:false,kind:'wall'};
 vm.runInContext('release({pointerId:1})', context);

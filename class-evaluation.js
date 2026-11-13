@@ -1,5 +1,5 @@
 import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js?v=20261109-ui3';
-import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=20261109-ui3';
+import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=20261113-awards';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
@@ -276,7 +276,7 @@ function setupTeacher(){
 async function setupStudent(){
  const root=document.querySelector('#student-evaluation');
  let record,levels=[0,0,0],locked=false,loading=false,displayedCommand=null;
- const header=el('header',undefined,'ev-heading');header.append(el('span','第 '+groupId+' 组'),el('span','我们的成长花园 🌿'));
+ const header=el('header',undefined,'ev-heading');header.append(el('span','第 '+groupId+' 组'),el('span','我们的成长花园 🌿'),button('全屏',()=>window.requestLessonFullscreen?.(),'student-fullscreen'));
  const title=el('h1','今天，我们闪闪发光！'),subtitle=el('p','一起商量，给自己的表现点亮星星。','self-hint');
  const form=el('form',undefined,'self-panel'),status=el('p','','ev-status'),awardArea=el('section',undefined,'student-award');
  const rows=[];
@@ -295,15 +295,16 @@ async function setupStudent(){
  async function showCommand(command){
    if(loading||(command?.commandId&&command.commandId===displayedCommand))return;loading=true;
    try{
-     if(!record)record=await currentRecord();
-     if((record.resetId||null)!==(command?.resetId||null))return;
      if(command?.phase==='awards'){
-       const feedback=await readDocument('class-feedback'),entry=feedback.resetId===record.resetId?feedback.groups?.[groupId]:null;
+       const feedback=await readDocument('class-feedback');
+       const entry=(feedback.resetId||null)===(command.resetId||null)?feedback.groups?.[groupId]:null;
        form.hidden=true;title.hidden=true;subtitle.hidden=true;
-       if(entry?.issuedAt&&entry.recordId===record.id){
+       if(entry?.issuedAt&&Number(entry.groupId??groupId)===groupId){
          awardArea.replaceChildren(certificate({...entry,groupId}));status.textContent='';document.body.classList.add('award-mode');displayedCommand=command.commandId;
-       }else{awardArea.replaceChildren();status.textContent='我们的奖状正在准备中，一起等一等 🌷';}
+       }else{document.body.classList.remove('award-mode');awardArea.replaceChildren();status.textContent='我们的奖状正在准备中，一起等一等 🌷';}
      }else{
+       if(!record)record=await currentRecord();
+       if((record.resetId||null)!==(command?.resetId||null))return;
        document.body.classList.remove('award-mode');awardArea.replaceChildren();form.hidden=false;title.hidden=false;subtitle.hidden=false;
        if(command?.phase==='evaluation'){displayedCommand=command.commandId;locked=false;submit.disabled=false;submit.textContent='把星星提交给老师 ✨';drawStars();}
      }
@@ -325,8 +326,11 @@ async function setupStudent(){
  };
  window.addEventListener('class-command',event=>showCommand(event.detail));
  try{
-   record=await currentRecord();
-   levels=(record.evaluationDraft||record.evaluation)?.levels?.slice(0,3)||levels;drawStars();
-   await showCommand(await readDocument('class-control'));
+   const command=await readDocument('class-control');
+   if(command.phase!=='awards'){
+     record??=await currentRecord();
+     levels=(record.evaluationDraft||record.evaluation)?.levels?.slice(0,3)||levels;drawStars();
+   }
+   await showCommand(command);
  }catch{status.textContent='正在连接课堂…';}
 }

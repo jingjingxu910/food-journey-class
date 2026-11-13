@@ -732,6 +732,7 @@ function miniModel(model, label, options = {}) {
 }
 
 window.renderLiveModel=(model)=>miniModel(model,'当前作品');
+window.renderLiveComparison=(before,after)=>`<div class="mini-compare has-revision">${miniModel(before?{...before,_paired:true}:null,'观察前想法')}${miniModel(after,'观察后修正')}</div>`;
 function latestRecord(records, id) {
   return records.filter((record) => Number(record.groupId) === id).sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))[0] || null;
 }
@@ -754,17 +755,18 @@ function renderDashboard(records) {
   document.querySelector("#dashboard-page-label").textContent = `第 ${firstGroup}–${firstGroup + pageSize - 1} 组 · 共 12 组`;
   document.querySelector("#dashboard-prev").disabled = dashboardPage === 0;
   document.querySelector("#dashboard-next").disabled = dashboardPage === pageCount - 1;
+  document.querySelector("#group-dashboard").dataset.phase=teacherModelPhase;
   document.querySelector("#group-dashboard").innerHTML = groups.map((id) => {
     const record = latestRecord(dashboardRecords, id);
     const revisionView = teacherModelPhase === 'v2';
-    if (!record) return `<article class="group-model-card is-empty"><header><h2>第 ${id} 组</h2><span>等待提交</span></header></article>`;
-    const difference = compareModels(record.v1, record.v2);
-    const status = revisionView ? (record.v2?.completedAt ? "已提交修正模型" : "等待修正模型") : (record.v1?.completedAt ? "已提交初始模型" : "等待初始模型");
-    const before = record.v1?.completedAt ? miniModel({ ...record.v1, _paired: revisionView && Boolean(record.v2?.completedAt) }, "观察前想法", { groupId: id, phase: "v1" }) : "";
-    const after = revisionView && record.v2?.completedAt ? miniModel(record.v2, "观察后修正", { groupId: id, phase: "v2" }) : "";
-    const analysis = !revisionView ? "" : record.v2?.completedAt
+    if (!record && !revisionView) return `<article class="group-model-card is-empty"><header><h2>第 ${id} 组</h2><span>等待提交</span></header></article>`;
+    const difference = compareModels(record?.v1, record?.v2);
+    const status = revisionView ? (record?.v2?.completedAt ? "已提交修正模型" : "等待修正模型") : (record.v1?.completedAt ? "已提交初始模型" : "等待初始模型");
+    const before = miniModel(record?.v1?.completedAt ? { ...record.v1, _paired: revisionView } : null, "观察前想法", { groupId: id, phase: "v1" });
+    const after = revisionView ? miniModel(record?.v2?.completedAt ? record.v2 : null, "观察后修正", { groupId: id, phase: "v2" }) : "";
+    const analysis = !revisionView ? "" : record?.v2?.completedAt
       ? `${difference.organs.length ? `位置有变化：${difference.organs.join("、")}` : "器官位置未见明显变化"}；${difference.routeChanged ? "食物路线有变化" : "食物路线保持原样"}`
-      : record.v1?.completedAt ? "等待小组完成观察后修正" : "";
+      : "";
     return `<article class="group-model-card"><header><h2>第 ${id} 组</h2><span>${status}</span></header>${before || after ? `<div class="mini-compare ${after ? "has-revision" : "single-model"}">${before}${after}</div>` : ""}${analysis ? `<p class="group-model-analysis">${analysis}</p>` : ""}</article>`;
   }).join("");
 }
