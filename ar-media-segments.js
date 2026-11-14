@@ -1,66 +1,66 @@
 // Local organ clips; provenance and adaptation records are kept separately from the camera UI.
 export const organSegments={
   "mouth": {
-    "start": 104,
-    "end": 123,
+    "start": 97.833,
+    "end": 124.55,
     "label": "咀嚼、唾液和淀粉",
-    "duration": 19,
+    "duration": 26.717,
     "path": "assets/ar-media/local-review/mouth.mp4",
     "poster": "assets/ar-media/local-review/mouth.jpg"
   },
   "esophagus": {
-    "start": 123,
-    "end": 144,
+    "start": 124.55,
+    "end": 143.155,
     "label": "食管蠕动推送食物",
-    "duration": 21,
+    "duration": 18.605,
     "path": "assets/ar-media/local-review/esophagus.mp4",
     "poster": "assets/ar-media/local-review/esophagus.jpg"
   },
   "stomach": {
-    "start": 144,
-    "end": 164,
+    "start": 143.155,
+    "end": 185.714,
     "label": "胃的搅拌与胃液",
-    "duration": 20,
+    "duration": 42.559,
     "path": "assets/ar-media/local-review/stomach.mp4",
     "poster": "assets/ar-media/local-review/stomach.jpg"
   },
   "liver": {
-    "start": 164,
-    "end": 174,
+    "start": 163.517,
+    "end": 176.427,
     "label": "肝脏与胆汁",
-    "duration": 10,
+    "duration": 12.91,
     "path": "assets/ar-media/local-review/liver.mp4",
     "poster": "assets/ar-media/local-review/liver.jpg"
   },
   "gallbladder": {
-    "start": 184,
-    "end": 198,
+    "start": 185.714,
+    "end": 194.169,
     "label": "胆囊储存和释放胆汁",
-    "duration": 14,
+    "duration": 8.455,
     "path": "assets/ar-media/local-review/gallbladder.mp4",
     "poster": "assets/ar-media/local-review/gallbladder.jpg"
   },
   "pancreas": {
-    "start": 203,
-    "end": 220,
+    "start": 194.169,
+    "end": 220.759,
     "label": "胰液帮助分解食物",
-    "duration": 17,
+    "duration": 26.59,
     "path": "assets/ar-media/local-review/pancreas.mp4",
     "poster": "assets/ar-media/local-review/pancreas.jpg"
   },
   "small-intestine": {
-    "start": 195,
-    "end": 220,
+    "start": 185.714,
+    "end": 242.45,
     "label": "消化液在小肠内继续分解食物",
-    "duration": 25,
+    "duration": 56.736,
     "path": "assets/ar-media/local-review/small-intestine.mp4",
     "poster": "assets/ar-media/local-review/small-intestine.jpg"
   },
   "large-intestine": {
-    "start": 248,
-    "end": 264,
+    "start": 242.45,
+    "end": 278.19,
     "label": "大肠吸收剩余水分",
-    "duration": 16,
+    "duration": 35.74,
     "path": "assets/ar-media/local-review/large-intestine.mp4",
     "poster": "assets/ar-media/local-review/large-intestine.jpg"
   },

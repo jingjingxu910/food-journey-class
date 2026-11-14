@@ -34,7 +34,7 @@ async function check(force=false){
  if(!frame)return;
  let url;
  try{url=new URL(frame.contentWindow.location.href);}catch{return;}
- if(url.searchParams.get('mode')==='teacher'||url.pathname==='blank')return;
+ if(url.searchParams.get('mode')==='teacher'||url.searchParams.get('preview')==='1'||url.pathname==='blank')return;
  checking=true;lastCheck=Date.now();
  try{
    if(Date.now()-lastRoundCheck>=60000){

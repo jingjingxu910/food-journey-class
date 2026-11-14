@@ -90,3 +90,27 @@
  .ar-page #organ-dialog footer{top:63%;width:32%}
  .ar-page #organ-dialog #organ-media{left:43%;right:5%;width:52%;height:min(63%,calc(79% - var(--ar-tray-height,44px) - 24px))!important}
 }
+
+/* Fit the panel to the clip within the space below the organ viewer. */
+.ar-page #organ-dialog{container-type:size}
+.ar-page #organ-dialog #organ-media.has-video{
+ --clip-ratio:1.77778;
+ --choice-height:0px;
+ --clip-height:min(44cqh,calc(54cqh - var(--ar-tray-height,44px) - 24px));
+ left:50%;right:auto;transform:translateX(-50%);
+ width:min(90%,calc(max(1px,var(--clip-height) - var(--choice-height)) * var(--clip-ratio)));
+ height:auto!important;padding:0;border:0;gap:0;
+}
+.ar-page #organ-dialog #organ-media.has-video.has-choices{--choice-height:34px}
+.ar-page #organ-dialog #organ-media.has-video #organ-video:not([hidden]){
+ flex:none;width:100%;height:auto;aspect-ratio:var(--clip-ratio);
+ object-fit:contain;border-radius:0;
+}
+.ar-page #organ-dialog #organ-media.has-video #organ-media-choices{box-sizing:border-box;padding:2px 5px}
+@media(orientation:landscape){
+ .ar-page #organ-dialog #organ-media.has-video{
+  --clip-height:min(63cqh,calc(79cqh - var(--ar-tray-height,44px) - 24px));
+  left:auto;right:5%;transform:none;
+  width:min(52%,calc(max(1px,var(--clip-height) - var(--choice-height)) * var(--clip-ratio)));
+ }
+}
