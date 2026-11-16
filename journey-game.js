@@ -3,7 +3,7 @@ import {bindSceneLongPress} from './journey-long-press.js';
 import * as THREE from './vendor/three.module.js';
 import {JourneyCompanion} from './journey-companion.js?v=20261113-opening-queue';
 import {JourneyMiniMap} from './journey-mini-map.js?v=20261113-map-sync';
-import './live-sync.js?v=20261118-ar-stills';
+import './live-sync.js?v=20261118-classroom-review';
 import {prepareMucosa} from './journey-anatomy-v2.js';
 import {prepareFixedScenes,FixedScenes,fixedStage} from './journey-fixed-scenes.js?v=20261113-pharynx-wall';
 import {buildLumen,prepareLumenAssets} from './journey-lumen.js?v=20261113-stomach-wave';
@@ -14,7 +14,7 @@ import {groupId,homeUrl,allRecords,currentRecord,saveRecord,submitRecord} from '
 
 const $=id=>document.getElementById(id),host=$('world'),stage=$('stage');
 const observerMode=new URLSearchParams(location.search).get('observe')==='1';
-let observedState,observerReady=false;
+let observedState,observerReady=false,lastObservedFrame=0;
 const companion=new JourneyCompanion(stage),miniMap=new JourneyMiniMap(stage);
 const queuedHints=[];
 let suppressHint=false, playerAction=false;
@@ -288,7 +288,8 @@ function tickChew(){
 function wetMouth(){help();}
 function beginIntestinalAbsorption(){if(log.digested)return;log.digested=true;log.absorbed=Math.max(log.absorbed,0);spawnFlow('nutrient',28);food('fine-chyme','继续变细的食糜');event('continued-digestion');event('nutrient-absorption-start');hint('仔细看，内壁正在吸收营养物质。');refreshEvidence();}
 const organReveal=document.createElement('figure');organReveal.id='organ-reveal';organReveal.hidden=true;stage.append(organReveal);
-function revealOrgan(name,src){const img=new Image(),caption=document.createElement('figcaption');img.alt=name;img.style.objectFit='contain';img.onerror=()=>{img.onerror=null;img.src=src.replace('assets/organs/','assets/models/ar-thumbnails/');};img.src=src;caption.textContent=name;organReveal.replaceChildren(img,caption);organReveal.hidden=false;}
+const organImages=new Map(Object.values(organs).map(({image:src})=>{const img=new Image();img.src=src;return [src,img];}));
+function revealOrgan(name,src){const img=organImages.get(src)||new Image(),caption=document.createElement('figcaption');img.alt=name;img.style.objectFit='contain';img.onerror=()=>{img.onerror=null;img.src=src.replace('assets/organs/','assets/models/ar-thumbnails/');};if(!img.getAttribute('src'))img.src=src;caption.textContent=name;organReveal.replaceChildren(img,caption);organReveal.hidden=false;}
 function ask(id){if(where!==id||log.identified.includes(id)||document.querySelector('dialog[open]'))return;motionRunning=false;const o=organs[id];hint(id==='mouth'?'你认为这是哪个器官？':o.prompt+' 你认为这是哪个器官？','question',{onShow:()=>{
  if(where!==id||busy||transport||log.identified.includes(id)||document.querySelector('dialog[open]'))return false;
  sideHint=null;miniMap.toggleSide(false);miniMap.toggle(false);$('question-text').textContent=o.prompt;$('question').querySelector('h2').textContent=id==='mouth'?o.prompt:'这是哪个器官？';$('answer-hint').textContent='';$('answers').replaceChildren(...o.options.map(name=>{const b=document.createElement('button');b.textContent=name;b.onclick=onPlayerAction(()=>{event('identify',{organId:id,choice:name});if(id==='stomach'){stomachFrame.contentWindow.postMessage({channel:'food-journey-parent',type:'answer',value:name==='胃'?'stomach':name==='食管'?'esophagus':'small'},location.origin);return;}if(name!==o.name){log.wrong++;hint(o.wrong+' 再选一次。','retry');persist();return;}log.identified.push(id);log.discoveries.push({organId:id,at:Date.now()});$('question').close();revealOrgan(o.name,o.image);hint('点击“前进”，我们接着走。','praise',{celebrate:true});persist();});return b;}));$('question').show();
@@ -348,8 +349,10 @@ function finish(){motionRunning=false;where='done';stage.dataset.scene='done';mi
 function drawObservedScene(dt){
  if(!observerReady||!observedState)return;
  const {stage:sceneName,food:foodKey,view={},progress=0,interface:ui={}}=observedState;
+ if(sceneName==='done'){if(where!=='done')finish();return;}
  if(!sequence.includes(sceneName))return;
  if(where!==sceneName||!started){
+  $('finished').hidden=true;
   commitScene(sceneName,{restore:true});
   started=true;
 
@@ -415,7 +418,10 @@ function draw(ms){
  requestAnimationFrame(draw);
  const dt=Math.min(.083,last?(ms-last)/1000:.016);last=ms;
  if(document.hidden||!renderer)return;
- if(observerMode){drawObservedScene(dt);return;}
+ if(observerMode){
+  if(ms-lastObservedFrame>=28){const delta=Math.min(.083,(ms-lastObservedFrame)/1000);lastObservedFrame=ms;drawObservedScene(delta);}
+  return;
+ }
  if(started)drawTravelProgress(dt);
  if(where==='done')return;
  if(ms-lastLive>=240){lastLive=ms;liveState();}
@@ -482,6 +488,6 @@ function anatomyProbe(){raycaster.setFromCamera(new THREE.Vector2(0,0),camera);r
 $('show-reflection').onclick=()=>$('reflection').showModal();$('close-reflection').onclick=()=>$('reflection').close();
 window.journeyGame={get visualState(){return{where,busy,motionTime:time,wallMotion,foodStage:foodTo,foodBlend,preparedScenes:[...preparedTubes.keys()],sceneTimings:sceneTimings.slice(-8),flows:particles.map(p=>({kind:p.kind,start:p.start,end:p.end})),yaw,pitch,canalU,cameraQuaternion:camera?.quaternion.toArray(),camera:camera?.position.toArray(),jawMotion:fixedScenes.chew,jawLift:fixedScenes.chew*34,transition:transport?{mode:transport.mode,to:transport.next,progress:passageView.progress,keepView:transport.keepView}:null};},get state(){return{where,busy,holding,...JSON.parse(JSON.stringify(log))};},get diagnostics(){const visible=[],pickGrid=[];if(canal)for(const x of [.16,.32,.5,.68,.84])for(const y of [.3,.45,.6,.75]){raycaster.setFromCamera(new THREE.Vector2(x*2-1,1-y*2),camera);pickGrid.push({x,y,kind:raycaster.intersectObjects(targets,false)[0]?.object.userData.kind});}if(camera&&!fixedStage(where)){for(const o of targets.filter(o=>o.userData.kind!=='wall')){const v=o.getWorldPosition(new THREE.Vector3()).project(camera);if(v.z>1||v.z<0)continue;raycaster.setFromCamera(new THREE.Vector2(v.x,v.y),camera);if(raycaster.intersectObjects(targets,false)[0]?.object.userData.kind===o.userData.kind)visible.push({kind:o.userData.kind,x:(v.x+1)/2,y:(1-v.y)/2});}if(['mouth','pharynx'].includes(where))for(let x=.12;x<.9;x+=.065)for(let y=.26;y<.82;y+=.055){raycaster.setFromCamera(new THREE.Vector2(x*2-1,1-y*2),camera);const kind=raycaster.intersectObjects(targets,false)[0]?.object.userData.kind;if(kind&&kind!=='wall')visible.push({kind,x,y});}}if(fixedStage(where))visible.push(...fixedScenes.targets(where));return{pickGrid,fixedView:fixedStage(where),jawMotion:fixedScenes.chew,jawLift:fixedScenes.chew*34,transition:transport?{mode:transport.mode,to:transport.next,progress:passageView.progress}:null,portalProgress:transport?.mode==='passage'?passageView.progress:fixedScenes.progress,webgl:!!renderer,triangles:renderer?.info.render.triangles,particles:particles.length,peristalsis:wallShaders.map(s=>({strength:s.uniforms.uStrength.value,clock:s.uniforms.uClock?.value,maximum:s.uniforms.uSqueeze?.value})),villi:canal?.villi?.count||0,yaw,pitch,camera:camera?.position.toArray(),jaw:jaw?{y:jaw.position.y,rotation:jaw.rotation.x}:null,targets:visible};}};
 Object.defineProperty(window.journeyGame,'anatomyProbe',{get:anatomyProbe});
-try{await Promise.all([newFoodAtlas.decode(),atlas.decode(),stomachFood.decode(),fractureAtlas.decode(),prepareMucosa(),prepareFixedScenes(),prepareLumenAssets(),$('outside-photo').decode()]);const records=observerMode?[]:await allRecords();lessonRecordId=records.filter(r=>r.lesson==='food-journey'&&Number(r.groupId)===groupId).sort((a,b)=>Number(b.updatedAt)-Number(a.updatedAt))[0]?.id||null;log=fresh();if((saved?.lessonRecordId??null)!==lessonRecordId)saved=null;prepareArt();init3D();await prepareTubeScenes();if(observerMode){observerReady=true;$('intro').hidden=true;}else if(saved?.stage!=='stomach'){prepareStomach();await new Promise((resolve,reject)=>{const until=performance.now()+60000;const check=()=>{if(stomachReady)resolve();else if(performance.now()>until)reject(Error('Stomach preparation timed out'));else requestAnimationFrame(check);};check();});}food('whole','一块饼干');$('start').disabled=false;$('start').textContent='开始旅行 →';if(saved?.version===3&&saved.groupId===groupId)$('resume').hidden=false;}catch(e){console.error(e);$('failure').hidden=false;}
+try{await Promise.all([newFoodAtlas.decode(),atlas.decode(),stomachFood.decode(),fractureAtlas.decode(),prepareMucosa(),prepareFixedScenes(),prepareLumenAssets(),$('outside-photo').decode()]);const records=observerMode?[]:await allRecords();lessonRecordId=records.filter(r=>r.lesson==='food-journey'&&Number(r.groupId)===groupId).sort((a,b)=>Number(b.updatedAt)-Number(a.updatedAt))[0]?.id||null;log=fresh();if((saved?.lessonRecordId??null)!==lessonRecordId)saved=null;prepareArt();init3D();if(observerMode)$('intro').hidden=true;await prepareTubeScenes();if(observerMode){observerReady=true;}else if(saved?.stage!=='stomach'){prepareStomach();await new Promise((resolve,reject)=>{const until=performance.now()+60000;const check=()=>{if(stomachReady)resolve();else if(performance.now()>until)reject(Error('Stomach preparation timed out'));else requestAnimationFrame(check);};check();});}food('whole','一块饼干');$('start').disabled=false;$('start').textContent='开始旅行 →';if(saved?.version===3&&saved.groupId===groupId)$('resume').hidden=false;}catch(e){console.error(e);$('failure').hidden=false;}
 
 window.prepareClassNavigation = () => { persist(); };

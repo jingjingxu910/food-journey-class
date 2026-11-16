@@ -2,7 +2,7 @@ import {chewForms,chewLabels,chewStep} from './journey-chew-stages.js';
 import {journeyEvents} from './evaluation-data.js?v=20261113-awards';
 import {cloudDb} from './student-data.js?v=20261116-tablet-fixes';
 import {isLocalPreview} from './local-preview-db.js';
-import {LIVE_COLLECTION,writeTeacherFocus} from './live-sync.js?v=20261118-ar-stills';
+import {LIVE_COLLECTION,writeTeacherFocus} from './live-sync.js?v=20261118-classroom-review';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={outside:'入口',mouth:'口腔',pharynx:'咽',esophagus:'食管',stomach:'胃',small:'小肠',large:'大肠',done:'旅行完成'};
@@ -25,15 +25,15 @@ function setup(){
  dialog.querySelector('.live-focus-content').before(gameViewport);
  let gameSrc='';
  function showGame(){
-  const state=phase==='journey'&&focus&&!(demo?focus%4===0||demoSubmitted.has(phase+':'+focus):completion(focus))&&stateFor(focus);
-  const active=!!state&&state.stage!=='done';
+  const state=phase==='journey'&&focus&&stateFor(focus);
+  const active=!!state;
   gameViewport.hidden=gameFrame.hidden=!active;
   if(!active){
    if(gameSrc){gameFrame.removeAttribute('src');gameSrc='';}
    return;
   }
   if(!gameSrc){
-   gameSrc='journey-game.html?observe=1&layout=landscape&v=20261118-button-fit';
+   gameSrc='journey-game.html?observe=1&layout=landscape&v=20261118-classroom-review';
    gameFrame.src=gameSrc;
   }
   sendGameState(gameFrame,state);
@@ -56,7 +56,8 @@ function setup(){
  function updateGameCards(grid){
   if(phase!=='journey')return;
   for(const card of grid.children){
-   const state=stateFor(Number(card.dataset.group));
+   const id=Number(card.dataset.group);
+   const state=stateFor(id);
    const box=card.querySelector('.live-game-scene');
    if(!box||!state)continue;
    let frame=box.querySelector('iframe');
@@ -68,7 +69,7 @@ function setup(){
     frame=document.createElement('iframe');
     frame.title='本组游戏画面';
     frame.className='live-game-card-frame';
-    frame.src='journey-game.html?observe=1&v=20261118-button-fit';
+    frame.src='journey-game.html?observe=1&v=20261118-classroom-review';
     frame.onload=()=>sendGameState(frame,stateFor(Number(card.dataset.group)));
     box.replaceChildren(frame);
    }
@@ -87,6 +88,7 @@ function setup(){
  function stateFor(id){
   if(demo){
    const simulated=demoState(id,phase);
+   if(phase==='journey'&&(id%4===0||demoSubmitted.has(phase+':'+id)))return {...simulated,stage:'done',progress:1};
    if(phase==='journey'){
     const cycle=(performance.now()/9000+id*.13)%2;
     const progress=1-Math.abs(cycle-1);
@@ -115,7 +117,7 @@ function setup(){
  }
  function preview(state,id,submitted,expanded=false){
   const record=demo&&['v1','v2'].includes(phase)?{v1:demoState(id,'v1').model,v2:demoState(id,'v2').model}:recordFor(id);
-  if(submitted&&phase==='journey')return journeyAnalysis(record?.journey,expanded);
+  if(submitted&&phase==='journey')return (expanded?'':'<div class="live-scene live-game-scene"></div>')+journeyAnalysis(record?.journey,expanded);
   const analysis=submitted&&['v1','v2'].includes(phase)?window.renderSubmittedModelAnalysis?.(record,phase)||'':'';
   const summary=analysis?'<div class="live-analysis"><strong>行为与路线分析</strong>'+analysis+'</div>':'';
 
@@ -132,7 +134,7 @@ function setup(){
    }
    const organ=/^[a-z-]+$/.test(state.organId||'')?state.organId:null;
    const frame=snapshots.get(id);
-   const freshCamera=expanded&&!demo&&state.sharePreview&&frame?.token===token&&Date.now()-frame.updatedAt<4000;
+   const freshCamera=!demo&&(!focus||focus===id)&&state.sharePreview&&frame?.token===token&&Date.now()-frame.updatedAt<4000;
    if(freshCamera&&/^data:image\/jpeg;base64,[a-z0-9+/=]+$/i.test(state.image||'')){
     return '<div class="live-scene live-camera-still"><img src="'+state.image+'" alt="学生相机预览"></div>';
    }
@@ -140,7 +142,7 @@ function setup(){
    return src?'<div class="live-scene live-capture"><img src="'+src+'" alt="'+escape(state.organName||'器官观察')+'"></div><p class="live-game-copy">'+escape(state.organName||'器官观察')+'</p>':'<div class="live-empty">'+(state.completed?'观察完成':'观察身体里的器官')+'</div>';
   }
   if(state.phase!=='journey')return (window.renderLiveModel?.(state.model)||'<div class="live-empty">模型正在准备</div>')+summary;
-  if(state.stage==='done')return '<div class="live-completed"><strong>旅行完成</strong><div>'+[0,3,5,6,7].map(index=>'<span class="live-food-sprite" style="background-position:'+index%4/3*100+'% '+Math.floor(index/4)*100+'%"></span>').join('')+'</div></div>';
+  if(state.stage==='done')return expanded?'':'<div class="live-scene live-game-scene"></div>';
   const food=state.foodName||'食物正在变化';
   const viewport=expanded?'':'<div class="live-scene live-game-scene"></div>';
   return viewport+'<p class="live-game-copy"><strong>'+escape(food)+'</strong><br>'+escape(state.hint||'正在探索')+'</p><progress class="live-progress" max="1" value="'+Math.max(0,Math.min(1,Number(state.progress)||0))+'" aria-label="当前场景行进进度"></progress>';
@@ -183,9 +185,11 @@ function setup(){
     cards.forEach((card,index)=>{
      const current=grid.children[index];
      if(current.outerHTML===card.outerHTML)return;
+     const currentPhoto=current.querySelector('.live-camera-still img'),nextPhoto=card.querySelector('.live-camera-still img');
+     if(currentPhoto&&nextPhoto&&current.className===card.className){currentPhoto.src=nextPhoto.src;return;}
      const currentScene=current.querySelector('.live-game-scene');
      const nextScene=card.querySelector('.live-game-scene');
-     if(currentScene?.querySelector('iframe')&&nextScene){
+     if(currentScene?.querySelector('iframe')&&nextScene&&card.querySelector('progress')&&current.querySelector('progress')){
       current.className=card.className;
       current.querySelector('header').replaceWith(card.querySelector('header'));
       current.querySelector('.live-game-copy').replaceWith(card.querySelector('.live-game-copy'));
@@ -248,7 +252,8 @@ function setup(){
  wall.addEventListener('click',e=>{const pager=e.target.closest('[data-page]');if(pager){page=Number(pager.dataset.page);focus=null;render();void control();return;}const card=e.target.closest('[data-group]');if(card){focus=Number(card.dataset.group);unread.delete(phase+':'+focus);render();dialog.showModal();void control();}});
  dialog.querySelector('header button').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{focus=null;window.speechSynthesis?.cancel();render();void control();});
  window.addEventListener('resize',()=>{render();void control();});
- const previewPoll=setInterval(()=>{if(!document.hidden&&!watcher&&phase==='journey'&&!demo)void subscribe();},2000);
+ document.querySelector('#refresh-dashboard')?.addEventListener('click',()=>{if(phase&&!demo){void control(true);void subscribe();}});
+ const previewPoll=setInterval(()=>{if(!document.hidden&&!watcher&&phase&&!demo)void subscribe();},2000);
  const demoPlayback=setInterval(()=>{if(demo&&phase==='journey'&&!document.hidden){updateGameCards(wall.querySelector('.live-grid'));showGame();}},250);
  const cameraExpiry=setInterval(()=>{if(phase==='observation'&&focus&&dialog.open&&dialog.querySelector('.live-camera-still')&&Date.now()-(snapshots.get(focus)?.updatedAt||0)>=4000)render();},1000);
  const heartbeat=setInterval(()=>{if(!document.hidden){void control(true);if(!watcher&&phase&&!demo)void subscribe();}},20000);

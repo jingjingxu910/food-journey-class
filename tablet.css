@@ -132,3 +132,11 @@ body.student-page:not(.teacher-mode),body.flow-page{height:100dvh;min-height:0;o
 .assembly-page .assembly-side{min-height:0;width:auto;min-width:0;overflow:visible}
 .assembly-page .assembly-side textarea{height:clamp(32px,6vh,60px)}
 .assembly-page .assembly-side .flow-status:empty{display:none}
+
+body.assembly-page .flow-shell{
+ height:100vh;height:100dvh;min-height:0;
+ display:grid;grid-template-rows:auto auto minmax(0,1fr);
+}
+body.assembly-page .assembly-layout{min-height:0;height:100%}
+body.assembly-page .assembly-photo{min-height:0;display:grid;grid-template-rows:minmax(0,1fr) auto}
+body.assembly-page .photo-frame{min-height:0;height:100%}

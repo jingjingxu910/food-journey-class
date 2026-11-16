@@ -145,3 +145,10 @@
 }
 
 .journey-observer #experience{pointer-events:none}
+
+#stage #back,#stage #forward{top:auto!important}
+@media(orientation:landscape){
+ #stage #back,#stage #forward{bottom:calc(var(--map-actual-height) + 26px)!important}
+ #stage #back{right:calc(24px + var(--nav-size))}
+}
+#recap img.recap-organ{background:transparent!important}

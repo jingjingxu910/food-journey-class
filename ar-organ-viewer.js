@@ -20,6 +20,7 @@ export async function createOrganViewer(mount,url,resetButton,isCurrent,options=
  const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;observer?.observe(mount);window.addEventListener('resize',resize);resize();
  resetButton.onclick=()=>{group.rotation.set(...initial);camera.zoom=options.zoom||1;camera.updateProjectionMatrix();request();};
  const dispose=()=>{cancelAnimationFrame(frame);observer?.disconnect();window.removeEventListener('resize',resize);resetButton.onclick=null;disposeModel(group);renderer.dispose();renderer.forceContextLoss();mount.replaceChildren();};
+ dispose.renderForPreview=()=>renderer.render(scene,camera);
  dispose.viewState=()=>[group.rotation.x,group.rotation.y,camera.zoom].map(value=>Math.round(value*100)/100);
  dispose.snapshot=()=>{
   if(!renderer.domElement.width||!renderer.domElement.height)return null;

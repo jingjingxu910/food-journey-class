@@ -8,7 +8,7 @@ const organs = [
 
 const revisionOnlyIds=new Set(['nose','trachea','lungs','liver','pancreas']);
 organs.push({id:'nose',name:'鼻子',image:'assets/organs/nose-gentle.svg',width:9});
-organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-atlas.png',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-soft.webp',width:25},{id:'pancreas',name:'胰脏',image:'assets/organs/pancreas-soft.webp',width:18});
+organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-atlas.png',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-soft.webp',width:19},{id:'pancreas',name:'胰脏',image:'assets/organs/pancreas-soft.webp',width:11});
 const CLOUD_ENV = "motionless-harrier-d7cuz0659ef1a";
 const CLOUD_COLLECTION = "food-journey-groups";
 const LOCAL_CLEAR_SIGNAL_KEY = "foodJourneyClassLocalClear";

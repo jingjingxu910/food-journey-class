@@ -1,4 +1,4 @@
-import './live-sync.js?v=20261118-ar-stills';
+import './live-sync.js?v=20261118-classroom-review';
 import {organSegments} from './ar-media-segments.js';
 const isPreview=new URLSearchParams(location.search).get('preview')==='1';
 import {CameraMotion} from './ar-motion.js';
@@ -22,13 +22,30 @@ let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,
 let workerReady=false,starting=false,saveTimer,viewerDispose,viewerGeneration=0,captureWidth=384,interval=100,meanCost=0,lastPaint=0;
 let startupController,connected;const motion=new CameraMotion();let sentMotion=null,targetMotion=null;
 const previewCanvas=document.createElement('canvas');
-window.captureLessonLive=()=>{
+window.captureLessonLive=(_state,focused)=>{
  const video=$('#camera-video');
  if(isPreview||observation?.completedAt||document.hidden||!stream?.active||video.readyState<2||!video.videoWidth||!video.videoHeight)return null;
- const scale=Math.min(320/video.videoWidth,240/video.videoHeight,1);
- previewCanvas.width=Math.max(1,Math.round(video.videoWidth*scale));
- previewCanvas.height=Math.max(1,Math.round(video.videoHeight*scale));
- previewCanvas.getContext('2d').drawImage(video,0,0,previewCanvas.width,previewCanvas.height);
+ const stage=$('#camera-stage').getBoundingClientRect();
+ if(!stage.width||!stage.height)return null;
+ const scale=Math.min((focused?400:280)/stage.width,(focused?320:224)/stage.height,1);
+ previewCanvas.width=Math.max(1,Math.round(stage.width*scale));
+ previewCanvas.height=Math.max(1,Math.round(stage.height*scale));
+ const context=previewCanvas.getContext('2d');
+ const draw=(source,rect)=>context.drawImage(source,(rect.left-stage.left)*scale,(rect.top-stage.top)*scale,rect.width*scale,rect.height*scale);
+ const box=video.getBoundingClientRect();
+ const cover=Math.max(box.width/video.videoWidth,box.height/video.videoHeight);
+ const width=video.videoWidth*cover,height=video.videoHeight*cover;
+ draw(video,{left:box.left+(box.width-width)/2,top:box.top+(box.height-height)/2,width,height});
+ const overlay=$('#anatomy-overlay canvas');
+ if(overlay?.width&&overlay.height){
+  connected?.renderForPreview?.();
+  draw(overlay,overlay.getBoundingClientRect());
+ }
+ const model=$('#organ-3d canvas');
+ if(dialogOpen&&model?.width&&model.height){
+  viewerDispose?.renderForPreview?.();
+  draw(model,model.getBoundingClientRect());
+ }
  const image=previewCanvas.toDataURL('image/jpeg',.55);
  return image.length<=55000?image:null;
 };
@@ -156,7 +173,7 @@ async function startCamera(){
   await preparePoseResources(startupController.signal,message=>{$('#camera-status').textContent=message;});
   if(startupController.signal.aborted)throw new DOMException('已取消','AbortError');
   $('#camera-status').textContent='正在准备整套解剖模型…';
-  if(!connected){const {createConnectedOverlay}=await import('./ar-connected.js');connected=await waitStartup(createConnectedOverlay($('#anatomy-overlay'),selectOrgan),45000,'解剖模型加载未完成，请重试',late=>late.dispose());}
+  if(!connected){const {createConnectedOverlay}=await import('./ar-connected.js?v=20261118-classroom-review');connected=await waitStartup(createConnectedOverlay($('#anatomy-overlay'),selectOrgan),45000,'解剖模型加载未完成，请重试',late=>late.dispose());}
   $('#camera-status').textContent='请站到镜头前。';await initDetector();
   if(startupController.signal.aborted)throw new DOMException('已取消','AbortError');
   running=true;observation.cameraStarted=true;observation.cameraFacing='environment';saveSoon();$('#start-camera').textContent='相机已开启';$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';lastPose=0;lastSent=0;lastFrame=-1;frame=requestAnimationFrame(paint);
@@ -169,7 +186,7 @@ async function openViewer(){
  const mount=$('#organ-3d');mount.textContent='正在准备模型…';
 
 
- try{const {createOrganViewer}=await import('./ar-organ-viewer.js?v=20261116-tablet-fixes');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open,id==='mouth'?{initialRotation:[.35,-.18,0]}:{});if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
+ try{const {createOrganViewer}=await import('./ar-organ-viewer.js?v=20261118-classroom-review');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open,id==='mouth'?{initialRotation:[.35,-.18,0]}:{});if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
  catch(error){if(generation===viewerGeneration)mount.innerHTML=`<img class="model-fallback-image" src="${asset(id,'png')}" alt="${o.name}"><p>模型加载未完成，请关闭后重试。</p>`;console.warn('Organ model failed',error);}
 }
 async function finishObservation(){

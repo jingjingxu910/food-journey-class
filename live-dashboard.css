@@ -162,3 +162,11 @@ button.teacher-award-tile{display:block;padding:0;overflow:hidden;text-align:ini
 }
 .evaluation-teacher .live-grid[data-phase="journey"] .live-card{height:auto}
 .evaluation-teacher .live-grid[data-phase="journey"] .live-card .live-empty{flex:none;height:88px}
+
+.evaluation-teacher .live-grid[data-phase="observation"] .live-camera-still{height:auto;flex:none;aspect-ratio:4/3}
+.live-camera-still img{width:100%;height:100%;object-fit:contain}
+.evaluation-teacher .teacher-award-tile{box-sizing:border-box;width:100%;height:100%;min-width:0;margin:0;border-radius:20px;overflow:hidden}
+.evaluation-teacher .teacher-award-tile .ev-award{width:100%;min-width:0;margin:0;border-radius:inherit;outline:0}
+
+#model-preview-dialog:has(#preview-model-content > .ev-award){width:min(92vw,760px);padding:16px;box-sizing:border-box}
+#preview-model-content > .ev-award{width:100%;margin:12px 0 0;min-height:0;box-sizing:border-box}

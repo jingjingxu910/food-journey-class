@@ -44,6 +44,7 @@ export async function createConnectedOverlay(mount,onSelect){
  },
  calibrate(s,x,y){scale=s;offset={x,y};},rotate(value){rotation=value;},
  respiratory(show){for(const [id,m]of models)if(['trachea','right-lung','left-lung','nasal-cavity'].includes(id))m.visible=show;},
+ renderForPreview(){renderer.render(scene,camera);},
  contextImage(){renderer.render(scene,camera);return renderer.domElement.toDataURL("image/png");},
  getState(){return{visible:root.visible,yaw:root.rotation.y,scale:root.scale.toArray()};},
  anchor(id){const mesh=models.get(id);if(!mesh||!active||!mesh.visible)return null;mesh.updateWorldMatrix(true,false);projectedCenter.copy(id==="mouth"?mouthCenter:mesh.userData.center).applyMatrix4(mesh.matrixWorld).project(camera);return{x:(projectedCenter.x+1)*w/2,y:(1-projectedCenter.y)*h/2};},

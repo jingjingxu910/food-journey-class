@@ -36,11 +36,11 @@ const run=code=>vm.runInContext(code,ctx),settle=()=>new Promise(r=>setImmediate
  assert.equal(liveWrites().length,count,'submitted group removed from focus stops uploads');
  run("states[1]={phase:'observation',sharePreview:true};var camera=createStudentPublisher({groupId:12,getState:()=>states[1],capture:()=> 'data:image/jpeg;base64,AA=='});");await settle();
  await run("writeTeacherFocus({phase:'observation',groups:[12],token:'camera-overview'})");await settle();
- assert.equal(liveWrites().at(-1)[1].state.image,null);
+ assert.match(liveWrites().at(-1)[1].state.image,/^data:image/);
  await run("writeTeacherFocus({phase:'observation',groups:[12],focus:true,token:'camera-focus'})");await settle();
  const cameraCount=liveWrites().length;
  assert.match(liveWrites().at(-1)[1].state.image,/^data:image/);
- now+=500;for(const f of timers.values())f();await settle();
+ now+=200;for(const f of timers.values())f();await settle();
  assert.equal(liveWrites().length,cameraCount+1,'Camera refreshes without a change in organ selection');
  run("camera.close()");
  run("publishers.forEach(p=>p.close())");assert.equal(timers.size,0);
