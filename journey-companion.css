@@ -152,3 +152,5 @@
  #stage #back{right:calc(24px + var(--nav-size))}
 }
 #recap img.recap-organ{background:transparent!important}
+
+#stage[data-scene=done] #organ-reveal{display:none!important}

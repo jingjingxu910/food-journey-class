@@ -19,6 +19,7 @@ const stage=$('stage'),host=$('world'),clock=new THREE.Clock();
 const state={phase:'ready',fluid:false,motion:0,mixed:0,wrong:0,back:0,identified:false,finished:false,routeProgress:0,foodStage:'bolus',mixing:false,seen:new Set()};
 let renderer,scene,camera,wall,liquid,food,gate,cardia,materialShader,liquidShader,foodInstances,bubbleInstances,bolusSprite,chymeSprite,wetCoat,wetSheen;
 let wetUntil=0;
+let previewPaused=false;
 let elapsed=0,lastDraw=0,held=false,pointer=null,moving=null,viewTween=null,viewYaw=0,viewPitch=0,lastProgressAt=0;
 let chymeInstances=null;
 let desiredYaw=0,desiredPitch=0,anatomyTimer=0,ready=false,frame=0,photoFood=null,photoFoodShader=null;
@@ -318,6 +319,7 @@ function updateLandmark(o){
 }
 function draw(ms){
  frame=requestAnimationFrame(draw);
+ if(previewPaused)return;
  if(ms-lastDraw<16)return;
  lastDraw=ms;
  const dt=Math.min(clock.getDelta(),.083);
@@ -391,7 +393,7 @@ $('close-anatomy').onclick=()=>{$('anatomy').close();clearTimeout(anatomyTimer);
 $('replay').onclick=()=>location.reload();$('fullscreen').onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();try{await screen.orientation?.lock('portrait');}catch{} }catch{hint('点击“本组的探索与发现”，一起回顾这趟旅行吧！');}};
 // A read-only diagnostic is deliberately separate from classroom data and stays on this device.
 window.addEventListener('message',e=>{if(!inVoyage||e.origin!==location.origin||e.source!==parent||e.data?.channel!=='food-journey-parent')return;if(e.data.type==='enter'&&ready)enterVoyage();if(e.data.type==='answer')withPlayerAction(()=>answer(e.data.value));if(e.data.type==='navigate'&&['explore','exit'].includes(state.phase)){withPlayerAction(()=>{if(e.data.direction==='forward')forward();else if(e.data.direction==='back')backward();});}if(e.data.type==='knowledge-continue')$('close-knowledge').onclick();});
-window.stomachSample={get visualState(){return{phase:state.phase,yaw:viewYaw,pitch:viewPitch,camera:camera?.position.toArray(),quaternion:camera?.quaternion.toArray()};},setObservedState(next){
+window.stomachSample={get visualState(){return{phase:state.phase,yaw:viewYaw,pitch:viewPitch,camera:camera?.position.toArray(),quaternion:camera?.quaternion.toArray()};},pausePreview(paused){previewPaused=paused;},setObservedState(next){
  if(!next||!camera)return;
  state.mixed=Math.max(0,Math.min(1,Number(next.mixed)||0));
  state.fluid=!!next.fluid;

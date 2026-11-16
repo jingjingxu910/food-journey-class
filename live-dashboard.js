@@ -33,7 +33,7 @@ function setup(){
    return;
   }
   if(!gameSrc){
-   gameSrc='journey-game.html?observe=1&layout=landscape&v=20261118-classroom-review';
+   gameSrc='journey-game.html?observe=1&layout=landscape&v=classroom-last-frame';
    gameFrame.src=gameSrc;
   }
   sendGameState(gameFrame,state);
@@ -61,22 +61,23 @@ function setup(){
    const box=card.querySelector('.live-game-scene');
    if(!box||!state)continue;
    let frame=box.querySelector('iframe');
-   if(focus){
-    frame?.remove();
-    continue;
-   }
+   if(focus)continue;
    if(!frame){
     frame=document.createElement('iframe');
     frame.title='本组游戏画面';
     frame.className='live-game-card-frame';
-    frame.src='journey-game.html?observe=1&v=20261118-classroom-review';
-    frame.onload=()=>sendGameState(frame,stateFor(Number(card.dataset.group)));
+    frame.src='journey-game.html?observe=1&v=classroom-last-frame';
+    frame.onload=()=>{
+     if(focus)frame.contentWindow?.postMessage({channel:'journey-observer',paused:true},location.origin);
+     else sendGameState(frame,stateFor(id));
+    };
     box.replaceChildren(frame);
    }
    sendGameState(frame,state);
   }
  }
  let phase=window.currentTeacherLivePhase||null,page=0,focus=null,resetId=null,records=[],snapshots=new Map(),watcher=null,watchVersion=0,token='',initial=true,demo=false;
+ const phaseSnapshots=new Map([[phase,snapshots]]),lastCameraFrames=new Map();
  const seen=new Map(),unread=new Map(),flashes=new Map(),demoSubmitted=new Set();let lastControl='',controlBusy=false,controlAgain=false;
  const focusedNotice=document.createElement('p');focusedNotice.className='live-notice';focusedNotice.setAttribute('role','status');dialog.querySelector('header').after(focusedNotice);
  const stageLabel=()=>({v1:'初始模型',observation:'AR观察',v2:'修正模型',journey:'食物旅行'}[phase]||'');
@@ -133,11 +134,9 @@ function setup(){
     return '<section class="live-findings"><strong>本组发现</strong><div>'+organs.map(id=>'<figure><img src="assets/models/ar-thumbnails/'+id+'.png" alt=""><figcaption>'+organNames[id]+'</figcaption></figure>').join('')+'</div></section>';
    }
    const organ=/^[a-z-]+$/.test(state.organId||'')?state.organId:null;
-   const frame=snapshots.get(id);
-   const freshCamera=!demo&&(!focus||focus===id)&&state.sharePreview&&frame?.token===token&&Date.now()-frame.updatedAt<4000;
-   if(freshCamera&&/^data:image\/jpeg;base64,[a-z0-9+/=]+$/i.test(state.image||'')){
-    return '<div class="live-scene live-camera-still"><img src="'+state.image+'" alt="学生相机预览"></div>';
-   }
+   const camera=demo?null:lastCameraFrames.get(id);
+   if(camera)return '<div class="live-scene live-camera-still"><img src="'+camera+'" alt="学生相机预览"></div>';
+   if(state.sharePreview)return '<div class="live-empty">等待相机画面</div>';
    const src=organ?'assets/models/ar-thumbnails/'+organ+'.png':'';
    return src?'<div class="live-scene live-capture"><img src="'+src+'" alt="'+escape(state.organName||'器官观察')+'"></div><p class="live-game-copy">'+escape(state.organName||'器官观察')+'</p>':'<div class="live-empty">'+(state.completed?'观察完成':'观察身体里的器官')+'</div>';
   }
@@ -165,17 +164,18 @@ function setup(){
   const rowHeight=(available-toolbar.offsetHeight-Math.max(42,notice.offsetHeight)-24)/rows;
   wall.style.setProperty('--game-preview-width',Math.max(75,(rowHeight-116)*.75)+'px');
   const pages=wall.querySelector('.live-pages');
-  pages.innerHTML=Array.from({length:Math.ceil(12/pageSize)},(_,p)=>{
+  const pageMarkup=Array.from({length:Math.ceil(12/pageSize)},(_,p)=>{
    const count=[...unread.keys()].filter(key=>key.startsWith(phase+':')&&Math.floor((Number(key.split(':')[1])-1)/pageSize)===p).length;
    return '<button data-page="'+p+'" aria-current="'+(p===page?'page':'false')+'">第 '+(p*pageSize+1)+'–'+Math.min(12,(p+1)*pageSize)+' 组'+(count?'<small>'+count+' 组新提交</small>':'')+'</button>';
   }).join('');
+  if(pages.renderedMarkup!==pageMarkup){pages.innerHTML=pageMarkup;pages.renderedMarkup=pageMarkup;}
   const grid=wall.querySelector('.live-grid');
   grid.dataset.phase=phase;
-  const markup=groupIds().map(id=>{
+  const markup=focus?grid.renderedMarkup:groupIds().map(id=>{
    const submitted=demo?(id%4===0||demoSubmitted.has(phase+':'+id)):!!completion(id),key=phase+':'+id,isUnread=unread.has(key),flash=Date.now()-(flashes.get(key)||0)<3200;
    return `<button type="button" class="live-card${submitted?' is-submitted':''}${isUnread?' is-unread':''}${flash?' is-new':''}" data-group="${id}" aria-label="放大第 ${id} 组"><header><strong>第 ${id} 组</strong><span class="live-status">${isUnread?'✓ 新提交':submitted?'✓ 已提交':stateFor(id)?'探索中':'等待进入'}</span></header>${preview(stateFor(id),id,submitted)}</button>`;
   }).join('');
-  if(grid.renderedMarkup!==markup){
+  if(!focus&&grid.renderedMarkup!==markup){
    const next=document.createElement('template');
    next.innerHTML=markup;
    const cards=Array.from(next.content.children);
@@ -189,21 +189,38 @@ function setup(){
      if(currentPhoto&&nextPhoto&&current.className===card.className){currentPhoto.src=nextPhoto.src;return;}
      const currentScene=current.querySelector('.live-game-scene');
      const nextScene=card.querySelector('.live-game-scene');
-     if(currentScene?.querySelector('iframe')&&nextScene&&card.querySelector('progress')&&current.querySelector('progress')){
+     if(currentScene?.querySelector('iframe')&&nextScene&&grid.renderedPhase===phase){
       current.className=card.className;
-      current.querySelector('header').replaceWith(card.querySelector('header'));
-      current.querySelector('.live-game-copy').replaceWith(card.querySelector('.live-game-copy'));
-      current.querySelector('progress').value=card.querySelector('progress').value;
+      for(const child of [...current.children])if(child!==currentScene)child.remove();
+      current.prepend(card.querySelector('header'));
+      for(const child of [...card.children])if(child!==nextScene)current.append(child);
      }else current.replaceWith(card);
     });
    }
    grid.renderedMarkup=markup;
+   grid.renderedPhase=phase;
   }
-  updateGameCards(grid);
+  const paused=Boolean(focus);
+  if(grid.previewsPaused!==paused){
+   grid.previewsPaused=paused;
+   for(const frame of grid.querySelectorAll('iframe'))frame.contentWindow?.postMessage({channel:'journey-observer',paused},location.origin);
+  }
+  if(!paused)updateGameCards(grid);
   const updatedGroups=[...unread.keys()].filter(key=>key.startsWith(phase+':')).map(key=>Number(key.split(':')[1]));
   wall.querySelector('.live-notice').textContent=updatedGroups.length?'第 '+updatedGroups.join('、')+' 组已提交':'';
   focusedNotice.textContent=focus&&updatedGroups.includes(focus)?'本组已提交':'';
-  if(focus){dialog.querySelector('h2').textContent=`第 ${focus} 组 · ${stageLabel()}`;dialog.querySelector('.live-focus-content').innerHTML=preview(stateFor(focus),focus,demo?(focus%4===0||demoSubmitted.has(phase+':'+focus)):!!completion(focus),true);}
+  if(focus){
+   dialog.querySelector('h2').textContent='第 '+focus+' 组 · '+stageLabel();
+   const content=dialog.querySelector('.live-focus-content');
+   const state=stateFor(focus);
+   const previewMarkup=preview(state,focus,demo?(focus%4===0||demoSubmitted.has(phase+':'+focus)):!!completion(focus),true);
+   if(content.renderedMarkup!==previewMarkup){
+    const photo=content.querySelector('.live-camera-still img');
+    if(photo&&previewMarkup.startsWith('<div class="live-scene live-camera-still">'))photo.src=lastCameraFrames.get(focus);
+    else content.innerHTML=previewMarkup;
+    content.renderedMarkup=previewMarkup;
+   }
+  }
  }
  async function control(force=false){
   const groups=demo?[]:visible().filter(id=>!completion(id)),signature=JSON.stringify([phase,groups,focus,resetId]);
@@ -222,6 +239,9 @@ function setup(){
    for(const doc of docs||[]){
     const id=Number(doc.groupId),prior=snapshots.get(id);
     if(doc.phase!==phase||(doc.resetId||null)!==(resetId||null)||prior?.updatedAt>=doc.updatedAt||(completion(id)&&prior))continue;
+    if(!doc.state||doc.state.phase!==phase)continue;
+    if(phase==='journey'&&!Object.hasOwn(names,doc.state.stage))continue;
+    if(phase==='observation'&&doc.state.sharePreview&&typeof doc.state.image==='string'&&/^data:image\/jpeg;base64,[a-z0-9+/=]+$/i.test(doc.state.image))lastCameraFrames.set(id,doc.state.image);
     snapshots.set(id,doc);changed=true;
    }
    if(changed)render();
@@ -240,10 +260,10 @@ function setup(){
    if(!result?.code)receive(result.data);
   }catch{/* Reconnect on the next heartbeat. */}
  }
- async function selectPhase(next){if(next===phase){render();return;}phase=next;focus=null;snapshots.clear();if(dialog.open)dialog.close();lastControl='';render();void control();await subscribe();}
+ async function selectPhase(next){if(next===phase){render();return;}phase=next;focus=null;if(!phaseSnapshots.has(next))phaseSnapshots.set(next,new Map());snapshots=phaseSnapshots.get(next);if(dialog.open)dialog.close();lastControl='';render();void control();await subscribe();}
  window.addEventListener('teacher-live-phase',e=>void selectPhase(e.detail));
  window.addEventListener('lesson-records',e=>{
-  const oldRound=resetId;resetId=e.detail.resetId||null;if(oldRound!==resetId){seen.clear();unread.clear();initial=true;snapshots.clear();lastControl='';}
+  const oldRound=resetId;resetId=e.detail.resetId||null;if(oldRound!==resetId){seen.clear();unread.clear();initial=true;for(const entries of phaseSnapshots.values())entries.clear();lastCameraFrames.clear();lastControl='';}
   records=e.detail.records||[];
   const added=[];
   for(let id=1;id<=12;id++)for(const p of ['v1','observation','v2','journey']){const at=completion(id,p),key=p+':'+id,old=seen.get(key);if(at&&old&&old!==at||at&&!old&&!initial){if(p!==phase||id!==focus||!dialog.open){unread.set(key,at);flashes.set(key,Date.now());}added.push(`第 ${id} 组${{v1:' 初始模型',observation:' AR观察',v2:' 修正模型',journey:' 食物旅行'}[p]}`);}seen.set(key,at);}
@@ -255,10 +275,9 @@ function setup(){
  document.querySelector('#refresh-dashboard')?.addEventListener('click',()=>{if(phase&&!demo){void control(true);void subscribe();}});
  const previewPoll=setInterval(()=>{if(!document.hidden&&!watcher&&phase&&!demo)void subscribe();},2000);
  const demoPlayback=setInterval(()=>{if(demo&&phase==='journey'&&!document.hidden){updateGameCards(wall.querySelector('.live-grid'));showGame();}},250);
- const cameraExpiry=setInterval(()=>{if(phase==='observation'&&focus&&dialog.open&&dialog.querySelector('.live-camera-still')&&Date.now()-(snapshots.get(focus)?.updatedAt||0)>=4000)render();},1000);
  const heartbeat=setInterval(()=>{if(!document.hidden){void control(true);if(!watcher&&phase&&!demo)void subscribe();}},20000);
  document.addEventListener('visibilitychange',()=>{if(document.hidden){watchVersion++;watcher?.close();watcher=null;}else void subscribe();void control(true);});
- window.addEventListener('pagehide',()=>{clearInterval(heartbeat);clearInterval(cameraExpiry);clearInterval(demoPlayback);clearInterval(previewPoll);watcher?.close();void writeTeacherFocus({phase:null,groups:[],token});});
+ window.addEventListener('pagehide',()=>{clearInterval(heartbeat);clearInterval(demoPlayback);clearInterval(previewPoll);watcher?.close();void writeTeacherFocus({phase:null,groups:[],token});});
  if(isLocalPreview){
   const row=document.createElement('div');row.className='live-demo-actions';row.innerHTML='<span class="live-demo-badge">本地预览 · 云端已隔离</span><button type="button">显示 12 组演示</button><button type="button" hidden>模拟另一页提交</button>';wall.querySelector('.live-toolbar').append(row);
   const buttons=row.querySelectorAll('button');buttons[0].onclick=()=>{demo=!demo;buttons[0].textContent=demo?'返回本地真实小组':'显示 12 组演示';buttons[1].hidden=!demo;void subscribe();render();void control();};buttons[1].onclick=()=>{const id=page===0?pageSize+1:1,key=phase+':'+id;demoSubmitted.add(key);unread.set(key,Date.now());flashes.set(key,Date.now());wall.querySelector('.live-notice').textContent=`演示：第 ${id} 组已提交，另一页已标记`;render();};

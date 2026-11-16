@@ -41,11 +41,6 @@ window.captureLessonLive=(_state,focused)=>{
   connected?.renderForPreview?.();
   draw(overlay,overlay.getBoundingClientRect());
  }
- const model=$('#organ-3d canvas');
- if(dialogOpen&&model?.width&&model.height){
-  viewerDispose?.renderForPreview?.();
-  draw(model,model.getBoundingClientRect());
- }
  const image=previewCanvas.toDataURL('image/jpeg',.55);
  return image.length<=55000?image:null;
 };
@@ -251,4 +246,4 @@ function updateLinks(){
  svg.innerHTML=paths.length?`<path d="${paths.join(' ')}"/><circle cx="${p.x}" cy="${p.y}" r="4"/>`:'';
 }
 
-window.prepareClassNavigation = async () => { if (!record||observationSubmitting) return false; clearTimeout(saveTimer); if (!isPreview) { if(observation?.pendingSync)await finishObservation(); else await saveRecord(record); } };
+window.prepareClassNavigation = async () => { if (!record||observationSubmitting) return false; clearTimeout(saveTimer); if (!isPreview) { await saveRecord(record); } };

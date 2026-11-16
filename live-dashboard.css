@@ -170,3 +170,9 @@ button.teacher-award-tile{display:block;padding:0;overflow:hidden;text-align:ini
 
 #model-preview-dialog:has(#preview-model-content > .ev-award){width:min(92vw,760px);padding:16px;box-sizing:border-box}
 #preview-model-content > .ev-award{width:100%;margin:12px 0 0;min-height:0;box-sizing:border-box}
+
+.evaluation-teacher .live-grid[data-phase="observation"]{grid-template-rows:repeat(var(--live-rows),auto);align-content:start;align-items:start}
+.evaluation-teacher .live-grid[data-phase="observation"] .live-card{height:auto}
+.evaluation-teacher .live-grid[data-phase="observation"] .live-camera-still{width:min(100%,var(--game-preview-width,260px));aspect-ratio:3/4;margin:8px auto 0;background:#edf5f0}
+.live-focus .live-camera-still{background:#edf5f0}
+.evaluation-teacher .live-grid[data-phase="observation"] .live-empty{flex:none;height:88px}

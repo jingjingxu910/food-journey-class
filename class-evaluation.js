@@ -126,8 +126,8 @@ function setupTeacher(){
    busy=true;renderStars();
    try{
      if(!ready)throw new Error('请先连接课堂。');
-     await flush();
      if(name==='专属奖状'){
+       await flush();
        records=await submittedRecords(state.resetId);
        if(!records.length)throw new Error('还没有本轮作品，暂时无法颁发。');
        const next=structuredClone(state);
@@ -136,6 +136,7 @@ function setupTeacher(){
      }
      const phases={'课题封面':'cover','初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards','课堂研讨':'discussion'};
      await sendClassCommand(state.resetId,phases[name],String(Date.now()),name==='课堂研讨'?{discussionIndex}:{});
+     if(name!=='专属奖状')void flush().catch(()=>{status.textContent='课堂环节已切换，评价记录可点击重试保存';});
      status.textContent=name==='专属奖状'?'已颁发，学生端自动展示':'学生端正在进入'+name;
      render();
    }catch(error){status.textContent=error.message;}finally{busy=false;renderStars();}

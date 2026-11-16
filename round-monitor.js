@@ -2,7 +2,7 @@
 import {readDocument} from './evaluation-data.js?v=20261109-ui3';
 import {cloudDb} from './student-data.js?v=20261116-tablet-fixes';
 let checking=false,lastCheck=0,lastRoundCheck=0,lastStageCommand=null;
-let commandWatcher=null,cachedCommand=null,nextWatchAttempt=0,retryAfter=0,failureDelay=2000;
+let commandWatcher=null,cachedCommand=null,lastCommandRead=0,nextWatchAttempt=0,retryAfter=0,failureDelay=2000;
 function stopCommandWatch(){
  const watcher=commandWatcher;
  commandWatcher=null;
@@ -15,12 +15,13 @@ async function ensureCommandWatch(){
  try{
    const db=await cloudDb();
    if(document.hidden)return;
-   const ref=db.collection('food-journey-groups').doc('class-control');
+   const ref=db.collection('food-journey-groups').where({_id:'class-control'});
    if(typeof ref.watch!=='function')return;
    commandWatcher=ref.watch({
      onChange(snapshot){
        if(document.hidden)return;
        cachedCommand=snapshot.docs?.[0]||{};
+       lastCommandRead=Date.now();
        retryAfter=0;
        void check(true);
      },
@@ -29,7 +30,7 @@ async function ensureCommandWatch(){
  }catch{stopCommandWatch();}
 }
 async function check(force=false){
- if(checking||document.hidden||Date.now()<retryAfter||(!force&&Date.now()-lastCheck<1500))return;
+ if(checking||document.hidden||Date.now()<retryAfter||(!force&&Date.now()-lastCheck<1000))return;
  const frame=document.querySelector('#lesson-frame');
  if(!frame)return;
  let url;
@@ -55,10 +56,16 @@ async function check(force=false){
      }
    }
    await ensureCommandWatch();
-   const command=cachedCommand||await readDocument('class-control');
+   let command=cachedCommand;
+   if(!command||Date.now()-lastCommandRead>6000){
+     const since=lastCommandRead;
+     const latest=await readDocument('class-control');
+     if(lastCommandRead===since){cachedCommand=latest;lastCommandRead=Date.now();}
+     command=cachedCommand||latest;
+   }
    failureDelay=2000;retryAfter=0;
    const known=JSON.parse(localStorage.getItem('lesson-known-round')||'null');
-   if(command.resetId!==known)return;
+   if((command.resetId||null)!==known)return;
    const stageRoutes={cover:'index.html?classroom=cover',v1:'model-workbench.html?phase=v1',v2:'model-workbench.html?phase=v2',observation:'observation.html',assembly:'assembly.html',journey:'journey.html',discussion:'discussion.html?question='+Math.max(0,Math.min(2,Number(command.discussionIndex)||0))};
    const route=stageRoutes[command.phase];
    if(route){
@@ -83,7 +90,7 @@ async function check(force=false){
    failureDelay=Math.min(60000,failureDelay*2);
  }finally{checking=false;}
 }
-setInterval(check,2000);
+setInterval(check,1200);
 window.addEventListener('focus',()=>void check(true));
 window.addEventListener('online',()=>{nextWatchAttempt=0;retryAfter=0;void check(true);});
 document.addEventListener('visibilitychange',()=>{

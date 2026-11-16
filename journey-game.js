@@ -14,7 +14,7 @@ import {groupId,homeUrl,allRecords,currentRecord,saveRecord,submitRecord} from '
 
 const $=id=>document.getElementById(id),host=$('world'),stage=$('stage');
 const observerMode=new URLSearchParams(location.search).get('observe')==='1';
-let observedState,observerReady=false,lastObservedFrame=0;
+let observedState,observerReady=false,lastObservedFrame=0,observerPaused=false;
 const companion=new JourneyCompanion(stage),miniMap=new JourneyMiniMap(stage);
 const queuedHints=[];
 let suppressHint=false, playerAction=false;
@@ -164,7 +164,7 @@ function init3D(){renderer=new THREE.WebGLRenderer({antialias:false,powerPrefere
 function resize(){if(!renderer||!host.clientWidth||!host.clientHeight)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25,Math.sqrt(900000/(host.clientWidth*host.clientHeight))));renderer.setSize(host.clientWidth,host.clientHeight,false);camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();positionMouth();}
 function positionMouth(){const w=stage.clientWidth,h=stage.clientHeight,scale=Math.max(w/1586,h/992),iw=1586*scale,ih=992*scale;Object.assign($('mouth-entry').style,{left:`${(w-iw)/2+iw*.413}px`,top:`${(h-ih)/2+ih*.49}px`,width:`${iw*.17}px`,height:`${ih*.23}px`});}
 function prepareStomach(restore=false){
- if(stomachFrame)return;stomachReady=false;stomachFrame=$('stomach-frame');stomachFrame.style.transition='none';stomachFrame.hidden=false;stomachFrame.style.opacity='0';stomachFrame.style.pointerEvents='none';const u=new URL('stomach-sample.html',location.href);u.searchParams.set('v','20261118-game-mirror');u.searchParams.set('voyage','1');u.searchParams.set('autostart','0');u.searchParams.set('group',groupId);if(restore&&log.stomach)u.searchParams.set('restore',JSON.stringify(log.stomach));stomachFrame.src=u.href;
+ if(stomachFrame)return;stomachReady=false;stomachFrame=$('stomach-frame');stomachFrame.style.transition='none';stomachFrame.hidden=false;stomachFrame.style.opacity='0';stomachFrame.style.pointerEvents='none';const u=new URL('stomach-sample.html',location.href);u.searchParams.set('v','classroom-retained-preview');u.searchParams.set('voyage','1');u.searchParams.set('autostart','0');u.searchParams.set('group',groupId);if(restore&&log.stomach)u.searchParams.set('restore',JSON.stringify(log.stomach));stomachFrame.src=u.href;
 }
 function zoomInto(next,options,source,focus,scale,duration){
  const frame=stage.getBoundingClientRect();
@@ -345,7 +345,7 @@ function backward(){
  if(rearHints[where])hint(rearHints[where]);
 }
 function restart(){const previous=log;log=fresh();log.attempts=[...previous.attempts,{at:Date.now(),reason:'restart',wrong:previous.wrong,events:previous.events}];log.coughs=previous.coughs;log.vomits=previous.vomits;started=true;foodCurrent=foodTo=foodFrom='whole';foodBlend=1;drawFood(0);$('save-status').textContent='';organReveal.hidden=true;$('finished').hidden=true;$('intro').hidden=true;go('outside');}
-function finish(){motionRunning=false;where='done';stage.dataset.scene='done';miniMap.update('done');hint('牙齿把饼干嚼碎，食管把食团送进胃。胃把食物搅成食糜。接下来，小肠吸收营养，大肠再吸收一部分水分。','report',{immediate:false});log.stage='done';log.completedAt??=Date.now();holding=false;event('complete');controls(false);$('detail').hidden=true;$('food-display').hidden=true;$('food-caption').hidden=true;$('observation').hidden=true;$('hint').hidden=true;updateTravelProgress(1);$('step-label').textContent='旅行完成';$('finished').hidden=false;renderReflection(document,organs,log,foodArt);persist();liveState();}
+function finish(){organReveal.hidden=true;$('question').close();motionRunning=false;where='done';stage.dataset.scene='done';miniMap.update('done');hint('牙齿把饼干嚼碎，食管把食团送进胃。胃把食物搅成食糜。接下来，小肠吸收营养，大肠再吸收一部分水分。','report',{immediate:false});log.stage='done';log.completedAt??=Date.now();holding=false;event('complete');controls(false);$('detail').hidden=true;$('food-display').hidden=true;$('food-caption').hidden=true;$('observation').hidden=true;$('hint').hidden=true;updateTravelProgress(1);$('step-label').textContent='旅行完成';$('finished').hidden=false;renderReflection(document,organs,log,foodArt);persist();liveState();}
 function drawObservedScene(dt){
  if(!observerReady||!observedState)return;
  const {stage:sceneName,food:foodKey,view={},progress=0,interface:ui={}}=observedState;
@@ -410,7 +410,12 @@ function drawObservedScene(dt){
 if(observerMode){
  document.body.classList.add('journey-observer');
  window.addEventListener('message',event=>{
-  if(event.origin===location.origin&&event.source===parent&&event.data?.channel==='journey-observer')observedState=event.data.state;
+  if(event.origin!==location.origin||event.source!==parent||event.data?.channel!=='journey-observer')return;
+  if(typeof event.data.paused==='boolean'){
+   observerPaused=event.data.paused;
+   stomachFrame?.contentWindow?.stomachSample?.pausePreview?.(observerPaused);
+  }
+  if(event.data.state)observedState=event.data.state;
  });
 }
 
@@ -419,7 +424,7 @@ function draw(ms){
  const dt=Math.min(.083,last?(ms-last)/1000:.016);last=ms;
  if(document.hidden||!renderer)return;
  if(observerMode){
-  if(ms-lastObservedFrame>=28){const delta=Math.min(.083,(ms-lastObservedFrame)/1000);lastObservedFrame=ms;drawObservedScene(delta);}
+  if(!observerPaused&&ms-lastObservedFrame>=28){const delta=Math.min(.083,(ms-lastObservedFrame)/1000);lastObservedFrame=ms;drawObservedScene(delta);}
   return;
  }
  if(started)drawTravelProgress(dt);
@@ -466,7 +471,7 @@ $('start').onclick=()=>{log=fresh();started=true;companion.unlock();$('intro').h
 $('submit').onclick=async()=>{if(!log.completedAt)return;const button=$('submit');button.disabled=true;$('save-status').textContent='正在保存本组发现…';try{await import('./cloud-loader.js');const record=await currentRecord();if(log.lessonRecordId&&record.id!==log.lessonRecordId){$('save-status').textContent='课堂已开始新一轮，请返回课堂重新出发。';return;}record.journey={...log,schema:3,phase:'exit',history:log.events,identified:log.identified,activities:{chews:log.chews,saliva:log.saliva,nutrientAbsorption:log.absorbed,waterAbsorption:log.water}};record.pendingSync=true;await saveRecord(record);const ok=await submitRecord(record);if(ok){record.pendingSync=false;await saveRecord(record);}$('save-status').textContent=ok?'本组发现已提交。':'本机已保存，网络恢复后可再次提交。';}catch{$('save-status').textContent='暂时无法提交，请重试；旅行记录仍保留在本机。';}finally{button.disabled=false;}};
 window.addEventListener('message',e=>{
  if(e.origin!==location.origin||!stomachFrame||e.source!==stomachFrame.contentWindow||e.data?.channel!=='food-journey-stomach')return;
- if(e.data.type==='ready'){stomachReady=true;if(where==='stomach'&&transport?.mode!=='passage')stomachFrame.contentWindow.postMessage({channel:'food-journey-parent',type:'enter'},location.origin);return;}
+ if(e.data.type==='ready'){stomachReady=true;if(observerMode&&observerPaused)stomachFrame.contentWindow.stomachSample?.pausePreview?.(true);if(where==='stomach'&&transport?.mode!=='passage')stomachFrame.contentWindow.postMessage({channel:'food-journey-parent',type:'enter'},location.origin);return;}
  if(where!=='stomach')return;
  if(e.data.type==='question'){if(e.data.playerAction)onPlayerAction(ask)('stomach');else ask('stomach');}
  if(e.data.type==='advance')organReveal.hidden=true;
