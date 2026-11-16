@@ -262,7 +262,7 @@ function setup(){
  }
  async function selectPhase(next){if(next===phase){render();return;}phase=next;focus=null;if(!phaseSnapshots.has(next))phaseSnapshots.set(next,new Map());snapshots=phaseSnapshots.get(next);if(dialog.open)dialog.close();lastControl='';render();void control();await subscribe();}
 
- window.addEventListener('remote-display-state',event=>{
+ window.addEventListener('remote-display-state',event=>queueMicrotask(()=>{
   if(!phase)return;
   const remote=event.detail;
   const nextFocus=remote.group||null;
@@ -274,7 +274,7 @@ function setup(){
   render();
   if(focus&&!dialog.open)dialog.showModal();
   void control();
- });
+ }));
  window.addEventListener('teacher-live-phase',e=>void selectPhase(e.detail));
  window.addEventListener('lesson-records',e=>{
   const oldRound=resetId;resetId=e.detail.resetId||null;if(oldRound!==resetId){seen.clear();unread.clear();initial=true;for(const entries of phaseSnapshots.values())entries.clear();lastCameraFrames.clear();lastControl='';}
