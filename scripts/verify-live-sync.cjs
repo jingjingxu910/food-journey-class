@@ -34,6 +34,15 @@ const run=code=>vm.runInContext(code,ctx),settle=()=>new Promise(r=>setImmediate
  run("states[3].model.positions.mouth.x=52");
  now+=3500;for(const f of timers.values())f();await settle();
  assert.equal(liveWrites().length,count,'submitted group removed from focus stops uploads');
+ run("states[1]={phase:'observation',sharePreview:true};var camera=createStudentPublisher({groupId:12,getState:()=>states[1],capture:()=> 'data:image/jpeg;base64,AA=='});");await settle();
+ await run("writeTeacherFocus({phase:'observation',groups:[12],token:'camera-overview'})");await settle();
+ assert.equal(liveWrites().at(-1)[1].state.image,null);
+ await run("writeTeacherFocus({phase:'observation',groups:[12],focus:true,token:'camera-focus'})");await settle();
+ const cameraCount=liveWrites().length;
+ assert.match(liveWrites().at(-1)[1].state.image,/^data:image/);
+ now+=500;for(const f of timers.values())f();await settle();
+ assert.equal(liveWrites().length,cameraCount+1,'Camera refreshes without a change in organ selection');
+ run("camera.close()");
  run("publishers.forEach(p=>p.close())");assert.equal(timers.size,0);
  console.log('PASS: local isolation, 12 groups, page selection, 3s/1s throttling, unchanged suppression, focus, page catch-up, lease expiration, cleanup');
 })().catch(e=>{console.error(e);process.exitCode=1});

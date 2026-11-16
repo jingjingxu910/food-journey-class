@@ -133,11 +133,15 @@
 #recap .recap-images:has(>canvas:only-child){grid-template-rows:clamp(60px,14vh,172px)}
 @supports not (height:1cqh){#stage{--nav-edge:min(calc(var(--mini-height) + 44px),32vh);--direction-height:clamp(46px,8vh,96px)}}
 
-#stage #forward,#stage #back{top:auto!important;bottom:16px!important;z-index:32;width:clamp(52px,9vw,92px);height:clamp(48px,9vh,80px)}
-#stage #forward{right:16px}
-#stage #back{right:calc(24px + clamp(52px,9vw,92px))}
-#stage #journey-minimap{bottom:calc(28px + clamp(48px,9vh,80px))}
+#stage{--nav-size:clamp(54px,8vh,84px);--map-actual-height:min(var(--mini-height),42%)}
+#stage #journey-minimap:not(.expanded){bottom:16px;height:var(--map-actual-height)}
+#stage #back,#stage #forward{top:auto;right:16px;width:var(--nav-size);height:var(--nav-size);z-index:32;padding:4px;gap:2px;font-size:clamp(16px,3vh,28px);line-height:1}
+#stage :is(#forward,#back) span{flex:none;white-space:nowrap;font-size:clamp(13px,2.5vh,20px);line-height:1.2}
+#stage #back{bottom:calc(var(--map-actual-height) + 26px)}
+#stage #forward{bottom:calc(var(--map-actual-height) + 34px + var(--nav-size))}
+@media(orientation:landscape) and (max-height:710px){
+ #stage #back{right:calc(24px + var(--nav-size))}
+ #stage #forward{bottom:calc(var(--map-actual-height) + 26px)}
+}
 
-.journey-observer #experience{padding:0;gap:0}
-.journey-observer :is(header,#companion,#journey-minimap,#journey-side-map,#forward,#back,#detail,#passages,.topline,#hint,#food-caption,#observation){display:none!important}
-.journey-observer #stage{border-radius:0;pointer-events:none}
+.journey-observer #experience{pointer-events:none}

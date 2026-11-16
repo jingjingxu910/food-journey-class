@@ -1,8 +1,9 @@
+import {chewForms,chewLabels,chewStep} from './journey-chew-stages.js';
 import {bindSceneLongPress} from './journey-long-press.js';
 import * as THREE from './vendor/three.module.js';
 import {JourneyCompanion} from './journey-companion.js?v=20261113-opening-queue';
 import {JourneyMiniMap} from './journey-mini-map.js?v=20261113-map-sync';
-import './live-sync.js?v=20261117-camera';
+import './live-sync.js?v=20261118-ar-stills';
 import {prepareMucosa} from './journey-anatomy-v2.js';
 import {prepareFixedScenes,FixedScenes,fixedStage} from './journey-fixed-scenes.js?v=20261113-pharynx-wall';
 import {buildLumen,prepareLumenAssets} from './journey-lumen.js?v=20261113-stomach-wave';
@@ -52,7 +53,12 @@ const atlas=new Image(),stomachFood=new Image(),newFoodAtlas=new Image();newFood
 for(const a of document.querySelectorAll('#home,#end-home'))a.href=homeUrl();
 function persist(){if(observerMode||!started)return;log.stage=where;try{localStorage.setItem(storageKey,JSON.stringify(log));}catch{}}
 function event(type,extra={}){log.events.push({type,scene:where,at:Date.now(),...extra});persist();}
-function liveState(){const progress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;window.dispatchEvent(new CustomEvent('lesson-live-state',{detail:{phase:'journey',stage:where,food:foodCurrent,foodName:$('food-name').textContent,progress:Math.round(progress*100)/100,view:{yaw:+yaw.toFixed(2),pitch:+pitch.toFixed(2),u:+canalU.toFixed(3),wall:+wallMotion.toFixed(2),jaw:+fixedScenes.chew.toFixed(2),swallow:+fixedScenes.swallow.toFixed(2),stomach:where==='stomach'&&log.stomach?{mixed:log.stomach.mixed,fluid:log.stomach.fluid,foodStage:log.stomach.foodStage,motion:log.stomach.motion,routeProgress:log.stomach.routeProgress}:null},hint:companion.last,identified:log.identified,completed:!!log.completedAt}}));return progress;}
+function liveState(){if(observerMode||!started)return;const progress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;window.dispatchEvent(new CustomEvent('lesson-live-state',{detail:{phase:'journey',stage:where,viewport:{width:innerWidth,height:innerHeight},food:foodCurrent,foodName:$('food-name').textContent,progress:Math.round(progress*100)/100,view:{yaw:+yaw.toFixed(2),pitch:+pitch.toFixed(2),u:+canalU.toFixed(3),wall:+wallMotion.toFixed(2),jaw:+fixedScenes.chew.toFixed(2),swallow:+fixedScenes.swallow.toFixed(2),stomach:where==='stomach'&&log.stomach?{mixed:log.stomach.mixed,fluid:log.stomach.fluid,foodStage:log.stomach.foodStage,motion:log.stomach.motion,routeProgress:log.stomach.routeProgress}:null},interface:{
+ map:miniMap.button.classList.contains('expanded'),
+ side:miniMap.side.classList.contains('expanded'),
+ reveal:!organReveal.hidden,
+ question:$('question').open?{title:$('question').querySelector('h2').textContent,text:$('question-text').textContent,options:Array.from($('answers').children,button=>button.textContent),feedback:$('answer-hint').textContent}:null
+ },hint:companion.last,identified:log.identified,completed:!!log.completedAt}}));return progress;}
 function hint(s,kind='hint',options={}){
  if(!started)return;
  const {immediate=playerAction,onShow,...presentation}=options;
@@ -158,7 +164,7 @@ function init3D(){renderer=new THREE.WebGLRenderer({antialias:false,powerPrefere
 function resize(){if(!renderer||!host.clientWidth||!host.clientHeight)return;renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.25,Math.sqrt(900000/(host.clientWidth*host.clientHeight))));renderer.setSize(host.clientWidth,host.clientHeight,false);camera.aspect=host.clientWidth/host.clientHeight;camera.updateProjectionMatrix();positionMouth();}
 function positionMouth(){const w=stage.clientWidth,h=stage.clientHeight,scale=Math.max(w/1586,h/992),iw=1586*scale,ih=992*scale;Object.assign($('mouth-entry').style,{left:`${(w-iw)/2+iw*.413}px`,top:`${(h-ih)/2+ih*.49}px`,width:`${iw*.17}px`,height:`${ih*.23}px`});}
 function prepareStomach(restore=false){
- if(stomachFrame)return;stomachReady=false;stomachFrame=$('stomach-frame');stomachFrame.style.transition='none';stomachFrame.hidden=false;stomachFrame.style.opacity='0';stomachFrame.style.pointerEvents='none';const u=new URL('stomach-sample.html',location.href);u.searchParams.set('v','20261113-opening-queue');u.searchParams.set('voyage','1');u.searchParams.set('autostart','0');u.searchParams.set('group',groupId);if(restore&&log.stomach)u.searchParams.set('restore',JSON.stringify(log.stomach));stomachFrame.src=u.href;
+ if(stomachFrame)return;stomachReady=false;stomachFrame=$('stomach-frame');stomachFrame.style.transition='none';stomachFrame.hidden=false;stomachFrame.style.opacity='0';stomachFrame.style.pointerEvents='none';const u=new URL('stomach-sample.html',location.href);u.searchParams.set('v','20261118-game-mirror');u.searchParams.set('voyage','1');u.searchParams.set('autostart','0');u.searchParams.set('group',groupId);if(restore&&log.stomach)u.searchParams.set('restore',JSON.stringify(log.stomach));stomachFrame.src=u.href;
 }
 function zoomInto(next,options,source,focus,scale,duration){
  const frame=stage.getBoundingClientRect();
@@ -274,9 +280,9 @@ function chew(){
  chewRun={born:time,step:0};busy=true;event('chew-start');hint('看看牙齿咀嚼饼干的时候，饼干有什么变化。','feedback');
 }
 function tickChew(){
- if(!chewRun)return;const elapsed=time-chewRun.born,step=Math.min(3,1+Math.floor(elapsed/1.5));
+ if(!chewRun)return;const elapsed=time-chewRun.born,step=chewStep(elapsed);
  oralPulse=(Math.sin(elapsed*6)+1)/2;
- if(step!==chewRun.step){chewRun.step=step;log.chews=step;spawnFlow('crumb',10);spawnFlow('saliva',16);food(step===1?'chunks':step===2?'pieces':'bolus',step===1?'湿润的大碎块':step===2?'湿润的小碎块':'湿润的食团');event('chew');if(step===2)hint('快看，饼干碎了，变湿了，变软了！','feedback');}
+ if(step!==chewRun.step){chewRun.step=step;log.chews=step;spawnFlow('crumb',10);spawnFlow('saliva',16);food(chewForms[step],chewLabels[step]);event('chew');if(step===2)hint('快看，饼干碎了，变湿了，变软了！','feedback');}
  if(elapsed>=4.8){chewRun=null;log.saliva=true;busy=false;oralPulse=0;event('saliva');refreshEvidence();setTimeout(()=>ask('mouth'),900);}
 }
 function wetMouth(){help();}
@@ -341,13 +347,37 @@ function restart(){const previous=log;log=fresh();log.attempts=[...previous.atte
 function finish(){motionRunning=false;where='done';stage.dataset.scene='done';miniMap.update('done');hint('牙齿把饼干嚼碎，食管把食团送进胃。胃把食物搅成食糜。接下来，小肠吸收营养，大肠再吸收一部分水分。','report',{immediate:false});log.stage='done';log.completedAt??=Date.now();holding=false;event('complete');controls(false);$('detail').hidden=true;$('food-display').hidden=true;$('food-caption').hidden=true;$('observation').hidden=true;$('hint').hidden=true;updateTravelProgress(1);$('step-label').textContent='旅行完成';$('finished').hidden=false;renderReflection(document,organs,log,foodArt);persist();liveState();}
 function drawObservedScene(dt){
  if(!observerReady||!observedState)return;
- const {stage:sceneName,food:foodKey,view={},progress=0}=observedState;
+ const {stage:sceneName,food:foodKey,view={},progress=0,interface:ui={}}=observedState;
  if(!sequence.includes(sceneName))return;
  if(where!==sceneName||!started){
   commitScene(sceneName,{restore:true});
   started=true;
-  stage.querySelectorAll('.direction').forEach(element=>element.hidden=true);
+
  }
+ const sceneIndex=Math.max(0,sequence.indexOf(sceneName));
+ $('progress').value=(sceneIndex+progress)/sequence.length*$('progress').max;
+ miniMap.update(sceneName,progress);
+ if(miniMap.button.classList.contains('expanded')!==!!ui.map)miniMap.toggle(!!ui.map);
+ if(miniMap.side.classList.contains('expanded')!==!!ui.side)miniMap.toggleSide(!!ui.side);
+ const organ=organs[sceneName];
+ if(ui.reveal&&organ){
+  if(organReveal.hidden)revealOrgan(organ.name,organ.image);
+ }else organReveal.hidden=true;
+ const question=$('question');
+ if(ui.question){
+  const {title,text,options,feedback}=ui.question;
+  if(!question.open||$('question-text').textContent!==text){
+   question.querySelector('h2').textContent=title;
+   $('question-text').textContent=text;
+   $('answers').replaceChildren(...options.map(name=>{
+    const button=document.createElement('button');
+    button.textContent=name;
+    return button;
+   }));
+   if(!question.open)question.show();
+  }
+  $('answer-hint').textContent=feedback;
+ }else if(question.open)question.close();
  if(sceneName==='stomach'){
   stomachFrame?.contentWindow?.stomachSample?.setObservedState?.(view.stomach);
   return;
@@ -387,8 +417,10 @@ function draw(ms){
  if(document.hidden||!renderer)return;
  if(observerMode){drawObservedScene(dt);return;}
  if(started)drawTravelProgress(dt);
- if(where==='done'||document.querySelector('dialog[open]'))return;
- time+=dt;const mapProgress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;miniMap.update(where,mapProgress);if(started&&where!=='done')updateTravelProgress(mapProgress);if(time-lastLive>.4){lastLive=time;liveState();}tickChew();if(swallowRun){fixedScenes.swallow=Math.min(1,(time-swallowRun.born)/1.2);if(time-swallowRun.born>2.3){swallowRun=null;busy=false;go('esophagus');}}
+ if(where==='done')return;
+ if(ms-lastLive>=240){lastLive=ms;liveState();}
+ if(document.querySelector('dialog[open]'))return;
+ time+=dt;const mapProgress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;miniMap.update(where,mapProgress);if(started&&where!=='done')updateTravelProgress(mapProgress);tickChew();if(swallowRun){fixedScenes.swallow=Math.min(1,(time-swallowRun.born)/1.2);if(time-swallowRun.born>2.3){swallowRun=null;busy=false;go('esophagus');}}
  if(transport){if(!transport.finalFrame)for(const shader of wallShaders){if(shader.uniforms.uClock)shader.uniforms.uClock.value=time};drawFood(dt);if(advanceTransport())return;}
  // The visible stomach frame owns its food and scene. The parent only draws during handoffs.
  if(where==='stomach')return;

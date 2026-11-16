@@ -1,4 +1,4 @@
-import './live-sync.js?v=20261117-camera';
+import './live-sync.js?v=20261118-ar-stills';
 import {organSegments} from './ar-media-segments.js';
 const isPreview=new URLSearchParams(location.search).get('preview')==='1';
 import {CameraMotion} from './ar-motion.js';
@@ -21,31 +21,23 @@ let record,observation,selected=null,selectedAt=0,stream,worker,mainDetector,obs
 let frame=0,running=false,busy=false,hidden=false,dialogOpen=false,lastFrame=-1,lastSent=0,lastPose=0,targets=null;
 let workerReady=false,starting=false,saveTimer,viewerDispose,viewerGeneration=0,captureWidth=384,interval=100,meanCost=0,lastPaint=0;
 let startupController,connected;const motion=new CameraMotion();let sentMotion=null,targetMotion=null;
+const previewCanvas=document.createElement('canvas');
+window.captureLessonLive=()=>{
+ const video=$('#camera-video');
+ if(isPreview||observation?.completedAt||document.hidden||!stream?.active||video.readyState<2||!video.videoWidth||!video.videoHeight)return null;
+ const scale=Math.min(320/video.videoWidth,240/video.videoHeight,1);
+ previewCanvas.width=Math.max(1,Math.round(video.videoWidth*scale));
+ previewCanvas.height=Math.max(1,Math.round(video.videoHeight*scale));
+ previewCanvas.getContext('2d').drawImage(video,0,0,previewCanvas.width,previewCanvas.height);
+ const image=previewCanvas.toDataURL('image/jpeg',.55);
+ return image.length<=55000?image:null;
+};
 window.readLiveObservation=()=>isPreview||!observation?null:{
- phase:'observation',organId:selected||observation.views.at(-1)?.organId,
+ phase:'observation',sharePreview:!document.hidden&&!!stream?.active&&!observation.completedAt,organId:selected||observation.views.at(-1)?.organId,
  organName:organs.find(organ=>organ.id===(selected||observation.views.at(-1)?.organId))?.name,
  view:dialogOpen?'organ':observation.cameraStarted?'body':'ready',
- cameraShared:!!stream?.active&&$('#share-class-camera').checked,completed:!!observation.completedAt
+ completed:!!observation.completedAt
 };
-let cameraShare, cameraToken, activeLease;
-const shareCamera=()=> {
- const token=activeLease?.phase==='observation'&&activeLease.focus&&activeLease.groups?.includes(groupId)&&activeLease.expiresAt>Date.now()&&$('#share-class-camera').checked&&stream?.active?activeLease.token:null;
- if(token===cameraToken)return;
- cameraShare?.abort();
- cameraShare=null;
- cameraToken=token;
- if(token){
-  const controller=new AbortController();
-  cameraShare=controller;
-  const source=stream;
-  import('./ar-live-camera.js?v=20261117-camera').then(({connectClassCamera})=>{
-   if(!controller.signal.aborted)connectClassCamera({token,stream:source,signal:controller.signal});
-  }).catch(()=>{if(!controller.signal.aborted)controller.abort();});
- }
-};
-$('#share-class-camera').onchange=shareCamera;
-window.updateLessonLiveControl=lease=>{activeLease=lease;shareCamera();};
-
 const metrics={samples:0,totalMs:0,maxMs:0,losses:0,mode:null};
 $('#group-label').textContent=`第 ${groupId} 组`;$('#back-link').href=homeUrl();
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
@@ -152,13 +144,13 @@ function paint(now){
  lastPaint=now;if(busy && now-lastSent>15000){stopCamera();$('#camera-status').textContent='识别暂时没有响应，请重新开启相机';return;}
  lastPaint=now;if(now-lastSent>=interval)void sendFrame(now);
 }
-function stopCamera(){cameraShare?.abort();cameraShare=null;cameraToken=null;connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();motion.reset();targetMotion=null;$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
+function stopCamera(){connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();motion.reset();targetMotion=null;$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
 async function startCamera(){
  if(starting||running||!record)return;starting=true;startupController=new AbortController();$('#cancel-camera').hidden=false;$('#start-camera').disabled=true;
  try{$('#camera-status').textContent='正在开启后置相机…';if(!navigator.mediaDevices?.getUserMedia)throw new Error('请使用支持网页相机的浏览器，并通过 HTTPS 打开课件');
   stream=await waitStartup(navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:'environment'},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}}}),45000,'相机开启等待较久，请检查浏览器相机权限',late=>late.getTracks().forEach(t=>t.stop()));
   if(startupController.signal.aborted){stream.getTracks().forEach(t=>t.stop());throw new DOMException('已取消','AbortError');}
-  $('#camera-video').srcObject=stream;shareCamera();await waitStartup($('#camera-video').play(),15000,'相机画面未就绪，请重新开启');$('#camera-placeholder').hidden=true;
+  $('#camera-video').srcObject=stream;await waitStartup($('#camera-video').play(),15000,'相机画面未就绪，请重新开启');$('#camera-placeholder').hidden=true;
   $('#camera-status').textContent='正在准备观察…';
   const {preparePoseResources}=await waitStartup(import('./pose-resources.js'),30000,'识别资源程序未加载完成，请检查网络后重试');
   await preparePoseResources(startupController.signal,message=>{$('#camera-status').textContent=message;});
