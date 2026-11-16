@@ -22,6 +22,13 @@ const run=code=>vm.runInContext(code,ctx),settle=()=>new Promise(r=>setImmediate
   await run('writeTeacherFocus('+JSON.stringify({phase,groups:[id],token:phase})+')');await settle();
   assert.equal(liveWrites().at(-1)[1].phase,phase);
  }
+ await run("writeTeacherFocus({phase:'journey',groups:[2],focus:true,token:'fast-game'})");await settle();
+ count=liveWrites().length;
+ run("states[2].progress=.25");now+=250;for(const f of timers.values())f();await settle();
+ assert.equal(liveWrites().length,count);
+ now+=250;for(const f of timers.values())f();await settle();
+ assert.equal(liveWrites().length,count+1,'focused game sends two state updates per second');
+ assert.equal(liveWrites().at(-1)[1].state.image,null);
  count=liveWrites().length;
  await run("writeTeacherFocus({phase:'v2',groups:[],token:'submitted'})");await settle();
  run("states[3].model.positions.mouth.x=52");

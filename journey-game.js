@@ -2,7 +2,7 @@ import {bindSceneLongPress} from './journey-long-press.js';
 import * as THREE from './vendor/three.module.js';
 import {JourneyCompanion} from './journey-companion.js?v=20261113-opening-queue';
 import {JourneyMiniMap} from './journey-mini-map.js?v=20261113-map-sync';
-import './live-sync.js?v=20261116-tablet-fixes';
+import './live-sync.js?v=20261117-camera';
 import {prepareMucosa} from './journey-anatomy-v2.js';
 import {prepareFixedScenes,FixedScenes,fixedStage} from './journey-fixed-scenes.js?v=20261113-pharynx-wall';
 import {buildLumen,prepareLumenAssets} from './journey-lumen.js?v=20261113-stomach-wave';
@@ -12,6 +12,8 @@ import {renderReflection} from './journey-reflection.js?v=20261116-tablet-fixes'
 import {groupId,homeUrl,allRecords,currentRecord,saveRecord,submitRecord} from './student-data.js?v=20261116-tablet-fixes';
 
 const $=id=>document.getElementById(id),host=$('world'),stage=$('stage');
+const observerMode=new URLSearchParams(location.search).get('observe')==='1';
+let observedState,observerReady=false;
 const companion=new JourneyCompanion(stage),miniMap=new JourneyMiniMap(stage);
 const queuedHints=[];
 let suppressHint=false, playerAction=false;
@@ -48,34 +50,9 @@ const foodArt={},foodContext=$('food-canvas').getContext('2d'),particles=[],rayc
 const fractureAtlas=new Image();fractureAtlas.src='assets/journey/biscuit-fractures-v4.webp';
 const atlas=new Image(),stomachFood=new Image(),newFoodAtlas=new Image();newFoodAtlas.src='assets/journey/food-atlas-v5.png';atlas.src='assets/journey/food-stages-v3.webp';stomachFood.src='assets/journey/stomach-food-sample.webp';
 for(const a of document.querySelectorAll('#home,#end-home'))a.href=homeUrl();
-function persist(){if(!started)return;log.stage=where;try{localStorage.setItem(storageKey,JSON.stringify(log));}catch{}}
+function persist(){if(observerMode||!started)return;log.stage=where;try{localStorage.setItem(storageKey,JSON.stringify(log));}catch{}}
 function event(type,extra={}){log.events.push({type,scene:where,at:Date.now(),...extra});persist();}
-window.captureLessonLive=()=>{
- if(!started||transport||where==='done')return null;
- let source;
- if(where==='outside')source=$('outside-photo');
- else if(fixedStage(where))source=fixedCanvas;
- else if(where==='stomach')source=stomachFrame?.contentWindow.stomachSample?.worldFrame();
- else if(canal){renderer.render(scene,camera);source=renderer.domElement;}
- if(!source)return null;
- const width=source.naturalWidth||source.width,height=source.naturalHeight||source.height;
- if(!width||!height)return null;
- const canvas=document.createElement('canvas');
- const scale=Math.min(320/width,360/height);
- canvas.width=Math.max(1,Math.round(width*scale));canvas.height=Math.max(1,Math.round(height*scale));
- const context=canvas.getContext('2d');
- context.drawImage(source,0,0,canvas.width,canvas.height);
- const frame=stage.getBoundingClientRect();
- const food=$('food-display').getBoundingClientRect();
- if(frame.width&&frame.height&&food.width){
-  context.drawImage($('food-canvas'),(food.left-frame.left)*canvas.width/frame.width,(food.top-frame.top)*canvas.height/frame.height,food.width*canvas.width/frame.width,food.height*canvas.height/frame.height);
- }else if(where==='stomach'&&foodArt[foodCurrent]){
-  const size=Math.min(canvas.width*.51,canvas.height*.39);
-  context.drawImage(foodArt[foodCurrent],(canvas.width-size)/2,canvas.height*.61-size/2,size,size);
- }
- return canvas.toDataURL('image/jpeg',.68);
-};
-function liveState(){const progress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;window.dispatchEvent(new CustomEvent('lesson-live-state',{detail:{phase:'journey',stage:where,food:foodCurrent,foodName:$('food-name').textContent,progress:Math.round(progress*20)/20,hint:companion.last,identified:log.identified,completed:!!log.completedAt}}));return progress;}
+function liveState(){const progress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;window.dispatchEvent(new CustomEvent('lesson-live-state',{detail:{phase:'journey',stage:where,food:foodCurrent,foodName:$('food-name').textContent,progress:Math.round(progress*100)/100,view:{yaw:+yaw.toFixed(2),pitch:+pitch.toFixed(2),u:+canalU.toFixed(3),wall:+wallMotion.toFixed(2),jaw:+fixedScenes.chew.toFixed(2),swallow:+fixedScenes.swallow.toFixed(2),stomach:where==='stomach'&&log.stomach?{mixed:log.stomach.mixed,fluid:log.stomach.fluid,foodStage:log.stomach.foodStage,motion:log.stomach.motion,routeProgress:log.stomach.routeProgress}:null},hint:companion.last,identified:log.identified,completed:!!log.completedAt}}));return progress;}
 function hint(s,kind='hint',options={}){
  if(!started)return;
  const {immediate=playerAction,onShow,...presentation}=options;
@@ -362,10 +339,53 @@ function backward(){
 }
 function restart(){const previous=log;log=fresh();log.attempts=[...previous.attempts,{at:Date.now(),reason:'restart',wrong:previous.wrong,events:previous.events}];log.coughs=previous.coughs;log.vomits=previous.vomits;started=true;foodCurrent=foodTo=foodFrom='whole';foodBlend=1;drawFood(0);$('save-status').textContent='';organReveal.hidden=true;$('finished').hidden=true;$('intro').hidden=true;go('outside');}
 function finish(){motionRunning=false;where='done';stage.dataset.scene='done';miniMap.update('done');hint('牙齿把饼干嚼碎，食管把食团送进胃。胃把食物搅成食糜。接下来，小肠吸收营养，大肠再吸收一部分水分。','report',{immediate:false});log.stage='done';log.completedAt??=Date.now();holding=false;event('complete');controls(false);$('detail').hidden=true;$('food-display').hidden=true;$('food-caption').hidden=true;$('observation').hidden=true;$('hint').hidden=true;updateTravelProgress(1);$('step-label').textContent='旅行完成';$('finished').hidden=false;renderReflection(document,organs,log,foodArt);persist();liveState();}
+function drawObservedScene(dt){
+ if(!observerReady||!observedState)return;
+ const {stage:sceneName,food:foodKey,view={},progress=0}=observedState;
+ if(!sequence.includes(sceneName))return;
+ if(where!==sceneName||!started){
+  commitScene(sceneName,{restore:true});
+  started=true;
+  stage.querySelectorAll('.direction').forEach(element=>element.hidden=true);
+ }
+ if(sceneName==='stomach'){
+  stomachFrame?.contentWindow?.stomachSample?.setObservedState?.(view.stomach);
+  return;
+ }
+ if(Object.hasOwn(foodArt,foodKey))food(foodKey,observedState.foodName||'');
+ drawFood(dt);
+ if(fixedStage(sceneName)){
+  fixedScenes.swallow=view.swallow||0;
+  fixedScenes.draw(sceneName,view.jaw||0);
+ }
+ if(canal){
+  const target=Number.isFinite(view.u)?view.u:THREE.MathUtils.lerp(canal.start,canal.end,progress);
+  const fraction=1-Math.exp(-dt*5);
+  canalU=THREE.MathUtils.lerp(canalU,target,fraction);
+  const heading=view.yaw||0;
+  yaw+=Math.atan2(Math.sin(heading-yaw),Math.cos(heading-yaw))*fraction;
+  pitch=THREE.MathUtils.lerp(pitch,view.pitch||0,fraction);
+  positionCanal(canalU,1);
+  time+=dt;
+  for(const shader of wallShaders){
+   if(shader.uniforms.uClock)shader.uniforms.uClock.value=time;
+   if(shader.uniforms.uStrength)shader.uniforms.uStrength.value=view.wall||0;
+  }
+  renderer.render(scene,camera);
+ }
+}
+if(observerMode){
+ document.body.classList.add('journey-observer');
+ window.addEventListener('message',event=>{
+  if(event.origin===location.origin&&event.source===parent&&event.data?.channel==='journey-observer')observedState=event.data.state;
+ });
+}
+
 function draw(ms){
  requestAnimationFrame(draw);
  const dt=Math.min(.083,last?(ms-last)/1000:.016);last=ms;
  if(document.hidden||!renderer)return;
+ if(observerMode){drawObservedScene(dt);return;}
  if(started)drawTravelProgress(dt);
  if(where==='done'||document.querySelector('dialog[open]'))return;
  time+=dt;const mapProgress=where==='mouth'?log.chews/3:where==='esophagus'?log.push:where==='small'?log.absorbed:where==='large'?log.water:where==='stomach'?(log.stomach?.routeProgress||0):where==='pharynx'?(swallowRun?Math.min(1,(time-swallowRun.born)/2):0):0;miniMap.update(where,mapProgress);if(started&&where!=='done')updateTravelProgress(mapProgress);if(time-lastLive>.4){lastLive=time;liveState();}tickChew();if(swallowRun){fixedScenes.swallow=Math.min(1,(time-swallowRun.born)/1.2);if(time-swallowRun.born>2.3){swallowRun=null;busy=false;go('esophagus');}}
@@ -430,6 +450,6 @@ function anatomyProbe(){raycaster.setFromCamera(new THREE.Vector2(0,0),camera);r
 $('show-reflection').onclick=()=>$('reflection').showModal();$('close-reflection').onclick=()=>$('reflection').close();
 window.journeyGame={get visualState(){return{where,busy,motionTime:time,wallMotion,foodStage:foodTo,foodBlend,preparedScenes:[...preparedTubes.keys()],sceneTimings:sceneTimings.slice(-8),flows:particles.map(p=>({kind:p.kind,start:p.start,end:p.end})),yaw,pitch,canalU,cameraQuaternion:camera?.quaternion.toArray(),camera:camera?.position.toArray(),jawMotion:fixedScenes.chew,jawLift:fixedScenes.chew*34,transition:transport?{mode:transport.mode,to:transport.next,progress:passageView.progress,keepView:transport.keepView}:null};},get state(){return{where,busy,holding,...JSON.parse(JSON.stringify(log))};},get diagnostics(){const visible=[],pickGrid=[];if(canal)for(const x of [.16,.32,.5,.68,.84])for(const y of [.3,.45,.6,.75]){raycaster.setFromCamera(new THREE.Vector2(x*2-1,1-y*2),camera);pickGrid.push({x,y,kind:raycaster.intersectObjects(targets,false)[0]?.object.userData.kind});}if(camera&&!fixedStage(where)){for(const o of targets.filter(o=>o.userData.kind!=='wall')){const v=o.getWorldPosition(new THREE.Vector3()).project(camera);if(v.z>1||v.z<0)continue;raycaster.setFromCamera(new THREE.Vector2(v.x,v.y),camera);if(raycaster.intersectObjects(targets,false)[0]?.object.userData.kind===o.userData.kind)visible.push({kind:o.userData.kind,x:(v.x+1)/2,y:(1-v.y)/2});}if(['mouth','pharynx'].includes(where))for(let x=.12;x<.9;x+=.065)for(let y=.26;y<.82;y+=.055){raycaster.setFromCamera(new THREE.Vector2(x*2-1,1-y*2),camera);const kind=raycaster.intersectObjects(targets,false)[0]?.object.userData.kind;if(kind&&kind!=='wall')visible.push({kind,x,y});}}if(fixedStage(where))visible.push(...fixedScenes.targets(where));return{pickGrid,fixedView:fixedStage(where),jawMotion:fixedScenes.chew,jawLift:fixedScenes.chew*34,transition:transport?{mode:transport.mode,to:transport.next,progress:passageView.progress}:null,portalProgress:transport?.mode==='passage'?passageView.progress:fixedScenes.progress,webgl:!!renderer,triangles:renderer?.info.render.triangles,particles:particles.length,peristalsis:wallShaders.map(s=>({strength:s.uniforms.uStrength.value,clock:s.uniforms.uClock?.value,maximum:s.uniforms.uSqueeze?.value})),villi:canal?.villi?.count||0,yaw,pitch,camera:camera?.position.toArray(),jaw:jaw?{y:jaw.position.y,rotation:jaw.rotation.x}:null,targets:visible};}};
 Object.defineProperty(window.journeyGame,'anatomyProbe',{get:anatomyProbe});
-try{await Promise.all([newFoodAtlas.decode(),atlas.decode(),stomachFood.decode(),fractureAtlas.decode(),prepareMucosa(),prepareFixedScenes(),prepareLumenAssets(),$('outside-photo').decode()]);const records=await allRecords();lessonRecordId=records.filter(r=>r.lesson==='food-journey'&&Number(r.groupId)===groupId).sort((a,b)=>Number(b.updatedAt)-Number(a.updatedAt))[0]?.id||null;log=fresh();if((saved?.lessonRecordId??null)!==lessonRecordId)saved=null;prepareArt();init3D();await prepareTubeScenes();if(saved?.stage!=='stomach'){prepareStomach();await new Promise((resolve,reject)=>{const until=performance.now()+60000;const check=()=>{if(stomachReady)resolve();else if(performance.now()>until)reject(Error('Stomach preparation timed out'));else requestAnimationFrame(check);};check();});}food('whole','一块饼干');$('start').disabled=false;$('start').textContent='开始旅行 →';if(saved?.version===3&&saved.groupId===groupId)$('resume').hidden=false;}catch(e){console.error(e);$('failure').hidden=false;}
+try{await Promise.all([newFoodAtlas.decode(),atlas.decode(),stomachFood.decode(),fractureAtlas.decode(),prepareMucosa(),prepareFixedScenes(),prepareLumenAssets(),$('outside-photo').decode()]);const records=observerMode?[]:await allRecords();lessonRecordId=records.filter(r=>r.lesson==='food-journey'&&Number(r.groupId)===groupId).sort((a,b)=>Number(b.updatedAt)-Number(a.updatedAt))[0]?.id||null;log=fresh();if((saved?.lessonRecordId??null)!==lessonRecordId)saved=null;prepareArt();init3D();await prepareTubeScenes();if(observerMode){observerReady=true;$('intro').hidden=true;}else if(saved?.stage!=='stomach'){prepareStomach();await new Promise((resolve,reject)=>{const until=performance.now()+60000;const check=()=>{if(stomachReady)resolve();else if(performance.now()>until)reject(Error('Stomach preparation timed out'));else requestAnimationFrame(check);};check();});}food('whole','一块饼干');$('start').disabled=false;$('start').textContent='开始旅行 →';if(saved?.version===3&&saved.groupId===groupId)$('resume').hidden=false;}catch(e){console.error(e);$('failure').hidden=false;}
 
 window.prepareClassNavigation = () => { persist(); };

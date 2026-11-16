@@ -125,3 +125,20 @@ body.evaluation-teacher{padding-bottom:0!important}
 .live-journey-analysis li{padding-block:2px}
 @media(max-width:600px){.live-focus .live-journey-analysis{grid-template-columns:1fr}}
 .model-route-before{display:block;margin-top:5px}
+
+.evaluation-teacher .live-card .live-game-scene,.live-focus .live-game-scene{aspect-ratio:16/9;flex:none;height:auto;width:100%;max-height:none}
+.live-game-scene>img,.evaluation-teacher .live-card .live-game-scene>img{object-fit:cover}
+.live-focus .live-game-scene{max-width:min(100%,88vh);margin-inline:auto}
+.evaluation-teacher .live-card .live-game-copy,.live-focus .live-game-copy{height:3em;min-height:3em;margin:7px 0;line-height:1.5;overflow:hidden}
+.live-camera-panel video{display:block;width:100%;aspect-ratio:16/9;max-height:60vh;background:#243c38;object-fit:contain}
+.live-camera-panel p:empty{display:none}
+button.teacher-award-tile{display:block;padding:0;overflow:hidden;text-align:initial}
+.teacher-award-tile .ev-award{height:100%;min-height:0;padding:8px;gap:3px;justify-content:center;border-radius:12px}
+.teacher-award-tile .award-garden{min-height:0;height:auto}
+.teacher-award-tile .award-hero{font-size:clamp(20px,4vh,46px)}
+.teacher-award-tile .ev-award h2{font-size:clamp(14px,2vh,24px);letter-spacing:0}
+.teacher-award-tile .award-reason{font-size:clamp(10px,1.5vh,15px);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.teacher-award-tile :is(.award-wish,.award-confetti){display:none}
+
+.live-game-frame{display:block;width:min(100%,104vh);aspect-ratio:16/9;border:0;border-radius:14px;margin:8px auto 0;background:#183d39}
+.live-game-frame[hidden],.live-camera-panel[hidden]{display:none}

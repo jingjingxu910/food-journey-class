@@ -251,7 +251,7 @@ function setupTeacher(){
          document.querySelector('#preview-model-content').replaceChildren(certificate(award));
          document.querySelector('#model-preview-dialog').showModal();
        },'ev-card teacher-award-tile');
-       tile.append(el('span',awardIcon(award)),el('strong','第 '+id+' 组'),el('span',award.title));
+       tile.append(certificate(award));
        panel.append(tile);continue;
      }
      const card=el('article',undefined,'ev-card');card.append(el('h3','第 '+id+' 组'));

@@ -1,12 +1,12 @@
 import {journeyEvents} from './evaluation-data.js?v=20261113-awards';
 import {cloudDb} from './student-data.js?v=20261116-tablet-fixes';
 import {isLocalPreview} from './local-preview-db.js';
-import {LIVE_COLLECTION,writeTeacherFocus} from './live-sync.js?v=20261116-tablet-fixes';
+import {LIVE_COLLECTION,writeTeacherFocus} from './live-sync.js?v=20261117-camera';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={outside:'入口',mouth:'口腔',pharynx:'咽',esophagus:'食管',stomach:'胃',small:'小肠',large:'大肠',done:'旅行完成'};
 const organNames={mouth:"口腔",esophagus:"食管",stomach:"胃","small-intestine":"小肠","large-intestine":"大肠","nasal-cavity":"鼻腔",trachea:"气管","right-lung":"右肺","left-lung":"左肺",pharynx:"咽",liver:"肝",pancreas:"胰",gallbladder:"胆囊",heart:"心脏",submandibular:"下颌下腺","left-kidney":"左肾","right-kidney":"右肾",bladder:"膀胱"};
-const scenes={outside:'outside.webp',mouth:'mouth.webp',pharynx:'pharynx-mouth-style-v5.webp',esophagus:'esophagus.webp',stomach:'stomach.webp',small:'small-intestine.webp',large:'large-intestine.webp',done:'outside.webp'};
+const scenes={outside:'outside.webp',mouth:'mouth.webp',pharynx:'pharynx-mouth-style-v5.webp',esophagus:'esophagus-wall-v9.webp',stomach:'stomach.webp',small:'small-mucosa-v3.webp',large:'large-intestine.webp',done:'outside.webp'};
 if(teacher)setup();
 function setup(){
  const host=document.querySelector('#teacher-view');if(!host)return;
@@ -14,6 +14,50 @@ function setup(){
  wall.innerHTML='<div class="live-toolbar"><div><h2>小组同步预览</h2></div><nav class="live-pages" aria-label="同步预览分页"><button data-page="0">第 1–6 组</button><button data-page="1">第 7–12 组</button></nav></div><p class="live-notice" role="status" aria-live="polite"></p><div class="live-grid"></div>';
  host.append(wall);
  const dialog=document.createElement('dialog');dialog.className='live-focus';dialog.innerHTML='<header><h2></h2><button type="button">返回小组预览</button></header><div class="live-focus-content"></div>';document.body.append(dialog);
+ const cameraPanel=document.createElement('section');
+ cameraPanel.className='live-camera-panel';
+ cameraPanel.hidden=true;
+ cameraPanel.innerHTML='<video autoplay playsinline muted></video><p role="status"></p>';
+ dialog.querySelector('.live-focus-content').before(cameraPanel);
+ const cameraVideo=cameraPanel.querySelector('video'),cameraStatus=cameraPanel.querySelector('p');
+ let cameraController,cameraKey;
+ function showClassCamera(){
+  const active=phase==='observation'&&focus&&!demo&&!completion(focus)&&!document.hidden;
+  const key=active&&token&&stateFor(focus)?.cameraShared?focus+':'+token:null;
+  cameraPanel.hidden=!active;
+  if(key===cameraKey)return;
+  cameraController?.abort();
+  cameraKey=key;
+  if(!key){cameraStatus.textContent=active?'等待学生开启并允许共享相机…':'';return;}
+  const controller=new AbortController();
+  const id=focus,leaseToken=token;
+  cameraController=controller;
+  cameraStatus.textContent='等待学生开启并允许共享相机…';
+  import('./ar-live-camera.js?v=20261117-camera').then(({connectClassCamera})=>{
+   if(!controller.signal.aborted)connectClassCamera({token:leaseToken,id,video:cameraVideo,signal:controller.signal,onStatus:message=>{cameraStatus.textContent=message||'';}});
+  }).catch(()=>{if(!controller.signal.aborted)cameraStatus.textContent='无法连接学生相机';});
+ }
+ const gameFrame=document.createElement('iframe');
+ gameFrame.className='live-game-frame';
+ gameFrame.title='学生游戏画面';
+ gameFrame.hidden=true;
+ dialog.querySelector('.live-focus-content').before(gameFrame);
+ let gameSrc='';
+ function showGame(){
+  const state=phase==='journey'&&focus&&!demo&&!completion(focus)&&stateFor(focus);
+  const active=!!state&&state.stage!=='done';
+  gameFrame.hidden=!active;
+  if(!active){
+   if(gameSrc){gameFrame.removeAttribute('src');gameSrc='';}
+   return;
+  }
+  if(!gameSrc){
+   gameSrc='journey-game.html?observe=1&v=20261117-camera';
+   gameFrame.src=gameSrc;
+  }
+  gameFrame.contentWindow?.postMessage({channel:'journey-observer',state},location.origin);
+ }
+ gameFrame.onload=showGame;
  let phase=window.currentTeacherLivePhase||null,page=0,focus=null,resetId=null,records=[],snapshots=new Map(),watcher=null,watchVersion=0,token='',initial=true,demo=false;
  const seen=new Map(),unread=new Map(),flashes=new Map(),demoSubmitted=new Set();let lastControl='',controlBusy=false,controlAgain=false;
  const focusedNotice=document.createElement('p');focusedNotice.className='live-notice';focusedNotice.setAttribute('role','status');dialog.querySelector('header').after(focusedNotice);
@@ -46,7 +90,6 @@ function setup(){
   const analysis=submitted&&['v1','v2'].includes(phase)?window.renderSubmittedModelAnalysis?.(record,phase)||'':'';
   const summary=analysis?'<div class="live-analysis"><strong>行为与路线分析</strong>'+analysis+'</div>':'';
 
-  const image=typeof state?.image==='string'&&/^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(state.image)?state.image:null;
   if(phase==='v2'){
    const before=demo?demoState(id,'v1').model:record?.v1?.completedAt?record.v1:null;
    const after=submitted&&!demo?record?.v2:state?.model;
@@ -58,20 +101,22 @@ function setup(){
     const organs=state.organs||[state.organId].filter(id=>Object.hasOwn(organNames,id));
     return '<section class="live-findings"><strong>本组发现</strong><div>'+organs.map(id=>'<figure><img src="assets/models/ar-thumbnails/'+id+'.png" alt=""><figcaption>'+organNames[id]+'</figcaption></figure>').join('')+'</div></section>';
    }
+   if(expanded&&!demo)return '';
    const organ=/^[a-z-]+$/.test(state.organId||'')?state.organId:null;
-   const src=image||(organ?'assets/models/ar-thumbnails/'+organ+'.png':'');
+   const src=organ?'assets/models/ar-thumbnails/'+organ+'.png':'';
    return src?'<div class="live-scene live-capture"><img src="'+src+'" alt="'+escape(state.organName||'器官观察')+'"></div><p class="live-game-copy">'+escape(state.organName||'器官观察')+'</p>':'<div class="live-empty">'+(state.completed?'观察完成':'观察身体里的器官')+'</div>';
   }
   if(state.phase!=='journey')return (window.renderLiveModel?.(state.model)||'<div class="live-empty">模型正在准备</div>')+summary;
-  if(state.stage!=='done'&&image)return '<div class="live-scene live-capture"><img src="'+image+'" alt="'+escape(names[state.stage]||'旅行场景')+'"></div><p class="live-game-copy">'+escape(state.hint||names[state.stage]||'食物旅行')+'</p>';
   if(state.stage==='done')return '<div class="live-completed"><strong>旅行完成</strong><div>'+[0,3,5,6,7].map(index=>'<span class="live-food-sprite" style="background-position:'+index%4/3*100+'% '+Math.floor(index/4)*100+'%"></span>').join('')+'</div></div>';
   const scene=scenes[state.stage]||scenes.outside;
   const food=state.foodName||({whole:'一块饼干',crumbs:'湿润碎块',bolus:'湿润食团',chyme:'食糜',residue:'剩余内容物',dry:'残渣'}[state.food]||'食物正在变化');
   const foodKey=({crumbs:'pieces','fine-chyme':'chyme'}[state.food]||state.food),index=Math.max(0,['whole','chunks','pieces','bolus','gastric','chyme','residue','dry'].indexOf(foodKey));
-  return `<div class="live-scene"><img src="assets/journey/${scene}" alt="${escape(names[state.stage]||'旅行场景')}" onerror="this.style.visibility='hidden'"><span class="live-scene-label">${escape(names[state.stage]||'旅行中')}</span><span class="live-food-sprite" style="background-position:${index%4/3*100}% ${Math.floor(index/4)*100}%" aria-hidden="true"></span></div><p class="live-game-copy"><strong>${escape(food)}</strong><br>${escape(state.hint||'正在探索')}</p><progress class="live-progress" max="1" value="${Math.max(0,Math.min(1,Number(state.progress)||0))}" aria-label="当前场景行进进度"></progress>`;
+  return `${expanded&&!demo?'':`<div class="live-scene live-game-scene"><img src="assets/journey/${scene}" alt="${escape(names[state.stage]||'旅行场景')}" onerror="this.style.visibility='hidden'"><span class="live-scene-label">${escape(names[state.stage]||'旅行中')}</span><span class="live-food-sprite" style="background-position:${index%4/3*100}% ${Math.floor(index/4)*100}%" aria-hidden="true"></span></div>` }<p class="live-game-copy"><strong>${escape(food)}</strong><br>${escape(state.hint||'正在探索')}</p><progress class="live-progress" max="1" value="${Math.max(0,Math.min(1,Number(state.progress)||0))}" aria-label="当前场景行进进度"></progress>`;
  }
  function render(){
   wall.hidden=!phase;document.body.classList.toggle('teacher-live-active',!!phase);
+  showClassCamera();
+  showGame();
   if(!phase)return;
   wall.querySelector('h2').textContent=stageLabel();
   const available=Math.max(120,innerHeight-wall.getBoundingClientRect().top-(document.querySelector('.ev-stars')?.offsetHeight||0)-12);
@@ -87,10 +132,28 @@ function setup(){
   }).join('');
   const grid=wall.querySelector('.live-grid');
   grid.dataset.phase=phase;
-  grid.innerHTML=groupIds().map(id=>{
+  const markup=groupIds().map(id=>{
    const submitted=demo?(id%4===0||demoSubmitted.has(phase+':'+id)):!!completion(id),key=phase+':'+id,isUnread=unread.has(key),flash=Date.now()-(flashes.get(key)||0)<3200;
    return `<button type="button" class="live-card${submitted?' is-submitted':''}${isUnread?' is-unread':''}${flash?' is-new':''}" data-group="${id}" aria-label="放大第 ${id} 组"><header><strong>第 ${id} 组</strong><span class="live-status">${isUnread?'✓ 新提交':submitted?'✓ 已提交':stateFor(id)?'探索中':'等待进入'}</span></header>${preview(stateFor(id),id,submitted)}</button>`;
   }).join('');
+  if(grid.dataset.rendered!==markup){
+   const next=document.createElement('template');
+   next.innerHTML=markup;
+   const cards=Array.from(next.content.children);
+   if(grid.children.length!==cards.length||cards.some((card,index)=>grid.children[index].dataset.group!==card.dataset.group)){
+    grid.replaceChildren(next.content);
+   }else{
+    cards.forEach((card,index)=>{
+     const current=grid.children[index];
+     if(current.outerHTML===card.outerHTML)return;
+     const currentScene=current.querySelector('.live-game-scene');
+     const nextScene=card.querySelector('.live-game-scene');
+     if(currentScene&&nextScene&&currentScene.innerHTML===nextScene.innerHTML)nextScene.replaceWith(currentScene);
+     current.replaceWith(card);
+    });
+   }
+   grid.dataset.rendered=markup;
+  }
   const updatedGroups=[...unread.keys()].filter(key=>key.startsWith(phase+':')).map(key=>Number(key.split(':')[1]));
   wall.querySelector('.live-notice').textContent=updatedGroups.length?'第 '+updatedGroups.join('、')+' 组已提交':'';
   focusedNotice.textContent=focus&&updatedGroups.includes(focus)?'本组已提交':'';
@@ -100,7 +163,7 @@ function setup(){
   const groups=demo?[]:visible().filter(id=>!completion(id)),signature=JSON.stringify([phase,groups,focus,resetId]);
   if(!force&&signature===lastControl)return;
   if(controlBusy){controlAgain=true;return;}controlBusy=true;
-  try{if(signature!==lastControl)token=`view-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;await writeTeacherFocus({phase,groups,focus:!!focus,resetId,token});lastControl=signature;}catch{lastControl='';}finally{controlBusy=false;if(controlAgain){controlAgain=false;void control(true);}}
+  try{if(signature!==lastControl)token=crypto.randomUUID();await writeTeacherFocus({phase,groups,focus:!!focus,resetId,token});lastControl=signature;showClassCamera();}catch{lastControl='';}finally{controlBusy=false;if(controlAgain){controlAgain=false;void control(true);}}
  }
  async function subscribe(){
   const version=++watchVersion;
@@ -143,9 +206,10 @@ function setup(){
  wall.addEventListener('click',e=>{const pager=e.target.closest('[data-page]');if(pager){page=Number(pager.dataset.page);focus=null;render();void control();return;}const card=e.target.closest('[data-group]');if(card){focus=Number(card.dataset.group);unread.delete(phase+':'+focus);render();dialog.showModal();void control();}});
  dialog.querySelector('header button').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{focus=null;window.speechSynthesis?.cancel();render();void control();});
  window.addEventListener('resize',()=>{render();void control();});
+ const previewPoll=setInterval(()=>{if(!document.hidden&&!watcher&&phase==='journey'&&!demo)void subscribe();},2000);
  const heartbeat=setInterval(()=>{if(!document.hidden){void control(true);if(!watcher&&phase&&!demo)void subscribe();}},20000);
  document.addEventListener('visibilitychange',()=>{if(document.hidden){watchVersion++;watcher?.close();watcher=null;}else void subscribe();void control(true);});
- window.addEventListener('pagehide',()=>{clearInterval(heartbeat);watcher?.close();void writeTeacherFocus({phase:null,groups:[],token});});
+ window.addEventListener('pagehide',()=>{clearInterval(heartbeat);clearInterval(previewPoll);cameraController?.abort();watcher?.close();void writeTeacherFocus({phase:null,groups:[],token});});
  if(isLocalPreview){
   const row=document.createElement('div');row.className='live-demo-actions';row.innerHTML='<span class="live-demo-badge">本地预览 · 云端已隔离</span><button type="button">显示 12 组演示</button><button type="button" hidden>模拟另一页提交</button>';wall.querySelector('.live-toolbar').append(row);
   const buttons=row.querySelectorAll('button');buttons[0].onclick=()=>{demo=!demo;buttons[0].textContent=demo?'返回本地真实小组':'显示 12 组演示';buttons[1].hidden=!demo;void subscribe();render();void control();};buttons[1].onclick=()=>{const id=page===0?pageSize+1:1,key=phase+':'+id;demoSubmitted.add(key);unread.set(key,Date.now());flashes.set(key,Date.now());wall.querySelector('.live-notice').textContent=`演示：第 ${id} 组已提交，另一页已标记`;render();};

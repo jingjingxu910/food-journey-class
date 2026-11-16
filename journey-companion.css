@@ -132,3 +132,12 @@
 #recap .recap-images{height:auto;grid-template-rows:repeat(2,clamp(30px,7vh,86px))}
 #recap .recap-images:has(>canvas:only-child){grid-template-rows:clamp(60px,14vh,172px)}
 @supports not (height:1cqh){#stage{--nav-edge:min(calc(var(--mini-height) + 44px),32vh);--direction-height:clamp(46px,8vh,96px)}}
+
+#stage #forward,#stage #back{top:auto!important;bottom:16px!important;z-index:32;width:clamp(52px,9vw,92px);height:clamp(48px,9vh,80px)}
+#stage #forward{right:16px}
+#stage #back{right:calc(24px + clamp(52px,9vw,92px))}
+#stage #journey-minimap{bottom:calc(28px + clamp(48px,9vh,80px))}
+
+.journey-observer #experience{padding:0;gap:0}
+.journey-observer :is(header,#companion,#journey-minimap,#journey-side-map,#forward,#back,#detail,#passages,.topline,#hint,#food-caption,#observation){display:none!important}
+.journey-observer #stage{border-radius:0;pointer-events:none}
