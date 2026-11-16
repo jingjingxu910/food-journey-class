@@ -114,3 +114,14 @@ body.evaluation-teacher{padding-bottom:0!important}
  width:min(100cqw,calc((100cqh - 28px) * 2 / 3));
 }
 .evaluation-teacher .live-card .live-analysis{flex:0 0 auto;max-height:55%}
+
+
+.evaluation-teacher .live-card .live-findings{flex:0 0 auto}
+.evaluation-teacher .live-card .live-findings>div{flex:none;grid-auto-rows:auto}
+.evaluation-teacher .live-card .live-findings img{flex:none;height:clamp(38px,8vh,86px)}
+.live-card:has(.live-findings){align-self:start}
+.live-focus .live-journey-analysis{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:12px;margin-top:12px}
+.live-focus .live-journey-analysis>div{background:#edf5f0;border-radius:12px;padding:12px 16px}
+.live-journey-analysis li{padding-block:2px}
+@media(max-width:600px){.live-focus .live-journey-analysis{grid-template-columns:1fr}}
+.model-route-before{display:block;margin-top:5px}

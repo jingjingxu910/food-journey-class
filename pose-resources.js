@@ -1,4 +1,4 @@
-import './resource-manifest.js';
+import './resource-manifest.js?v=20261116-tablet-fixes';
 import './resource-store.js';
 import {selectedResources} from './resource-selection.js';
 // Fetch the selected WASM implementation only; preparation is reusable by the download screen.

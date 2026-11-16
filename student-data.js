@@ -75,7 +75,8 @@ export async function currentRecord() {
     ]).finally(()=>clearTimeout(resetTimer));
     if (result?.code) throw new Error(result.message || '课堂轮次读取失败');
     const data = Array.isArray(result.data) ? result.data[0] : result.data;
-    resetId = typeof data?.resetId === 'string' ? data.resetId : null;
+    const known = JSON.parse(localStorage.getItem('lesson-known-round')||'null');
+    resetId = typeof data?.resetId === 'string' ? data.resetId : known;
     if (localStorage.getItem('lesson-known-round') !== JSON.stringify(resetId)) {
       for (let id=1; id<=12; id++) localStorage.removeItem('food-journey-game-v3-group-'+id);
     }
@@ -142,8 +143,12 @@ export async function submitRecord(record, {saveLocal=true, submitEvaluation=fal
       !submitted.evaluation.levels.every(n => Number.isInteger(n) && n >= 1 && n <= 3))) {
       throw new Error('请完成三项自评后再提交');
     }
-    if (!submitted.v1?.completedAt) submitted.v1 = null;
-    if (!submitted.v2?.completedAt) submitted.v2 = null;
+    for (const phase of ['v1','v2','observation','journey']) {
+      const current = submitted[phase];
+      const saved = previous?.[phase];
+      submitted[phase] = current?.completedAt && (!saved?.completedAt || current.completedAt >= saved.completedAt)
+        ? current : saved || null;
+    }
     if (!submitted.assembly?.completedAt) submitted.assembly = previous?.assembly || null;
     if (submitted.assembly) delete submitted.assembly.photoLocal;
     if (submitted.assembly && !isPhotoPreview(submitted.assembly.photoPreview)) {

@@ -1,4 +1,4 @@
-import { currentRecord } from "./student-data.js?v=20261109-ui3";
+import { currentRecord } from "./student-data.js?v=20261116-tablet-fixes";
 
 const appVersion = "0.3.0";
 

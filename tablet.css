@@ -122,3 +122,13 @@ body.student-page:not(.teacher-mode),body.flow-page{height:100dvh;min-height:0;o
  .flow-page .assembly-layout{flex-direction:row}
  .assembly-side{width:min(36%,340px);min-width:160px;overflow:auto}
 }
+
+
+.assembly-page .assembly-layout{display:grid;grid-template-rows:minmax(0,1fr) auto;overflow:hidden}
+.assembly-page .assembly-photo{overflow:hidden}
+.assembly-page .photo-frame{position:relative;min-height:0;height:0}
+.assembly-page :is(#photo-preview,#assembly-camera){position:absolute;inset:0;width:100%;height:100%;max-height:100%;object-fit:contain}
+.assembly-page .assembly-photo-actions,.assembly-page .assembly-side{flex-shrink:0}
+.assembly-page .assembly-side{min-height:0}
+.assembly-page .assembly-side textarea{height:clamp(32px,6vh,60px)}
+.assembly-page .assembly-side .flow-status:empty{display:none}

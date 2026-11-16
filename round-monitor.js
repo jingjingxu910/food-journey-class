@@ -1,6 +1,6 @@
 // Lightweight control checks. Artwork and records are fetched only when commands change.
 import {readDocument} from './evaluation-data.js?v=20261109-ui3';
-import {cloudDb} from './student-data.js?v=20261109-ui3';
+import {cloudDb} from './student-data.js?v=20261116-tablet-fixes';
 let checking=false,lastCheck=0,lastRoundCheck=0,lastStageCommand=null;
 let commandWatcher=null,cachedCommand=null,nextWatchAttempt=0,retryAfter=0,failureDelay=2000;
 function stopCommandWatch(){
@@ -40,6 +40,8 @@ async function check(force=false){
    if(Date.now()-lastRoundCheck>=60000){
      const active=await readDocument('class-reset'),round=active.resetId||null,previous=localStorage.getItem('lesson-known-round');
      lastRoundCheck=Date.now();
+     const knownRound=previous===null?null:JSON.parse(previous);
+     if(knownRound&&(!round||(round!==knownRound&&Number(round.split('-')[1])<=Number(knownRound.split('-')[1]))))return;
      if(previous===null||JSON.parse(previous)!==round){
        const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('foodJourneyClass',2);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains('learningRecords'))r.result.createObjectStore('learningRecords',{keyPath:'id'});};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
        let removed=false;

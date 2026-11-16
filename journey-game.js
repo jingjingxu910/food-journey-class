@@ -2,14 +2,14 @@ import {bindSceneLongPress} from './journey-long-press.js';
 import * as THREE from './vendor/three.module.js';
 import {JourneyCompanion} from './journey-companion.js?v=20261113-opening-queue';
 import {JourneyMiniMap} from './journey-mini-map.js?v=20261113-map-sync';
-import './live-sync.js?v=20261113-four-views';
+import './live-sync.js?v=20261116-tablet-fixes';
 import {prepareMucosa} from './journey-anatomy-v2.js';
 import {prepareFixedScenes,FixedScenes,fixedStage} from './journey-fixed-scenes.js?v=20261113-pharynx-wall';
 import {buildLumen,prepareLumenAssets} from './journey-lumen.js?v=20261113-stomach-wave';
 import {PassageView} from './journey-passage-view.js?v=20261113-isolated-frames';
 import {showAnatomyView,cancelAnatomyView} from './journey-anatomy-zoom.js';
-import {renderReflection} from './journey-reflection.js';
-import {groupId,homeUrl,allRecords,currentRecord,saveRecord,submitRecord} from './student-data.js?v=20261109-ui3';
+import {renderReflection} from './journey-reflection.js?v=20261116-tablet-fixes';
+import {groupId,homeUrl,allRecords,currentRecord,saveRecord,submitRecord} from './student-data.js?v=20261116-tablet-fixes';
 
 const $=id=>document.getElementById(id),host=$('world'),stage=$('stage');
 const companion=new JourneyCompanion(stage),miniMap=new JourneyMiniMap(stage);
@@ -305,7 +305,7 @@ function tickChew(){
 function wetMouth(){help();}
 function beginIntestinalAbsorption(){if(log.digested)return;log.digested=true;log.absorbed=Math.max(log.absorbed,0);spawnFlow('nutrient',28);food('fine-chyme','继续变细的食糜');event('continued-digestion');event('nutrient-absorption-start');hint('仔细看，内壁正在吸收营养物质。');refreshEvidence();}
 const organReveal=document.createElement('figure');organReveal.id='organ-reveal';organReveal.hidden=true;stage.append(organReveal);
-function revealOrgan(name,src){const img=new Image(),caption=document.createElement('figcaption');img.src=src;img.alt='';caption.textContent=name;organReveal.replaceChildren(img,caption);organReveal.hidden=false;}
+function revealOrgan(name,src){const img=new Image(),caption=document.createElement('figcaption');img.alt=name;img.style.objectFit='contain';img.onerror=()=>{img.onerror=null;img.src=src.replace('assets/organs/','assets/models/ar-thumbnails/');};img.src=src;caption.textContent=name;organReveal.replaceChildren(img,caption);organReveal.hidden=false;}
 function ask(id){if(where!==id||log.identified.includes(id)||document.querySelector('dialog[open]'))return;motionRunning=false;const o=organs[id];hint(id==='mouth'?'你认为这是哪个器官？':o.prompt+' 你认为这是哪个器官？','question',{onShow:()=>{
  if(where!==id||busy||transport||log.identified.includes(id)||document.querySelector('dialog[open]'))return false;
  sideHint=null;miniMap.toggleSide(false);miniMap.toggle(false);$('question-text').textContent=o.prompt;$('question').querySelector('h2').textContent=id==='mouth'?o.prompt:'这是哪个器官？';$('answer-hint').textContent='';$('answers').replaceChildren(...o.options.map(name=>{const b=document.createElement('button');b.textContent=name;b.onclick=onPlayerAction(()=>{event('identify',{organId:id,choice:name});if(id==='stomach'){stomachFrame.contentWindow.postMessage({channel:'food-journey-parent',type:'answer',value:name==='胃'?'stomach':name==='食管'?'esophagus':'small'},location.origin);return;}if(name!==o.name){log.wrong++;hint(o.wrong+' 再选一次。','retry');persist();return;}log.identified.push(id);log.discoveries.push({organId:id,at:Date.now()});$('question').close();revealOrgan(o.name,o.image);hint('点击“前进”，我们接着走。','praise',{celebrate:true});persist();});return b;}));$('question').show();

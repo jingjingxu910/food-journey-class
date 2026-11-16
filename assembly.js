@@ -1,4 +1,4 @@
-import { groupId, currentRecord, saveRecord, submitRecord, homeUrl, isPhotoPreview } from './student-data.js?v=20261109-ui3';
+import { groupId, currentRecord, saveRecord, submitRecord, homeUrl, isPhotoPreview } from './student-data.js?v=20261116-tablet-fixes';
 const $=(selector)=>document.querySelector(selector);
 $('#group-label').textContent=`第 ${groupId} 组`;
 $('#back-link').href=homeUrl();
@@ -20,10 +20,13 @@ async function openCamera(){
   button.disabled=true;
   try{
     if(!navigator.mediaDevices?.getUserMedia)throw new Error();
-    const camera=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:960}}});
+    const camera=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:960},height:{ideal:720}}});
     if(document.hidden){camera.getTracks().forEach(track=>track.stop());return;}
     stream=camera;
     video.srcObject=stream;
+    video.muted=true;
+    video.playsInline=true;
+    video.hidden=false;
     await video.play();
     if(stream!==camera)return;
     video.hidden=false;

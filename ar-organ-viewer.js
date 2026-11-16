@@ -20,4 +20,19 @@ export async function createOrganViewer(mount,url,resetButton,isCurrent,options=
  const observer=typeof ResizeObserver!=='undefined'?new ResizeObserver(resize):null;observer?.observe(mount);window.addEventListener('resize',resize);resize();
  resetButton.onclick=()=>{group.rotation.set(...initial);camera.zoom=options.zoom||1;camera.updateProjectionMatrix();request();};
  const dispose=()=>{cancelAnimationFrame(frame);observer?.disconnect();window.removeEventListener('resize',resize);resetButton.onclick=null;disposeModel(group);renderer.dispose();renderer.forceContextLoss();mount.replaceChildren();};
+ dispose.viewState=()=>[group.rotation.x,group.rotation.y,camera.zoom].map(value=>Math.round(value*100)/100);
+ dispose.snapshot=()=>{
+  if(!renderer.domElement.width||!renderer.domElement.height)return null;
+  renderer.render(scene,camera);
+  const snapshot=document.createElement('canvas');
+  const scale=Math.min(480/renderer.domElement.width,480/renderer.domElement.height);
+  snapshot.width=Math.max(1,Math.round(renderer.domElement.width*scale));
+  snapshot.height=Math.max(1,Math.round(renderer.domElement.height*scale));
+  const context=snapshot.getContext('2d');
+  context.fillStyle='#eaf2ed';
+  context.fillRect(0,0,snapshot.width,snapshot.height);
+  context.drawImage(renderer.domElement,0,0,snapshot.width,snapshot.height);
+  return snapshot.toDataURL('image/jpeg',.72);
+ };
+ return dispose;
 }

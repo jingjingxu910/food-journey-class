@@ -1,23 +1,42 @@
-import {cloudDb,groupId} from './student-data.js?v=20261109-ui3';
+import {cloudDb,groupId} from './student-data.js?v=20261116-tablet-fixes';
 export const LIVE_COLLECTION='food-journey-groups';
 const CONTROL='live-view-control';
 export const liveDocumentId=(id,phase)=>`live-group-${id}-${phase}`;
 export function selectedGroups(control){return control&&control.expiresAt>Date.now()?control.groups||[]:[];}
 export function createStudentPublisher({groupId:id,getState,capture,onStatus=()=>{}}){
  let control=null,watcher=null,latest=null,lastSignature='',lastAt=0,writing=false,stopped=false,timer=null,retryAt=0;
+ function receiveControl(next){
+  if(next?.token!==control?.token){lastSignature='';lastAt=0;}
+  control=next;
+  void flush();
+ }
  async function connect(){
   if(stopped||watcher||Date.now()<retryAt)return;
   retryAt=Date.now()+10000;
-  try{const db=await cloudDb();watcher=db.collection(LIVE_COLLECTION).where({_id:CONTROL}).watch({onChange(snapshot){const old=control;control=snapshot.docs?.[0]||null;if(control?.token!==old?.token){lastSignature='';lastAt=0;}void flush();},onError(error){watcher?.close();watcher=null;onStatus('连接中断');retryAt=Date.now()+10000;}});}catch{onStatus('等待连接');}
+  try{
+   const db=await cloudDb();
+   const query=db.collection(LIVE_COLLECTION).where({_id:CONTROL});
+   if(stopped)return;
+   if(typeof query.watch==='function'){
+    watcher=query.watch({
+     onChange(snapshot){receiveControl(snapshot.docs?.[0]||null);},
+     onError(){watcher?.close();watcher=null;onStatus('连接中断');}
+    });
+   }else{
+    const result=await query.get();
+    if(!result?.code)receiveControl(result.data?.[0]||null);
+   }
+  }catch{onStatus('等待连接');}
  }
  async function flush(){
   if(stopped||writing)return;
   const state=getState?.()||latest;
   if(!state||!['v1','v2','observation','journey'].includes(state.phase)||!selectedGroups(control).includes(Number(id))||control.phase!==state.phase)return;
-  const signature=JSON.stringify(state),gap=control.focus?1000:3000;
+  const lease=control;
+  const signature=JSON.stringify(state),gap=lease.focus?1000:3000;
   if(signature===lastSignature||Date.now()-lastAt<gap)return;
   writing=true;lastAt=Date.now();
-  try{const db=await cloudDb();const image=capture?.(state)||null;const result=await db.collection(LIVE_COLLECTION).doc(liveDocumentId(id,state.phase)).set({kind:'lesson-live',groupId:Number(id),phase:state.phase,resetId:control.resetId||null,token:control.token,state:{...JSON.parse(signature),image},updatedAt:Date.now()});if(result?.code)throw Error(result.message||'同步失败');lastSignature=signature;onStatus('已同步');}catch{onStatus('同步暂未完成');}finally{writing=false;}
+  try{const db=await cloudDb();if(stopped||control?.token!==lease.token||!selectedGroups(control).includes(Number(id)))return;let image=null;try{image=capture?.(state)||null;}catch{/* A frame may disappear during navigation. */}const result=await db.collection(LIVE_COLLECTION).doc(liveDocumentId(id,state.phase)).set({kind:'lesson-live',groupId:Number(id),phase:state.phase,resetId:lease.resetId||null,token:lease.token,state:{...JSON.parse(signature),image},updatedAt:Date.now()});if(result?.code)throw Error(result.message||'同步失败');lastSignature=signature;onStatus('已同步');}catch{onStatus('同步暂未完成');}finally{writing=false;}
  }
  const listener=e=>{latest=e.detail;void flush();};window.addEventListener('lesson-live-state',listener);
  timer=setInterval(()=>{void connect();void flush();},250);void connect();

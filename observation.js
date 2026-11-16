@@ -1,9 +1,9 @@
-import './live-sync.js?v=20261113-four-views';
+import './live-sync.js?v=20261116-tablet-fixes';
 import {organSegments} from './ar-media-segments.js';
 const isPreview=new URLSearchParams(location.search).get('preview')==='1';
 import {CameraMotion} from './ar-motion.js';
 import {BodyTracker,mapOverlay} from './ar-tracking.js';
-import {groupId,currentRecord,saveRecord,submitRecord,homeUrl} from './student-data.js?v=20261109-ui3';
+import {groupId,currentRecord,saveRecord,submitRecord,homeUrl} from './student-data.js?v=20261116-tablet-fixes';
 const organs=[
  {id:'mouth',name:'口腔',question:'食物在这里怎样变小？',note:'牙齿咀嚼食物，舌帮助搅拌，唾液润湿食物。',feature:'转动、放大观察牙齿、牙龈和舌。'},
  {id:'esophagus',name:'食管',question:'食物怎样沿着这条管道前进？',note:'食管连接咽和胃，管壁蠕动，把食物送向胃。',feature:'转动观察这条细长管道。'},
@@ -25,9 +25,30 @@ window.readLiveObservation=()=>isPreview||!observation?null:{
  phase:'observation',organId:selected||observation.views.at(-1)?.organId,
  organName:organs.find(organ=>organ.id===(selected||observation.views.at(-1)?.organId))?.name,
  view:dialogOpen?'organ':observation.cameraStarted?'body':'ready',
- camera:viewerDispose?.viewState?.(),completed:!!observation.completedAt
+ camera:viewerDispose?.viewState?.(),clip:dialogOpen&&!$('#organ-media').hidden?Math.floor($('#organ-video').currentTime):null,completed:!!observation.completedAt
 };
-window.captureLessonLive=()=>dialogOpen?viewerDispose?.snapshot?.():null;
+window.captureLessonLive=()=>{
+ if(!dialogOpen)return null;
+ const model=viewerDispose?.snapshot?.();
+ const video=$('#organ-video');
+ if($('#organ-media').hidden||video.hidden||video.readyState<2)return model;
+ const canvas=document.createElement('canvas');
+ canvas.width=480;
+ canvas.height=270;
+ const context=canvas.getContext('2d');
+ context.fillStyle='#eaf2ed';
+ context.fillRect(0,0,480,270);
+ if(model){
+  const view=$('#organ-3d canvas');
+  if(view?.width&&view.height){
+   const scale=Math.min(144/view.width,270/view.height);
+   context.drawImage(view,0,(270-view.height*scale)/2,view.width*scale,view.height*scale);
+  }
+ }
+ const scale=Math.min(336/video.videoWidth,270/video.videoHeight);
+ context.drawImage(video,144+(336-video.videoWidth*scale)/2,(270-video.videoHeight*scale)/2,video.videoWidth*scale,video.videoHeight*scale);
+ return canvas.toDataURL('image/jpeg',.74);
+};
 const metrics={samples:0,totalMs:0,maxMs:0,losses:0,mode:null};
 $('#group-label').textContent=`第 ${groupId} 组`;$('#back-link').href=homeUrl();
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
@@ -154,12 +175,12 @@ async function startCamera(){
 }
 async function openViewer(){
  if(!selected)return;viewerDispose?.();viewerDispose=null;processStop?.();closeSelected();const id=selected,o=organs.find(o=>o.id===id),generation=++viewerGeneration;
- observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;stopMedia();$('#show-organ-media').hidden=!organSegments[id];$('#show-organ-media').textContent='科普短片';$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#show-organ-process').hidden=['liver','pancreas','gallbladder','heart','submandibular','left-kidney','right-kidney','spleen','bladder'].includes(id);$('#organ-dialog').show();showCandidateMedia();
+ observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;stopMedia();$('#show-organ-media').hidden=!organSegments[id];$('#show-organ-media').textContent='科普短片';$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#show-organ-process').hidden=['liver','pancreas','gallbladder','heart','submandibular','left-kidney','right-kidney','spleen','bladder'].includes(id);if(!$('#organ-dialog').open)$('#organ-dialog').show();showCandidateMedia();
  const credit=$('#organ-model-credit');credit.textContent=['small-intestine','large-intestine','liver','pancreas'].includes(id)?'模型：Human Reference Atlas / HuBMAP · CC BY 4.0':id==='mouth'?'模型：Alexander Antipov · CC BY 4.0':['right-lung','left-lung'].includes(id)?'模型：Human Reference Atlas · Kristen Browne、Heidi Schlehlein · CC BY 4.0':id==='pharynx'?'模型：BodyParts3D / OrganUI · CC BY-SA 2.1 Japan':'模型：BodyParts3D · DBCLS · CC BY 4.0';
  const mount=$('#organ-3d');mount.textContent='正在准备模型…';
 
 
- try{const {createOrganViewer}=await import('./ar-organ-viewer.js?v=20261113-four-views');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open,id==='mouth'?{initialRotation:[.35,-.18,0]}:{});if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
+ try{const {createOrganViewer}=await import('./ar-organ-viewer.js?v=20261116-tablet-fixes');const dispose=await createOrganViewer(mount,asset(id,'glb'),$('#reset-organ-view'),()=>generation===viewerGeneration&&$('#organ-dialog').open,id==='mouth'?{initialRotation:[.35,-.18,0]}:{});if(generation!==viewerGeneration){dispose?.();return;}viewerDispose=dispose;}
  catch(error){if(generation===viewerGeneration)mount.innerHTML=`<img class="model-fallback-image" src="${asset(id,'png')}" alt="${o.name}"><p>模型加载未完成，请关闭后重试。</p>`;console.warn('Organ model failed',error);}
 }
 async function finishObservation(){
@@ -167,7 +188,7 @@ async function finishObservation(){
  observationSubmitting=true;
  const button=$('#finish-observation');button.disabled=true;
  try{
-  closeSelected();selected=null;stopCamera();observation.completedAt=Date.now();
+  closeSelected();selected=null;stopCamera();observation.completedAt??=Date.now();
   observation.performance={...metrics,averageMs:metrics.samples?Math.round(metrics.totalMs/metrics.samples):null};
   observation.pendingSync=true;status('正在提交观察记录…');
   const uploaded=await submitRecord(record);
@@ -179,7 +200,8 @@ async function finishObservation(){
  finally{button.disabled=false;observationSubmitting=false;}
 }
 $('#cancel-camera').onclick=()=>{startupController?.abort();stopCamera();$('#camera-status').textContent='已取消开启，下载完成的资源已保留';};
-$('#start-camera').onclick=startCamera;$('#open-local-3d').onclick=openViewer;$('#close-organ-dialog').onclick=()=>$('#organ-dialog').close();
+window.addEventListener('online',()=>{if(observation?.pendingSync)void finishObservation();});
+$('#start-camera').onclick=startCamera;$('#open-local-3d').onclick=()=>{if(!dialogOpen)void openViewer();};$('#close-organ-dialog').onclick=()=>$('#organ-dialog').close();
 $('#organ-dialog').addEventListener('close',()=>{if($('#organ-dialog').open)return;viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;selectedAt=performance.now();tracker.reset();targets=null;});
 document.addEventListener('visibilitychange',()=>{hidden=document.hidden;if(hidden)closeSelected();else{selectedAt=performance.now();targets=null;tracker.reset();}});
 window.addEventListener('pagehide',()=>{connected?.dispose();connected=null;startupController?.abort();closeSelected();clearTimeout(saveTimer);if(record&&!isPreview)void saveRecord(record);stopCamera();stopMedia();viewerDispose?.();});
@@ -223,4 +245,4 @@ function updateLinks(){
  svg.innerHTML=paths.length?`<path d="${paths.join(' ')}"/><circle cx="${p.x}" cy="${p.y}" r="4"/>`:'';
 }
 
-window.prepareClassNavigation = async () => { if (!record||observationSubmitting) return false; clearTimeout(saveTimer); if (!isPreview) await saveRecord(record); };
+window.prepareClassNavigation = async () => { if (!record||observationSubmitting) return false; clearTimeout(saveTimer); if (!isPreview) { if(observation?.pendingSync)await finishObservation(); else await saveRecord(record); } };

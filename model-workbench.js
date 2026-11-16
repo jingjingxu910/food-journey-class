@@ -8,7 +8,7 @@ const organs = [
 
 const revisionOnlyIds=new Set(['nose','trachea','lungs','liver','pancreas']);
 organs.push({id:'nose',name:'鼻子',image:'assets/organs/nose-gentle.svg',width:9});
-organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-soft.webp',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-soft.webp',width:25},{id:'pancreas',name:'胰脏',image:'assets/organs/pancreas-soft.webp',width:18});
+organs.push({id:'trachea',name:'气管',image:'assets/organs/trachea-atlas.png',width:12,height:20},{id:'lungs',name:'肺',image:'assets/organs/lungs-atlas.png',width:31},{id:'liver',name:'肝',image:'assets/organs/liver-soft.webp',width:25},{id:'pancreas',name:'胰脏',image:'assets/organs/pancreas-soft.webp',width:18});
 const CLOUD_ENV = "motionless-harrier-d7cuz0659ef1a";
 const CLOUD_COLLECTION = "food-journey-groups";
 const LOCAL_CLEAR_SIGNAL_KEY = "foodJourneyClassLocalClear";
@@ -392,12 +392,12 @@ function finishRoute(event) {
   queueDraftSave();
 }
 
-function inferRouteOrder(model) {
+function inferRouteOrder(model, modelPhase, revision) {
   const points = model?.routePoints || [], distances = {};
-  if (points.length < 2) return {order:[],distances};
+  if (points.length < 2) return {order:[],comparisonOrder:[],distances};
   const samples=sampleFoodRoute(points);
   const {contacts,ignoreApproach}=intestinalContacts(model,samples);
-  const ranked=organs.filter(organ=>!revisionOnlyIds.has(organ.id)&&model.positions?.[organ.id]).map(organ=>{
+  const ranked=organs.filter(organ=>!revisionOnlyIds.has(organ.id)&&(modelPhase!=='v1'||organ.id!=='esophagus')&&model.positions?.[organ.id]).map(organ=>{
     let closest=Infinity,at=Infinity;
     for(const contact of contacts){
       const {point,colonDistance,afterSmall}=contact;
@@ -419,6 +419,8 @@ function inferRouteOrder(model) {
       for(let j=0;j<steps;j++)samples.push({x:a.x+(b.x-a.x)*j/steps,y:a.y+(b.y-a.y)*j/steps});
     }
     const near=[];
+    const esophagus=organById('esophagus');
+    let esophagusHits=0;
     for(const p of samples){
       let best=Infinity,at=0;
       for(let i=1;i<points.length;i++){
@@ -427,20 +429,27 @@ function inferRouteOrder(model) {
         const d=Math.hypot(a.x+t*dx-p.x,(a.y-p.y)*1.5+t*dy);
         if(d<best){best=d;at=i-1+t;}
       }
-      if(best<=3.5)near.push(at);
+      if(best<=3.5){
+        near.push(at);
+        if(modelPhase==='v1'&&revision?.positions?.esophagus&&routeOrganDistance(p,esophagus,revision)<=1)esophagusHits++;
+      }
     }
     if(near.length>=3&&near.length>=samples.length*.3){
       near.sort((a,b)=>a-b);
-      drawn.push({at:near[Math.floor(near.length/2)],label:'补画的器官 / 通道'});
+      const at=near[Math.floor(near.length/2)];
+      const mouth=placed.find(item=>item.id==='mouth');
+      const stomach=placed.find(item=>item.id==='stomach');
+      const matchesEsophagus=esophagusHits>=3&&esophagusHits>=near.length/2&&mouth&&stomach&&mouth.at<at&&at<stomach.at;
+      drawn.push({at,id:matchesEsophagus?'esophagus':'drawn',label:matchesEsophagus?'补画的通道（与修正模型的食管对应）':'补画的器官 / 通道'});
     }
   }
-  const displayOrder=[...placed.map(item=>({at:item.at,label:organById(item.id).name})),...drawn]
-    .sort((a,b)=>a.at-b.at).map(item=>item.label).filter((name,i,all)=>i===0||name!==all[i-1]);
-  return {order:placed.map(item=>item.id),distances,displayOrder,hasDrawn:!!model.structureStrokes?.length,unmatchedDrawn:!!model.structureStrokes?.length&&!drawn.length};
+  const entries=[...placed.map(item=>({...item,label:organById(item.id).name})),...drawn].sort((a,b)=>a.at-b.at);
+  const displayOrder=entries.map(item=>item.label).filter((name,i,all)=>i===0||name!==all[i-1]);
+  return {order:placed.map(item=>item.id),comparisonOrder:entries.map(item=>item.id),distances,displayOrder,hasDrawn:!!model.structureStrokes?.length,unmatchedDrawn:!!model.structureStrokes?.length&&!drawn.length};
 }
 
 function calculateRouteOrder(model = activeModel()) {
-  const result=inferRouteOrder(model);
+  const result=inferRouteOrder(model,phase);
   model.routeOrder=result.order;
   model.routeDistances=result.distances;
   model.routeOrderVersion=3;
@@ -550,7 +559,7 @@ function withCloudDeadline(work, ms) {
 async function loadClassResetId() {
   const result = await withCloudDeadline((async () => {
     const database = await initializeCloud();
-    const {readOptionalDocument} = await import("./student-data.js?v=20261109-ui3");
+    const {readOptionalDocument} = await import("./student-data.js?v=20261116-tablet-fixes");
     return readOptionalDocument(database.collection(CLOUD_COLLECTION).doc("class-reset"));
   })(), 2500);
   if (result?.code) throw new Error(result.message || "课堂轮次读取失败");
@@ -582,7 +591,7 @@ async function initializeCloud() {
 
 async function syncRecord(record) {
   try {
-    const data = await import("./student-data.js?v=20261109-ui3");
+    const data = await import("./student-data.js?v=20261116-tablet-fixes");
     if (!await data.submitRecord(record, { saveLocal: false })) throw data.lastSubmissionError || new Error("云端未确认保存");
     record.pendingSync = false;
     pendingSubmissionSync = false;
@@ -706,8 +715,8 @@ function compareModels(first, second) {
     const b = second.positions[organ.id];
     return Boolean(a) !== Boolean(b) || (a && b && (Math.hypot(a.x-b.x,a.y-b.y)>2.5 || JSON.stringify(appearanceFor(organ,first)) !== JSON.stringify(appearanceFor(organ,second))));
   }).map((organ) => organ.name);
-  const beforeOrder = inferRouteOrder(first).order;
-  const afterOrder = inferRouteOrder(second).order;
+  const beforeOrder = inferRouteOrder(first,"v1",second).comparisonOrder;
+  const afterOrder = inferRouteOrder(second,"v2").comparisonOrder;
   const routeChanged = beforeOrder.length !== afterOrder.length || beforeOrder.some((id, index) => id !== afterOrder[index]);
   return { organs: changedOrgans, routeChanged };
 }
@@ -725,7 +734,7 @@ function miniModel(model, label, options = {}) {
   const frontLine=front.map(point=>`${point.x},${point.y*1.5}`).join(" ");
   const pieces = organs.map((organ) => {
     const position = model.positions?.[organ.id];
-    if (!position) return "";
+    if (!position || (options.phase === "v1" && (organ.id === "esophagus" || revisionOnlyIds.has(organ.id)))) return "";
     const appearance = appearanceFor(organ,model);
     return `<img class="organ-${organ.id}" src="${organ.image}" alt="${organ.name}" title="${organ.name}" style="left:${position.x}%;top:${position.y}%;width:${appearance.width}%;${appearance.height ? `height:${appearance.height}%;` : ""}transform:translate(-50%,-50%) rotate(${appearance.angle}deg)">`;
   }).join("");
@@ -735,7 +744,7 @@ function miniModel(model, label, options = {}) {
 }
 
 window.renderLiveModel=(model)=>miniModel(model,'当前作品');
-window.renderLiveComparison=(before,after)=>`<div class="mini-compare has-revision">${miniModel(before?{...before,_paired:true}:null,'观察前想法')}${miniModel(after,'观察后修正')}</div>`;
+window.renderLiveComparison=(before,after)=>`<div class="mini-compare has-revision">${miniModel(before?{...before,_paired:true}:null,'观察前想法',{phase:"v1"})}${miniModel(after,'观察后修正')}</div>`;
 function latestRecord(records, id) {
   return records.filter((record) => Number(record.groupId) === id).sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt))[0] || null;
 }
@@ -818,7 +827,7 @@ async function watchTeacherRecords(){
   teacherWatchStarting=true;
   try{
     const database=await initializeCloud(),collection=database.collection(CLOUD_COLLECTION);
-    if(document.hidden||typeof collection.watch!=='function')return;
+    if(document.hidden)return;
     teacherWatcher=collection.where({_id:database.command.in([...Array.from({length:12},(_,i)=>`group-${i+1}`),'class-reset','class-feedback'])}).watch({
       onChange(snapshot){
         if(document.hidden||!Array.isArray(snapshot.docs))return;
@@ -840,6 +849,7 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden)stopTeacherWatch();else void refreshDashboard();
 });
 window.addEventListener('online',()=>{if(mode==='teacher')void refreshDashboard();});
+if(mode==='teacher')setInterval(()=>{if(!document.hidden&&!teacherWatcher&&!teacherWatchStarting)void refreshDashboard();},8000);
 window.addEventListener('pagehide',stopTeacherWatch);
 
 async function clearAllClassData() {
@@ -924,11 +934,13 @@ async function exportRecords() {
 function renderSubmittedModelAnalysis(record,phaseName){
   const model=record?.[phaseName];
   if(!model)return '';
-  const inferred=inferRouteOrder(model);
+  const inferred=inferRouteOrder(model,phaseName);
   const routeNames=inferred.displayOrder||[];
   const route = routeNames.length ? routeNames.join(" → ") : model.routePoints?.length >= 2 ? "已有笔迹，未识别到经过的器官，请对照上图查看" : "本次提交没有路线笔迹";
   const revision = phaseName === "v2" ? compareModels(record.v1, model) : null;
-  const metrics = `<dl class="model-preview-metrics"><div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>建模用时</dt><dd>${formatDuration(model)}</dd></div><div class="model-metric-route"><dt>所画路线</dt><dd>${route}${inferred.hasDrawn?'<small class="route-inference-note">'+(inferred.unmatchedDrawn?'另有补画部分，暂无法可靠排入顺序，请结合原图查看。':'已纳入路线附近的补画部分；具体名称请结合小组说明确认。')+'</small>':''}</dd></div>${revision ? `<div class="model-metric-revision"><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div class="model-metric-revision"><dt>器官顺序</dt><dd>${revision.routeChanged ? "有变化" : "相同"}</dd></div>` : ""}</dl>`;
+  const before = revision && record.v1 ? inferRouteOrder(record.v1,"v1",model).displayOrder?.join(" → ") : '';
+  const routeComparison = revision ? '<small class="route-inference-note model-route-before">初始模型 · '+(before||'未识别到器官顺序')+'</small><small class="route-inference-note model-route-before">修正模型 · '+route+'</small>' : '';
+  const metrics = `<dl class="model-preview-metrics"><div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>建模用时</dt><dd>${formatDuration(model)}</dd></div><div class="model-metric-route"><dt>所画路线</dt><dd>${route}${inferred.hasDrawn?'<small class="route-inference-note">'+(inferred.unmatchedDrawn?'另有补画部分，暂无法可靠排入顺序，请结合原图查看。':'已纳入路线附近的补画部分；具体名称请结合小组说明确认。')+'</small>':''}</dd></div>${revision ? `<div class="model-metric-revision"><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div class="model-metric-revision"><dt>器官顺序</dt><dd>${revision.routeChanged ? "有变化" : "相同"}${routeComparison}</dd></div>` : ""}</dl>`;
   return metrics;
 }
 window.renderSubmittedModelAnalysis=renderSubmittedModelAnalysis;
@@ -940,7 +952,7 @@ function openModelPreview(groupId, phaseName) {
   const label = phaseName === "v2" ? "观察后修正" : "观察前想法";
   const metrics=renderSubmittedModelAnalysis(record,phaseName);
   document.querySelector("#preview-model-title").textContent = `第 ${groupId} 组 · ${label}`;
-  document.querySelector("#preview-model-content").innerHTML = `<div class="preview-model-image">${miniModel(model, label)}</div>${metrics}`;
+  document.querySelector("#preview-model-content").innerHTML = `<div class="preview-model-image">${miniModel(model, label, {phase:phaseName})}</div>${metrics}`;
   document.querySelector("#model-preview-dialog").showModal();
 }
 

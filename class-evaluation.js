@@ -1,4 +1,4 @@
-import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js?v=20261109-ui3';
+import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js?v=20261116-tablet-fixes';
 import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=20261113-awards';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};

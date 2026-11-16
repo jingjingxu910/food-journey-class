@@ -26,11 +26,17 @@ const dashboard=fs.readFileSync(require('node:path').join(__dirname,'../live-das
 vm.runInContext(dashboard.slice(dashboard.indexOf('function demoState('))+'\nthis.demo=demoState;',context);
 for(const phase of ['v1','v2']){
  const submitted=context.demo(4,phase).model;
- assert.deepEqual(Array.from(context.infer(submitted).order),['mouth','esophagus','stomach','small-intestine','large-intestine']);
+ assert.deepEqual(Array.from(context.infer(submitted,phase).order),phase==='v1'?['mouth','stomach','small-intestine','large-intestine']:['mouth','esophagus','stomach','small-intestine','large-intestine']);
  assert(context.layers(submitted).front.length>1,'The distal route rises above the colon after reaching the small intestine');
 }
 const first=context.demo(4,'v1').model,second=context.demo(4,'v2').model;
-assert.equal(context.compare(first,second).routeChanged,false,'A shifted stomach waypoint does not change the organ sequence');
+assert.equal(context.compare(first,second).routeChanged,true,'V1 without a drawn passage must differ from V2 with an esophagus');
+const drawn={...first,structureStrokes:[[{x:50,y:22},{x:50,y:34}]]};
+assert.equal(context.compare(drawn,second).routeChanged,false,'A matching freehand passage and V2 esophagus preserve the sequence');
+assert.match(context.infer(drawn,'v1',second).displayOrder.join(' → '),/补画的通道/);
+const legacy={...first,positions:{...first.positions,esophagus:{x:50,y:28}}};
+assert.equal(context.infer(legacy,'v1').order.includes('esophagus'),false,'Legacy V1 data must not show a placed esophagus');
+assert.equal(context.compare({...first,structureStrokes:[[{x:25,y:22},{x:25,y:34}]]},second).routeChanged,true,'An unrelated stroke cannot count as an esophagus');
 assert.equal(context.compare(first,{...first,routePoints:[...first.routePoints].reverse()}).routeChanged,true,'Reversing the organ sequence changes the route');
 const ar=fs.readFileSync(require('node:path').join(__dirname,'../class-evaluation.js'),'utf8');
 assert(!ar.includes('names[v.organId]||v.organId'),'AR report must not leak internal English organ identifiers');

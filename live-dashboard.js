@@ -1,7 +1,7 @@
 import {journeyEvents} from './evaluation-data.js?v=20261113-awards';
-import {cloudDb} from './student-data.js?v=20261109-ui3';
+import {cloudDb} from './student-data.js?v=20261116-tablet-fixes';
 import {isLocalPreview} from './local-preview-db.js';
-import {LIVE_COLLECTION,writeTeacherFocus} from './live-sync.js?v=20261113-four-views';
+import {LIVE_COLLECTION,writeTeacherFocus} from './live-sync.js?v=20261116-tablet-fixes';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={outside:'入口',mouth:'口腔',pharynx:'咽',esophagus:'食管',stomach:'胃',small:'小肠',large:'大肠',done:'旅行完成'};
@@ -38,7 +38,7 @@ function setup(){
   const counts=new Map();
   for(const event of events)counts.set(event.type,(counts.get(event.type)||0)+1);
   const items=[...counts].map(([type,count])=>'<li>'+labels[type]+' '+count+' 次</li>');
-  return '<section class="live-analysis"><strong>探索行为</strong><ul>'+items.slice(0,expanded?items.length:4).join('')+'</ul>'+(expanded?'<h3>探索过程</h3><ol>'+events.map(event=>'<li>'+labels[event.type]+(event.choice?' · '+escape(event.choice):'')+'</li>').join('')+'</ol>':'')+'</section>';
+  return '<section class="live-analysis live-journey-analysis"><div><strong>探索行为</strong><ul>'+items.slice(0,expanded?items.length:4).join('')+'</ul></div>'+(expanded?'<div><strong>探索过程</strong><ol>'+events.map(event=>'<li>'+labels[event.type]+(event.choice?' · '+escape(event.choice):'')+'</li>').join('')+'</ol></div>':'')+'</section>';
  }
  function preview(state,id,submitted,expanded=false){
   const record=demo&&['v1','v2'].includes(phase)?{v1:demoState(id,'v1').model,v2:demoState(id,'v2').model}:recordFor(id);
@@ -91,7 +91,9 @@ function setup(){
    const submitted=demo?(id%4===0||demoSubmitted.has(phase+':'+id)):!!completion(id),key=phase+':'+id,isUnread=unread.has(key),flash=Date.now()-(flashes.get(key)||0)<3200;
    return `<button type="button" class="live-card${submitted?' is-submitted':''}${isUnread?' is-unread':''}${flash?' is-new':''}" data-group="${id}" aria-label="放大第 ${id} 组"><header><strong>第 ${id} 组</strong><span class="live-status">${isUnread?'✓ 新提交':submitted?'✓ 已提交':stateFor(id)?'探索中':'等待进入'}</span></header>${preview(stateFor(id),id,submitted)}</button>`;
   }).join('');
-  focusedNotice.textContent=wall.querySelector('.live-notice').textContent;
+  const updatedGroups=[...unread.keys()].filter(key=>key.startsWith(phase+':')).map(key=>Number(key.split(':')[1]));
+  wall.querySelector('.live-notice').textContent=updatedGroups.length?'第 '+updatedGroups.join('、')+' 组已提交':'';
+  focusedNotice.textContent=focus&&updatedGroups.includes(focus)?'本组已提交':'';
   if(focus){dialog.querySelector('h2').textContent=`第 ${focus} 组 · ${stageLabel()}`;dialog.querySelector('.live-focus-content').innerHTML=preview(stateFor(focus),focus,demo?(focus%4===0||demoSubmitted.has(phase+':'+focus)):!!completion(focus),true);}
  }
  async function control(force=false){
@@ -101,17 +103,42 @@ function setup(){
   try{if(signature!==lastControl)token=`view-${Date.now()}-${Math.random().toString(36).slice(2,6)}`;await writeTeacherFocus({phase,groups,focus:!!focus,resetId,token});lastControl=signature;}catch{lastControl='';}finally{controlBusy=false;if(controlAgain){controlAgain=false;void control(true);}}
  }
  async function subscribe(){
-  const version=++watchVersion;watcher?.close();watcher=null;snapshots.clear();if(!phase||demo)return;
-  try{const db=await cloudDb();if(version!==watchVersion)return;watcher=db.collection(LIVE_COLLECTION).where({kind:'lesson-live',phase}).watch({onChange(snapshot){if(version!==watchVersion)return;for(const doc of snapshot.docs||[]){const id=Number(doc.groupId);if(!completion(id)||!snapshots.has(id))snapshots.set(id,doc);}render();},onError(){if(version!==watchVersion)return;watcher?.close();watcher=null;render();}});}catch{render();}
+  const version=++watchVersion;
+  watcher?.close();
+  watcher=null;
+  if(!phase||demo)return;
+  function receive(docs){
+   if(version!==watchVersion)return;
+   let changed=false;
+   for(const doc of docs||[]){
+    const id=Number(doc.groupId),prior=snapshots.get(id);
+    if(doc.phase!==phase||(doc.resetId||null)!==(resetId||null)||prior?.updatedAt>=doc.updatedAt||(completion(id)&&prior))continue;
+    snapshots.set(id,doc);changed=true;
+   }
+   if(changed)render();
+  }
+  try{
+   const db=await cloudDb();
+   if(version!==watchVersion)return;
+   const query=db.collection(LIVE_COLLECTION).where({kind:'lesson-live',phase});
+   if(typeof query.watch==='function'){
+    watcher=query.watch({
+     onChange(snapshot){receive(snapshot.docs);},
+     onError(){if(version!==watchVersion)return;watcher?.close();watcher=null;}
+    });
+   }
+   const result=await query.get();
+   if(!result?.code)receive(result.data);
+  }catch{/* Reconnect on the next heartbeat. */}
  }
- async function selectPhase(next){if(next===phase){render();return;}phase=next;focus=null;if(dialog.open)dialog.close();lastControl='';await subscribe();render();void control();}
+ async function selectPhase(next){if(next===phase){render();return;}phase=next;focus=null;snapshots.clear();if(dialog.open)dialog.close();lastControl='';render();void control();await subscribe();}
  window.addEventListener('teacher-live-phase',e=>void selectPhase(e.detail));
  window.addEventListener('lesson-records',e=>{
   const oldRound=resetId;resetId=e.detail.resetId||null;if(oldRound!==resetId){seen.clear();unread.clear();initial=true;snapshots.clear();lastControl='';}
   records=e.detail.records||[];
   const added=[];
-  for(let id=1;id<=12;id++)for(const p of ['v1','observation','v2','journey']){const at=completion(id,p),key=p+':'+id,old=seen.get(key);if(at&&old&&old!==at||at&&!old&&!initial){unread.set(key,at);flashes.set(key,Date.now());added.push(`第 ${id} 组${{v1:' 初始模型',observation:' AR观察',v2:' 修正模型',journey:' 食物旅行'}[p]}`);}seen.set(key,at);}
-  initial=false;if(added.length)wall.querySelector('.live-notice').textContent=added.join('、')+'已提交';render();if(added.length)setTimeout(render,3400);void control();
+  for(let id=1;id<=12;id++)for(const p of ['v1','observation','v2','journey']){const at=completion(id,p),key=p+':'+id,old=seen.get(key);if(at&&old&&old!==at||at&&!old&&!initial){if(p!==phase||id!==focus||!dialog.open){unread.set(key,at);flashes.set(key,Date.now());}added.push(`第 ${id} 组${{v1:' 初始模型',observation:' AR观察',v2:' 修正模型',journey:' 食物旅行'}[p]}`);}seen.set(key,at);}
+  initial=false;render();if(added.length)setTimeout(render,3400);void control();
  });
  wall.addEventListener('click',e=>{const pager=e.target.closest('[data-page]');if(pager){page=Number(pager.dataset.page);focus=null;render();void control();return;}const card=e.target.closest('[data-group]');if(card){focus=Number(card.dataset.group);unread.delete(phase+':'+focus);render();dialog.showModal();void control();}});
  dialog.querySelector('header button').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{focus=null;window.speechSynthesis?.cancel();render();void control();});
@@ -129,7 +156,7 @@ function demoState(id,phase){
  if(phase==='observation'){const organs=['mouth','esophagus','stomach','small-intestine','large-intestine','pharynx'];return {phase,organId:organs[(id-1)%6],organName:['口腔','食管','胃','小肠','大肠','咽'][(id-1)%6]};}
  if(phase==='journey'){const stages=['mouth','esophagus','stomach','small','large','pharynx'];return {phase,stage:stages[(id-1)%6],food:id%6===1?'whole':'chyme',foodName:['湿润碎块','湿润食团','分散的食物碎块','更细软的食糜','剩余内容物','湿润食团'][(id-1)%6],hint:['快看！饼干变碎的同时，也变湿润了。','食管的内壁正在把食团向下推。','胃壁运动，让食物与胃液充分混合。','仔细观察，营养物质正在被吸收。','留下的内容物还会怎样变化？','前面是气管，后面是食管。'][(id-1)%6],progress:(id%5+1)/6};}
  const startedAt=1700000000000;
- const positions={mouth:{x:50,y:14},esophagus:{x:50,y:28},stomach:{x:57,y:43},'small-intestine':{x:50+(id%3-1)*2,y:55},'large-intestine':{x:50,y:55}};
- if(phase==='v2')Object.assign(positions,{stomach:{x:61,y:44},nose:{x:50,y:9},trachea:{x:48,y:26},lungs:{x:50,y:34}});
+ const positions={mouth:{x:50,y:14},stomach:{x:57,y:43},'small-intestine':{x:50+(id%3-1)*2,y:55},'large-intestine':{x:50,y:55}};
+ if(phase==='v2')Object.assign(positions,{esophagus:{x:50,y:28},stomach:{x:61,y:44},nose:{x:50,y:9},trachea:{x:48,y:26},lungs:{x:50,y:34}});
  return {phase,model:{positions,startedAt,completedAt:startedAt+(45+id*3+(phase==='v2'?18:0))*1000,visualStyle:{},routePoints:[{x:50,y:14},{x:50,y:29},{...positions.stomach},{x:50,y:55},{x:56,y:58},{x:43,y:55},{x:41,y:49},{x:60,y:49},{x:60,y:61},{x:50,y:64}],structureStrokes:[],modificationCount:id*2}};
 }

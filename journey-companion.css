@@ -120,3 +120,15 @@
 #stage[data-scene=pharynx] .companion-message p{font-size:clamp(14px,3.2vw,23px);line-height:1.25}
 #stage>footer{height:26px;z-index:28}
 #stage>footer #progress{min-width:0;height:8px}
+
+
+#stage{container-type:size;--nav-edge:min(calc(var(--mini-height) + 44px),36cqh);--direction-height:clamp(46px,10cqh,100px)}
+#stage #back{bottom:var(--nav-edge);z-index:32}
+#stage #forward{bottom:calc(var(--nav-edge) + var(--direction-height) + 8px);z-index:32}
+#stage #organ-reveal img{display:block;width:100%;height:clamp(90px,23vh,250px);object-fit:contain}
+#recap .recap-images>img.recap-organ{display:block;width:100%;height:100%;min-height:1px;object-fit:contain}
+
+
+#recap .recap-images{height:auto;grid-template-rows:repeat(2,clamp(30px,7vh,86px))}
+#recap .recap-images:has(>canvas:only-child){grid-template-rows:clamp(60px,14vh,172px)}
+@supports not (height:1cqh){#stage{--nav-edge:min(calc(var(--mini-height) + 44px),32vh);--direction-height:clamp(46px,8vh,96px)}}

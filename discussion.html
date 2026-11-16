@@ -5,29 +5,17 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>课堂研讨 · 一起想一想</title>
   <script src="frame-entry.js"></script>
-  <link rel="stylesheet" href="discussion.css">
-  <script type="module" src="discussion.js"></script>
+  <link rel="stylesheet" href="discussion.css?v=20261116-no-bulbs">
+  <script type="module" src="discussion.js?v=20261116-no-bulbs"></script>
 <link rel="stylesheet" href="student-fullscreen.css?v=20261113-classroom"></head>
 <body>
   <main>
     <header><span>课堂研讨</span><span id="question-number"></span><button class="student-fullscreen" type="button" onclick="requestLessonFullscreen()">全屏</button></header>
     <section class="discussion" aria-labelledby="question">
       <p class="eyebrow">一起想一想</p>
-      <div id="hints" class="hint-layout">
-        <h1 id="question"></h1>
-      </div>
-      <p class="instructions">点一点题目周围的小灯泡，看看思考提示。</p>
+      <h1 id="question"></h1>
     </section>
     <footer>认真听一听，让不同的想法相遇。</footer>
   </main>
-  <template id="hint-template">
-    <div class="hint">
-      <button type="button" class="bulb"><span aria-hidden="true">💡</span></button>
-      <div class="hint-note" tabindex="-1" hidden>
-        <span class="hint-label"></span>
-        <p></p>
-      </div>
-    </div>
-  </template>
 </body>
 </html>
