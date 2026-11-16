@@ -41,7 +41,44 @@ window.captureLessonLive=(_state,focused)=>{
   connected?.renderForPreview?.();
   draw(overlay,overlay.getBoundingClientRect());
  }
- const image=previewCanvas.toDataURL('image/jpeg',.55);
+ if($('#organ-dialog').open){
+  // Composite the visible panels in screen coordinates over the camera image.
+  function drawPanel(panel,source,width,height,contain=false){
+   if(!source||!width||!height||panel.hidden||source.hidden)return;
+   const rect=source.getBoundingClientRect();
+   if(!rect.width||!rect.height)return;
+   const x=(rect.left-stage.left)*scale,y=(rect.top-stage.top)*scale;
+   const w=rect.width*scale,h=rect.height*scale;
+   context.save();
+   context.beginPath();
+   const radius=Math.min(12*scale,w/2,h/2);
+   if(context.roundRect)context.roundRect(x,y,w,h,radius);
+   else context.rect(x,y,w,h);
+   context.clip();
+   context.fillStyle='#eaf5ef';
+   context.fillRect(x,y,w,h);
+   const ratio=contain?Math.min(w/width,h/height):null;
+   const imageWidth=ratio===null?w:width*ratio,imageHeight=ratio===null?h:height*ratio;
+   context.drawImage(source,x+(w-imageWidth)/2,y+(h-imageHeight)/2,imageWidth,imageHeight);
+   context.restore();
+  }
+  const modelPanel=$('#organ-3d');
+  const model=modelPanel.querySelector('canvas');
+  const fallback=modelPanel.querySelector('img');
+  if(!modelPanel.hidden&&model?.width&&model.height){
+   viewerDispose?.renderForPreview?.();
+   drawPanel(modelPanel,model,model.width,model.height);
+  }else if(fallback?.complete){
+   drawPanel(modelPanel,fallback,fallback.naturalWidth,fallback.naturalHeight,true);
+  }
+  const mediaPanel=$('#organ-media');
+  const clip=$('#organ-video');
+  const micrograph=$('#organ-micrograph');
+  if(clip.readyState>=2&&!clip.hidden)drawPanel(mediaPanel,clip,clip.videoWidth,clip.videoHeight,true);
+  else if(micrograph.complete)drawPanel(mediaPanel,micrograph,micrograph.naturalWidth,micrograph.naturalHeight,true);
+ }
+ let image=previewCanvas.toDataURL('image/jpeg',.55);
+ if(image.length>55000)image=previewCanvas.toDataURL('image/jpeg',.38);
  return image.length<=55000?image:null;
 };
 window.readLiveObservation=()=>isPreview||!observation?null:{
