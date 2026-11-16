@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head><base href="../"><style>.remote-standalone #teacher-fullscreen-button,.remote-standalone .lesson-fullscreen{display:none!important}.ev-tabs>.remote-bar{display:flex;align-items:center;gap:8px;margin-inline-start:auto}.remote-bar button{white-space:nowrap}</style><script src="frame-entry.js?v=20261105-tablet" data-standalone></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f3f8f6" />
+    <title>消化模型工作台｜食物在身体里的旅行</title>
+    <link rel="stylesheet" href="live-dashboard.css?v=classroom-last-frame">
+    <script type="module" src="remote/live-dashboard.js?v=1"></script>
+    <link rel="stylesheet" href="styles.css?v=20261102-1" />
+    <script defer src="cloud-loader.js?v=20261102-1"></script>
+    <script defer src="model-workbench.js?v=20261118-classroom-review"></script>
+    <script defer src="watermark.js?v=20261102-1"></script>
+<link rel="stylesheet" href="tablet.css?v=20261118-game-mirror">
+<script defer src="tablet-runtime.js?v=20261105-tablet"></script>
+<link rel="stylesheet" href="model-learning.css?v=20261118-game-mirror">
+<link rel="stylesheet" href="class-evaluation.css?v=20261118-classroom-review"><script type="module" src="remote/class-evaluation.js?v=1"></script><link rel="stylesheet" href="student-fullscreen.css?v=20261113-classroom"></head>
+  <body class="model-page student-page remote-standalone">
+    <main class="model-app">
+      <header class="model-topbar">
+        <a class="model-back" href="index.html">← 返回</a>
+        <div class="model-identity">
+          <span id="connection-status" class="connection-status">本机记录</span>
+          <strong id="group-badge">第 1 组</strong>
+          <button id="model-fullscreen-button" class="model-fullscreen-button student-fullscreen" type="button">全屏</button>
+        </div>
+      </header>
+
+      <section id="student-view" class="model-student-view">
+        <div class="model-heading">
+          <div>
+            <p id="phase-label" class="model-eyebrow">V1</p>
+            <h1 id="model-title">我们猜想</h1>
+            <p id="model-prompt">摆一摆：你觉得它们在身体里的什么位置？</p>
+          </div>
+          <div class="phase-track" aria-label="课堂进度">
+            <span id="phase-v1" class="active">初次建模</span><i></i><span>AR观察</span><i></i><span id="phase-v2">证据修正</span>
+          </div>
+        </div>
+
+        <section class="anatomy-workspace">
+          <aside class="organ-shelf" aria-labelledby="shelf-title">
+            <div><h2 id="shelf-title">器官</h2></div>
+            <div id="organ-palette" class="organ-palette"></div>
+          </aside>
+
+          <div class="body-stage-wrap">
+            <div id="body-stage" class="body-stage" aria-label="人体消化模型画布">
+              <img class="body-outline" src="assets/anatomy/body-outline-generated.webp?v=20261022-5" alt="儿童正面人体轮廓" draggable="false" />
+              <canvas id="route-canvas" aria-label="食物旅行路线画布"></canvas>
+              <div id="placed-organs" class="placed-organs"></div>
+              <div id="draw-tip" class="draw-tip" hidden>画出食物的路线</div>
+            </div>
+          </div>
+
+          <aside class="model-tools">
+            <div class="task-card"><span id="placement-count">0 / 5</span><strong>已放置</strong><p id="task-hint">拖动器官</p></div>
+            <div id="organ-size-controls" hidden><button id="organ-smaller" class="tool-button" type="button" aria-label="缩小选中器官">－</button><button id="organ-larger" class="tool-button" type="button" aria-label="放大选中器官">＋</button></div><button id="structure-button" class="tool-button" type="button">✎ 补画结构</button><button id="draw-route-button" class="tool-button tool-button--primary" type="button" disabled>✎ 画食物路线</button>
+            <button id="undo-button" class="tool-button" type="button">↶ 撤销上一步</button>
+            <button id="clear-route-button" class="tool-button" type="button">清除绿色路线</button>
+          </aside>
+        </section>
+
+        <footer class="model-footer">
+          <div><strong id="route-summary">画出食物的路线</strong><span id="save-status" role="status"></span></div>
+          <button id="submit-model-button" class="submit-model-button" type="button">确认提交 V1 初始模型</button>
+        </footer>
+      </section>
+
+      <section id="transition-panel" class="transition-panel" hidden></section>
+      <section id="teacher-view" class="teacher-model-view" hidden>
+        <div class="teacher-model-heading">
+          <div><p class="model-eyebrow">观察前 · 观察后</p><h1>各组的消化模型</h1></div>
+          <button id="teacher-fullscreen-button" class="tool-button" type="button">全屏展示</button>
+          <details class="teacher-controls">
+            <summary>教师操作</summary>
+            <div><button id="refresh-dashboard" class="tool-button" type="button">刷新数据</button><button id="export-button" class="tool-button" type="button">导出记录</button><button id="clear-data-button" class="tool-button tool-button--danger" type="button">清除全部记录</button></div>
+          </details>
+        </div>
+        <p id="clear-data-status" class="clear-data-status" role="status" aria-live="polite" hidden></p>
+        <div id="teacher-summary" class="teacher-summary"></div>
+        <nav class="teacher-pagination" aria-label="小组作品分页">
+          <button id="dashboard-prev" class="tool-button" type="button">上一页</button>
+          <span id="dashboard-page-label"></span>
+          <button id="dashboard-next" class="tool-button" type="button">下一页</button>
+        </nav>
+        <div id="group-dashboard" class="group-dashboard"></div>
+      </section>
+      <dialog id="model-preview-dialog" class="model-preview-dialog">
+        <div class="model-preview-dialog-heading"><h2 id="preview-model-title"></h2><button id="preview-dialog-close" class="tool-button" type="button">关闭</button></div>
+        <div id="preview-model-content"></div>
+      </dialog>
+    </main>
+  <script type="module" src="remote/screen.js?v=1"></script></body>
+</html>

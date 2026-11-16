@@ -1,0 +1,23 @@
+:root{font:17px system-ui,"Microsoft YaHei",sans-serif;color:#173e39;background:#edf5f0}
+*{box-sizing:border-box}
+main{max-width:1400px;margin:auto;padding:clamp(14px,3vw,36px)}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{margin:.2em 0}.eyebrow,#status{font-size:.9rem;color:#365d54}
+button,select,input{font:inherit;color:inherit;border:1px solid #a9c9bb;border-radius:10px;background:white;padding:9px 12px;min-height:44px}
+button{cursor:pointer}button[aria-pressed=true],.primary{background:#176455;color:white}
+nav,.actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+#controls,#stars,.card,.spotlight{background:#fffdf3;border-radius:16px;padding:14px;margin-top:12px}
+.groups,.star-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.star-grid article{padding:9px;border-radius:10px;background:#e9f2eb}.star-grid b{display:block;margin-bottom:4px}
+.star-grid button{padding:5px 7px;margin:2px;min-height:38px}
+#display .groups{grid-template-columns:repeat(3,minmax(0,1fr))}
+.card img,.spotlight img{display:block;width:100%;height:clamp(90px,20vh,230px);object-fit:contain;background:#e7f0ea;border-radius:10px}
+.spotlight img{height:min(57vh,540px)}.spotlight h2{margin:0 0 8px}
+label{display:flex;align-items:center;gap:8px;flex-wrap:wrap}#code{width:9em}
+@media(max-width:700px){#display .groups{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.star-grid{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+.star-grid article{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;text-align:center}
+.star-grid article b{grid-column:1/-1}
+.star-grid button{white-space:nowrap;padding:5px 3px;margin:0;background:#fff7e7;touch-action:manipulation}
+label{margin-top:8px}
+.star-grid article{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;text-align:center}.star-grid b{grid-column:1/-1}.star-grid button{padding:5px 3px;margin:0;min-height:44px;white-space:nowrap;touch-action:manipulation}
