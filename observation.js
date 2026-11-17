@@ -199,12 +199,13 @@ function stopTipVoice(){
 function hideArTip(){
  stopTipVoice();
  $('#ar-tap-tip').hidden=true;
+ $('#ar-tip-bubble').hidden=true;
 }
 function showArTip(id,queue=false){
  const tip=$('#ar-tap-tip');
  tip.dataset.stage=id;
  tip.querySelector('p').textContent=arGuideLines[id];
- tip.querySelector('p').hidden=false;
+ $('#ar-tip-bubble').hidden=false;
  tip.hidden=false;
  $('#ar-tip-trigger').setAttribute('aria-label',finishedFirstVideo?'听一条观察提示，也可以拖动小芽':'拖动小芽');
  if(!queue)stopTipVoice();
@@ -235,6 +236,11 @@ function showArTip(id,queue=false){
  }).catch(()=>tipBuffers.delete(id));
 }
 const arTip=$('#ar-tap-tip'),arTipTrigger=$('#ar-tip-trigger');
+$('#close-ar-tip').onclick=()=>{
+ $('#ar-tip-bubble').hidden=true;
+ stopTipVoice();
+ arTipTrigger.focus({preventScroll:true});
+};
 bindSproutDrag(arTip,arTipTrigger,()=>{},async()=>{
  if(!finishedFirstVideo)return;
  await prepareTapTipVoice();

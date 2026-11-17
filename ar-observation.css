@@ -9,15 +9,19 @@
 .camera-framing-outline{align-self:center;width:min(98%,680px);height:100%;min-height:0;object-fit:contain;transform:scale(1.2);transform-origin:center 35%}
 #ar-tap-tip{position:absolute;z-index:9;pointer-events:none;left:12px;bottom:10px;display:flex;align-items:center;gap:10px}
 #ar-tap-tip[data-stage="framing"],#ar-tap-tip[data-stage="recognized"]{top:8px;bottom:auto}
-#ar-tap-tip p{margin:0;padding:10px 16px;border:2px solid #f2d89a;border-radius:20px;background:#fff8ed;color:#20483d;font-size:clamp(20px,3.7vw,34px);font-weight:800;box-shadow:0 4px 18px #13383262}
+#ar-tip-bubble{box-sizing:border-box;display:flex;align-items:flex-start;gap:8px;padding:8px 10px 8px 14px;border:2px solid #f2d89a;border-radius:18px;background:#fff8ed;color:#20483d;box-shadow:0 4px 18px #13383262}
+#ar-tip-bubble p{min-width:0;margin:0;overflow-wrap:anywhere;font-size:clamp(17px,3vw,26px);font-weight:800;line-height:1.35}
+#close-ar-tip{flex:0 0 32px;width:32px;height:32px;padding:0;border:1px solid #c6d8ce;border-radius:10px;background:#fcfdf8;color:#20483d;font:700 22px/1 system-ui;pointer-events:auto;cursor:pointer}
+#close-ar-tip:hover,#close-ar-tip:focus-visible{background:#e6f1e9}
+#ar-tip-bubble[hidden]{display:none}
 #ar-tip-trigger{width:clamp(66px,14vw,124px);padding:0;border:0;background:none;flex:none;pointer-events:auto;cursor:grab;touch-action:none;user-select:none}
 #ar-tap-tip[data-dragging] #ar-tip-trigger{cursor:grabbing}
-#ar-tap-tip p{position:absolute;left:calc(100% + 8px);top:0;width:max-content;max-width:var(--ar-tip-room,min(65vw,540px))}
-#ar-tap-tip[data-side="right"] p{left:auto;right:calc(100% + 8px)}
-#ar-tap-tip[data-stage="back"] p,#ar-tap-tip[data-stage^="question-"] p{top:auto;bottom:0}
-#ar-tap-tip[data-bubble-anchor="top"] p{top:0;bottom:auto}
-#ar-tap-tip[data-bubble-anchor="bottom"] p{top:auto;bottom:0}
-#ar-tap-tip[data-dragging] p{visibility:hidden}
+#ar-tip-bubble{position:absolute;left:calc(100% + 8px);top:0;width:max-content;max-width:min(var(--ar-tip-room,65vw),360px)}
+#ar-tap-tip[data-side="right"] #ar-tip-bubble{left:auto;right:calc(100% + 8px)}
+#ar-tap-tip[data-stage="back"] #ar-tip-bubble,#ar-tap-tip[data-stage^="question-"] #ar-tip-bubble{top:auto;bottom:0}
+#ar-tap-tip[data-bubble-anchor="top"] #ar-tip-bubble{top:0;bottom:auto}
+#ar-tap-tip[data-bubble-anchor="bottom"] #ar-tip-bubble{top:auto;bottom:0}
+#ar-tap-tip[data-dragging] #ar-tip-bubble{visibility:hidden}
 #ar-tip-trigger span{display:block;width:100%;aspect-ratio:1;background:url("assets/journey/companion-pink-poses.png") right top/300% 200% no-repeat;filter:drop-shadow(0 4px 5px #183a4055)}
 .camera-framing p{margin:0;padding:5px 12px;border-radius:12px;background:#19353be8;color:#fff9d9;text-align:center;font-size:clamp(14px,2.4vw,20px);font-weight:700}
 .camera-stage{aspect-ratio:auto}.camera-actions{flex-shrink:0;min-height:54px}
