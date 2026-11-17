@@ -97,7 +97,7 @@ async function check(force=false){
      if(key===lastStageCommand)return;
      if(await frame.contentWindow.prepareClassNavigation?.()===false)return;
      lastStageCommand=key;
-     frame.contentWindow.location.replace('evaluation.html?group='+(url.searchParams.get('group')||1));
+     frame.contentWindow.location.replace('evaluation.html?group='+(url.searchParams.get('group')||1)+'&activity='+command.phase);
    }else{
      lastStageCommand=key;
      frame.contentWindow.dispatchEvent(new frame.contentWindow.CustomEvent('class-command',{detail:command}));

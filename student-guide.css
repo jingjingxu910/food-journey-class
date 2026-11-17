@@ -1,0 +1,72 @@
+.student-guide-replay {
+  flex: none;
+  min-height: 44px;
+  padding: 5px 11px;
+  border: 1px solid #bdd8cb;
+  border-radius: 11px;
+  background: #f7fffa;
+  color: #215448;
+  font: 700 14px/1.3 "Microsoft YaHei", sans-serif;
+  cursor: pointer;
+}
+.student-guide {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #193e34;
+  overflow: hidden;
+  font: 16px/1.55 "Microsoft YaHei", "PingFang SC", sans-serif;
+}
+.student-guide::backdrop { background: transparent; }
+.student-guide-spotlight {
+  position: absolute;
+  box-sizing: border-box;
+  border: 3px solid #f9c65e;
+  border-radius: 13px;
+  box-shadow: 0 0 0 150vmax #142f32b8;
+  pointer-events: none;
+}
+.student-guide-spotlight[hidden] { display: none; }
+.student-guide:has(.student-guide-spotlight[hidden]) { background: #142f32b8; }
+.student-guide-card {
+  position: absolute;
+  inset-inline: 12px;
+  bottom: max(12px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+  width: min(440px, calc(100% - 24px));
+  max-height: calc(100% - 24px);
+  margin-inline: auto;
+  overflow: auto;
+  padding: clamp(13px, 3vw, 22px);
+  border: 2px solid #b8ded0;
+  border-radius: 21px;
+  background: #fffdf4;
+  box-shadow: 0 5px 26px #12372e55;
+}
+.student-guide[data-panel="top"] .student-guide-card {
+  top: max(12px, env(safe-area-inset-top));
+  bottom: auto;
+}
+.student-guide-count { margin: 0 0 4px; color: #386a5e; }
+.student-guide h2 { margin: 0 0 5px; font-size: clamp(20px, 3.5vw, 27px); }
+.student-guide-text { margin: 0; font-size: clamp(16px, 2.7vw, 20px); }
+.student-guide-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; margin-top: 12px; }
+.student-guide-actions button {
+  min-height: 44px;
+  padding: 6px 12px;
+  border: 1px solid #bbd4c9;
+  border-radius: 11px;
+  background: #fff;
+  color: #215448;
+  font: 700 15px/1.3 "Microsoft YaHei", sans-serif;
+  cursor: pointer;
+}
+.student-guide-actions [data-guide-next] { color: #fff; background: #166655; border-color: #166655; }
+.student-guide-actions button:focus-visible, .student-guide-replay:focus-visible { outline: 3px solid #328779; outline-offset: 2px; }

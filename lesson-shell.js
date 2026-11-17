@@ -1,3 +1,5 @@
+import {installStudentGuide} from './student-guide.js?v=student-walkthrough';
+
 window.lessonShell = true;
 // The award page can stay open without loading any other lesson scripts.
 if ('serviceWorker' in navigator && window.isSecureContext) {
@@ -22,6 +24,7 @@ frame.addEventListener('load', () => {
     if (child.hash) shell.searchParams.set('hash', child.hash);
     history.replaceState(null, '', shell);
     document.title = frame.contentDocument.title || '食物在身体里的旅行';
+    installStudentGuide(frame, child);
     if (document.fullscreenElement && child.searchParams.get('mode') !== 'teacher') {
       void screen.orientation?.lock?.('portrait')?.catch(() => {});
     }
