@@ -106,7 +106,7 @@ export async function readForumStarGroups(resetId) {
     const result=await collection.where({kind:'lesson-forum',resetId:resetId||null,groupId:id}).limit(40).get();
     if(result?.code)throw Error(result.message||'暂时无法读取论坛记录');
     const replied=result.data.some(entry=>{
-      if(!entry.forumKey?.startsWith(prefix)||typeof entry.values?.message!=='string'||!entry.values.message.trim())return false;
+      if(entry.removedAt||!entry.forumKey?.startsWith(prefix)||typeof entry.values?.message!=='string'||!entry.values.message.trim())return false;
       const match=/^(breathing|movement|homework)-([1-9]|1[0-2])$/.exec(entry.forumKey.slice(prefix.length));
       return Boolean(match&&Number(match[2])!==id);
     });

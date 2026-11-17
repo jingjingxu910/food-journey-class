@@ -1,10 +1,11 @@
-import {cloudDb, groupId} from './student-data.js?v=20261116-tablet-fixes';
+import {cloudDb, groupId, readOptionalDocument} from './student-data.js?v=20261116-tablet-fixes';
 import {roundId, readDocument, awardIcon} from './evaluation-data.js?v=automatic-stars';
 import {forumTopics} from './forum-content.js?v=forum-voice';
 
 const $ = selector => document.querySelector(selector);
 const params = new URLSearchParams(location.search);
 const teacher = params.get('mode') === 'teacher';
+const canModerate = teacher;
 const group = Math.trunc(groupId);
 const groupName = id => '第 ' + id + ' 组';
 const discussionFields = [{name:'message', label:'我们组的想法', max:600}];
@@ -75,18 +76,46 @@ async function readEntries(key, limit=12) {
   const result = await collection.where({forumKey:key}).limit(limit).get();
   if (result.code) throw new Error('暂时无法读取论坛。');
   return result.data
-    .filter(entry => Number.isInteger(entry.groupId) && entry.groupId >= 1 && entry.groupId <= 12)
+    .filter(entry => !entry.removedAt && Number.isInteger(entry.groupId) && entry.groupId >= 1 && entry.groupId <= 12)
     .sort((a,b) => a.groupId - b.groupId);
 }
 
 async function saveEntry(key, values, like=false) {
-  const result = await collection.doc(key + (like ? '-like-' : '-') + group).set({
+  const ref = collection.doc(key + (like ? '-like-' : '-') + group);
+  const data = {
     kind:like ? 'lesson-forum-like' : 'lesson-forum',
     forumKey:key, resetId:round, groupId:group, values, updatedAt:Date.now()
-  });
+  };
+  const existing = like ? null : (await readOptionalDocument(ref)).data;
+  const prior = Array.isArray(existing) ? existing[0] : existing;
+  if (prior?.removedAt) throw new Error('这条内容已由老师删除。');
+  const result = await (prior ? ref.update(data) : ref.set(data));
   if (result.code || !(result.updated > 0 || result.upsertedId || result.id)) {
     throw new Error('暂时无法保存，请再试一次。');
   }
+}
+
+function deleteControl(entry, type, status, onDelete) {
+  const button = element('button', undefined, 'forum-delete');
+  button.title = '删除' + type;
+  button.setAttribute('aria-label', button.title);
+  button.type = 'button';
+  button.onclick = async () => {
+    if (!canModerate || button.disabled || !entry._id) return;
+    const detail = type === '帖子' ? '，其评论也会一起隐藏' : '';
+    if (!window.confirm('确定删除' + groupName(entry.groupId) + '的' + type + detail + '？')) return;
+    button.disabled = true;
+    try {
+      const result = await collection.doc(entry._id).update({removedAt:Date.now()});
+      if (result?.code || !(result?.updated > 0 || result?.id)) throw new Error('删除未保存');
+      await onDelete();
+    } catch {
+      status.textContent = '这次删除未完成，请刷新后重试。';
+    } finally {
+      button.disabled = false;
+    }
+  };
+  return button;
 }
 
 function composer(key, fields, publishText, saved, onSave) {
@@ -187,6 +216,7 @@ function thread(view, post) {
       const messages = comments.map(entry => {
         const reply = element('div', undefined, 'reply');
         reply.append(groupLabel(element('strong'), entry.groupId), element('p', entry.values.message));
+        if (canModerate) reply.append(deleteControl(entry, '评论', feedback, update));
         return reply;
       });
       replies.replaceChildren(...(messages.length ? messages : [element('p','还没有评论。')]));
@@ -223,6 +253,7 @@ function thread(view, post) {
     if (!panel.hidden) void update();
   };
   actions.append(like, comment);
+  if (canModerate) actions.append(deleteControl(post, '帖子', feedback, () => refresh(view)));
   panel.append(replies, replyEditor);
   article.append(actions, feedback, panel);
   return {node:article, update};

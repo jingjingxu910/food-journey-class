@@ -181,6 +181,13 @@ form button { justify-self: start; background: var(--primary); color: #fff; bord
 #status { margin-top: 6px; }
 #threads { display: grid; gap: 14px; margin-top: 12px; }
 .thread { min-width: 0; padding: 14px; border: 1px solid var(--edge); border-radius: 16px; }
+button.forum-delete{position:relative;flex:0 0 28px;width:28px;height:28px;min-height:0;padding:0;border:none;border-radius:6px;color:#914449;background:transparent}
+button.forum-delete:hover,button.forum-delete:focus-visible{background:#fbe8e6}
+.forum-delete::before,.forum-delete::after{content:"";position:absolute;box-sizing:border-box;left:50%;transform:translateX(-50%);pointer-events:none}
+.forum-delete::before{top:10px;width:10px;height:10px;border:1.5px solid currentColor;border-radius:0 0 3px 3px}
+.forum-delete::after{top:7px;width:14px;border-top:2px solid currentColor}
+.reply:has(.forum-delete){position:relative;padding-inline-end:42px}
+.reply .forum-delete{position:absolute;right:6px;top:4px}
 .thread h3 { margin-bottom: 8px; color: #185446; }
 .group-award-badge {
   display: inline-grid;
@@ -242,5 +249,5 @@ form button { justify-self: start; background: var(--primary); color: #fff; bord
 @media (max-width: 520px) {
   .topic-tab { flex-direction: column; font-size: 14px; }
   .topic-icon { flex-basis: auto; width: 32px; height: 32px; }
-  .thread-actions button { flex: 1; }
+  .thread-actions button:not(.forum-delete) { flex: 1; }
 }
