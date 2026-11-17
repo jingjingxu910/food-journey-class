@@ -6,8 +6,8 @@
   <title>课后论坛 · 食物在身体里的旅行</title>
   <script src="frame-entry.js"></script>
   <script defer src="cloud-loader.js"></script>
-  <link rel="stylesheet" href="forum.css?v=tap-hints">
-  <script type="module" src="forum.js?v=tap-hints"></script>
+  <link rel="stylesheet" href="forum.css?v=floating-hints">
+  <script type="module" src="forum.js?v=floating-hints"></script>
 </head>
 <body>
   <main>
@@ -21,12 +21,6 @@
     <section class="topic-panel" aria-labelledby="topic-title">
       <h2 id="topic-title"></h2>
       <p id="question"></p>
-      <div class="sprout-guide">
-        <button id="show-hint" class="sprout" type="button" aria-controls="prompt" disabled>
-          <span class="sprout-art" aria-hidden="true"></span><span id="hint-label">点我看提示</span>
-        </button>
-        <div class="sprout-bubble"><p id="prompt" aria-live="polite" aria-atomic="true">需要一点灵感？</p></div>
-      </div>
       <div id="composer"></div>
     </section>
     <section class="forum-board" aria-labelledby="board-title">
@@ -35,5 +29,14 @@
       <div id="threads"></div>
     </section>
   </main>
+  <div class="sprout-guide" hidden>
+    <button id="show-hint" class="sprout" type="button" aria-controls="hint-bubble">
+      <span class="sprout-art" aria-hidden="true"></span><span id="hint-label">点我看提示</span>
+    </button>
+    <div id="hint-bubble" class="sprout-bubble" hidden>
+      <p id="prompt" aria-live="polite" aria-atomic="true"></p>
+      <button id="close-hint" type="button" aria-label="收起提示">×</button>
+    </div>
+  </div>
 </body>
 </html>

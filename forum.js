@@ -1,6 +1,6 @@
 import {cloudDb, groupId} from './student-data.js?v=20261116-tablet-fixes';
 import {roundId} from './evaluation-data.js?v=award-journey-evidence';
-import {forumTopics} from './forum-content.js?v=tap-hints';
+import {forumTopics} from './forum-content.js?v=floating-hints';
 
 const $ = selector => document.querySelector(selector);
 const params = new URLSearchParams(location.search);
@@ -243,9 +243,11 @@ function select(view) {
   $('#topic-title').textContent = view.topic.title;
   $('#question').textContent = view.topic.question;
   hintIndex = -1;
-  $('#prompt').textContent = '需要一点灵感？';
+  $('#hint-bubble').hidden = true;
+  $('#prompt').textContent = '';
   $('#hint-label').textContent = '点我看提示';
-  $('#show-hint').disabled = false;
+  $('#show-hint').removeAttribute('data-pose');
+  $('.sprout-guide').hidden = false;
   $('#composer').replaceChildren(...(view.editor ? [view.editor] : []));
   $('#threads').replaceChildren(...Array.from(view.threads.values(), entry => entry.card.node));
   void refresh(view);
@@ -272,8 +274,15 @@ $('#fullscreen').onclick = () => window.requestLessonFullscreen?.();
 $('#show-hint').onclick = () => {
   const hints = active.topic.hints;
   hintIndex = (hintIndex + 1) % hints.length;
+  $('#hint-bubble').hidden = false;
   $('#prompt').textContent = hints[hintIndex];
+  $('#show-hint').dataset.pose = String(hintIndex);
   $('#hint-label').textContent = '换个提示';
+};
+$('#close-hint').onclick = () => {
+  $('#hint-bubble').hidden = true;
+  $('#hint-label').textContent = '点我看提示';
+  $('#show-hint').focus();
 };
 $('#refresh').onclick = () => active ? void refresh(active) : void connect();
 void connect();
