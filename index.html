@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="styles.css?v=20261031-1" />
     <script defer src="cloud-loader.js?v=20261031-1"></script>
     <script defer src="watermark.js?v=20261031-1"></script>
-<link rel="stylesheet" href="tablet.css?v=20261116-tablet-fixes">
+<link rel="stylesheet" href="tablet.css?v=teacher-task-visibility">
 <script defer src="tablet-runtime.js?v=20261105-tablet"></script>
 <link rel="stylesheet" href="student-fullscreen.css?v=20261113-classroom"></head>
   <body class="home-page student-page home-start">
@@ -34,11 +34,11 @@
       </header>
 
       <div class="section-heading">
-        <h2>课堂活动</h2>
+        <h2>请等待老师开启课堂活动</h2>
       </div>
 
       <section class="module-grid" aria-label="课堂模块">
-        <a class="module-card module-card--active" data-step="0" href="model-workbench.html">
+        <a class="module-card module-card--active" data-step="0" href="model-workbench.html?phase=v1" hidden>
           <span class="module-number">任务 1</span>
           <span class="module-icon module-icon--orange">↝</span>
           <h2>初始模型</h2>
@@ -86,6 +86,6 @@
         </a>
       </section>
     </main>
-    <script type="module" src="app.js?v=teacher-led"></script>
+    <script type="module" src="app.js?v=teacher-task-visibility"></script>
   </body>
 </html>

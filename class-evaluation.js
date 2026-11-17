@@ -343,6 +343,21 @@ async function setupStudent(){
  function drawStars(){rows.forEach((row,i)=>[...row.children].forEach((b,j)=>{b.classList.toggle('lit',j<levels[i]);b.setAttribute('aria-pressed',String(j<levels[i]));b.disabled=locked;}));}
  const legend=el('p','★ 再加把劲　★★ 有进步　★★★ 做得棒','self-legend'),submit=el('button','把星星提交给老师 ✨','ev-button primary');submit.type='submit';
  form.append(legend,submit);root.append(header,title,subtitle,form,status,awardArea);
+ if(new URLSearchParams(location.search).get('review')==='1'){
+   const back=el('a','← 课堂首页','ev-button');back.href='index.html?group='+groupId;
+   header.prepend(back);
+   title.textContent='小组自评';
+   subtitle.textContent='我们提交的自评';
+   locked=true;
+   submit.hidden=true;
+   try{
+     record=await currentRecord();
+     levels=record.evaluation?.levels?.slice(0,3)||levels;
+     if(!record.evaluation?.completedAt)status.textContent='暂未找到已提交的自评。';
+   }catch{status.textContent='暂时无法读取本组自评。';}
+   drawStars();
+   return;
+ }
  async function showCommand(command){
    if(loading||(command?.commandId&&command.commandId===displayedCommand))return;loading=true;
    try{

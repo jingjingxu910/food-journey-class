@@ -11,6 +11,7 @@ const video=$('#assembly-camera');
 const reference=$('#assembly-model');
 const photo=$('#photo-preview');
 const previewButton=$('#toggle-preview');
+const reviewing=new URLSearchParams(location.search).get('review')==='1';
 
 function renderFrame(){
   const cameraOpen=Boolean(stream);
@@ -18,7 +19,7 @@ function renderFrame(){
   reference.hidden=cameraOpen||showingPhoto;
   video.hidden=!cameraOpen;
   photo.hidden=cameraOpen||!showingPhoto;
-  $('#open-camera').hidden=cameraOpen;
+  $('#open-camera').hidden=cameraOpen||reviewing;
   $('#open-camera').textContent=showingPhoto?'重新拍摄':'开启相机';
   $('#take-photo').hidden=!cameraOpen;
   $('#close-camera').hidden=!cameraOpen;
@@ -155,8 +156,13 @@ async function loadReference() {
 async function initialize() {
   record=await currentRecord();
   const savedPhoto=record.assembly?.photoLocal||record.assembly?.photoPreview;
-  if(savedPhoto)photo.src=savedPhoto;
+  if(savedPhoto){photo.src=savedPhoto;showingPhoto=reviewing;}
   $('#assembly-note').value=record.assembly?.note||'';
+  if(reviewing){
+    $('.photo-picker').hidden=true;
+    $('#assembly-note').readOnly=true;
+    $('#submit-assembly').hidden=true;
+  }
   $('#open-camera').disabled=false;
   renderFrame();
   void loadReference();

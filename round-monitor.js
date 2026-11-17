@@ -2,6 +2,7 @@
 import {readDocument} from './evaluation-data.js?v=award-journey-evidence';
 import {cloudDb} from './student-data.js?v=20261116-tablet-fixes';
 let checking=false,lastCheck=0,lastRoundCheck=0,lastStageCommand=null;
+let reviewUrl, reviewCommand;
 let commandWatcher=null,cachedCommand=null,lastCommandRead=0,nextWatchAttempt=0,retryAfter=0,failureDelay=2000;
 function stopCommandWatch(){
  const watcher=commandWatcher;
@@ -66,10 +67,20 @@ async function check(force=false){
    failureDelay=2000;retryAfter=0;
    const known=JSON.parse(localStorage.getItem('lesson-known-round')||'null');
    if((command.resetId||null)!==known)return;
+   if(url.pathname.endsWith('/index.html')){
+     frame.contentWindow.dispatchEvent(new frame.contentWindow.CustomEvent('class-command',{detail:command}));
+   }
+   if(url.searchParams.get('review')==='1'){
+     if(reviewUrl!==url.href){
+       reviewUrl=url.href;
+       reviewCommand=url.searchParams.get('reviewCommand')??String(command.commandId??'');
+     }
+     if(reviewCommand===String(command.commandId??''))return;
+   }else reviewUrl=undefined;
    const stageRoutes={cover:'index.html?classroom=cover',v1:'model-workbench.html?phase=v1',v2:'model-workbench.html?phase=v2',observation:'observation.html',assembly:'assembly.html',journey:'journey.html',discussion:'discussion.html?question='+Math.max(0,Math.min(2,Number(command.discussionIndex)||0)),forum:'forum.html'};
    const route=stageRoutes[command.phase];
+   const key=JSON.stringify([known,command.phase,command.commandId]);
    if(route){
-     const key=JSON.stringify([known,command.phase,command.commandId]);
      if(key===lastStageCommand)return;
      if(await frame.contentWindow.prepareClassNavigation?.()===false)return;
      const target=new URL(route,url);
@@ -82,11 +93,15 @@ async function check(force=false){
      return;
    }
    if(!['evaluation','awards'].includes(command.phase))return;
-   lastStageCommand=null;
-   if(!url.pathname.endsWith('/evaluation.html')){
+   if(!url.pathname.endsWith('/evaluation.html')||url.searchParams.get('review')==='1'){
+     if(key===lastStageCommand)return;
      if(await frame.contentWindow.prepareClassNavigation?.()===false)return;
+     lastStageCommand=key;
      frame.contentWindow.location.replace('evaluation.html?group='+(url.searchParams.get('group')||1));
-   }else frame.contentWindow.dispatchEvent(new frame.contentWindow.CustomEvent('class-command',{detail:command}));
+   }else{
+     lastStageCommand=key;
+     frame.contentWindow.dispatchEvent(new frame.contentWindow.CustomEvent('class-command',{detail:command}));
+   }
  }catch{
    retryAfter=Date.now()+failureDelay;
    failureDelay=Math.min(60000,failureDelay*2);

@@ -548,7 +548,7 @@ function buildRecord() {
 function showSavedTransition(record) {
   studentView.hidden = true;
   transitionPanel.hidden = false;
-  if (!record.v2?.completedAt) {
+  if (!record.v2?.completedAt || (params.get('review')==='1' && params.get('phase')==='v1')) {
     transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已提交</p><h1>初始想法已提交</h1>${record.pendingSync ? '<p>已保存在本机，暂未传给老师。</p>' : ''}<div class="saved-model-preview">${miniModel(record.v1, "已保存模型")}</div><p>请等待老师开启下一项活动。</p>`;
     addSyncRetry(record);
     return;
@@ -904,7 +904,7 @@ async function initialize() {
       await saveLocal(savedRecord);
     }
   }
-  if (v2?.completedAt) {
+  if (v2?.completedAt || (params.get('review')==='1' && params.get('phase')==='v1' && v1.completedAt)) {
     studentView.hidden = true;
     transitionPanel.hidden = false;
     showSavedTransition(savedRecord);
