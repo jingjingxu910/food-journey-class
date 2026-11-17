@@ -1,5 +1,5 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
-import {stages,phases,round,readRemote,readLease,writeRemote} from './channel.js?v=after-class-forum';
+import {stages,phases,round,readRemote,readLease,writeRemote} from './channel.js?v=mini-forum';
 import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards} from '../evaluation-data.js?v=award-journey-evidence';
 const $=selector=>document.querySelector(selector);
 const symbols=['🔎','🤝','🌱'],dimensions=['观察','合作','坚持'];
@@ -130,7 +130,7 @@ function render(){
  };
  sharing.append(select);
  $('#controls').replaceChildren(element('strong',state.group?'正在展示第 '+state.group+' 组':state.stage),actions,groupButtons);
- if(state.stage!=='课后论坛')$('#controls').append(sharing);
+ if(state.stage!=='小论坛')$('#controls').append(sharing);
  const stars=element('div');stars.className='star-grid';
  for(let id=1;id<=12;id++){
   const item=element('article');item.append(element('b','第 '+id+' 组'));

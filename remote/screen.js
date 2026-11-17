@@ -1,5 +1,5 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
-import {stages,phases,round,readRemote,writeRemote} from './channel.js?v=after-class-forum';
+import {stages,phases,round,readRemote,writeRemote} from './channel.js?v=mini-forum';
 import {readDocument} from '../evaluation-data.js?v=20261113-awards';
 const stopText='跟随 iPad';
 const toolbar=document.createElement('div');

@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-65697f142708c8b5",
-  "bytes": 102889128,
+  "version": "20261102-chunks-a399a60c4ff24a10",
+  "bytes": 102888724,
   "files": [
     {
       "path": "app.js",
@@ -1699,13 +1699,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "class-evaluation.css",
-      "bytes": 12816,
-      "hash": "994077ec43c6c87d2187607a2a8ea13b86a5207dbef104f2f50519f9a9ae3489"
+      "bytes": 12797,
+      "hash": "dfe6eaba1e99c6fe7cd8cc8c871d6bf6c240439f8705e44ace676fc34587db8a"
     },
     {
       "path": "class-evaluation.js",
-      "bytes": 23868,
-      "hash": "d67d03ee92b07c169a54b1170c43c5d38f293be4661bba4621a7952112dfe143"
+      "bytes": 23730,
+      "hash": "892a9fe3f9a93e59fb7a836d35ba2afc06a2f2932415b517ac518db078bfa735"
     },
     {
       "path": "cloud-loader.js",
@@ -1749,8 +1749,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "forum-content.js",
-      "bytes": 3242,
-      "hash": "cabcdfa7f1c4df8b6874d56560b5128358853e45c2e26494cf4c6b9e6e1fa8f7"
+      "bytes": 3021,
+      "hash": "33171b26c806f5a9702b59641f8c80a5120cfb12231a28bb952d8ef6ef291589"
     },
     {
       "path": "forum.css",
@@ -1759,13 +1759,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "forum.html",
-      "bytes": 1753,
-      "hash": "3d765eeb87e00526a134517ac3930922a355a2f4fb8faec32fbaef3b98dcf2cc"
+      "bytes": 1744,
+      "hash": "7c8cf37104a5c2a587bc955949b88bcf8403f7e6d7013a3a2741ca1fd7ae230f"
     },
     {
       "path": "forum.js",
-      "bytes": 11544,
-      "hash": "01bbf5ce5111295bac231cb4efa3e052f5826e2458dc8dc2a6bb90460203150c"
+      "bytes": 11541,
+      "hash": "8fece8629934a43e1a3a1eb15d3f5a70558a6a0a713e22a9021f4fafe53fd206"
     },
     {
       "path": "frame-entry.js",
@@ -1959,8 +1959,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-workbench.html",
-      "bytes": 6199,
-      "hash": "df6ed2a8b587bfe75281d9b1e3ab400a783ff317f0ecf8fa98e66f523ed76906"
+      "bytes": 6185,
+      "hash": "9f463b4f428ece30912b61ed615e1f86a6dc168bf4e3b7d9f9dfa1e6669606e2"
     },
     {
       "path": "model-workbench.js",
@@ -2373,7 +2373,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-65697f142708c8b5"
+      "hash": "manifest-20261102-chunks-a399a60c4ff24a10"
     }
   ]
 };

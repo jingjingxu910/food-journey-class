@@ -18,7 +18,7 @@ export const forumTopics = [
     ]
   },
   {
-    id:'homework', title:'课后作业 · 我们可以怎样保护它？',
+    id:'homework', title:'资料探究 · 我们可以怎样保护它？',
     question:'查阅资料，选择一种与呼吸或消化器官有关的常见疾病，记录疾病名称、一条预防方法和信息来源。',
     hints:[
       '想想吃饭或呼吸时，身体的哪些地方和外界接触？你对其中哪个器官最想多了解一点？',
@@ -50,11 +50,8 @@ export function forumLink(text, {resetId, teacher=false}={}) {
 
 export function forumSlide(resetId) {
   const title = document.createElement('h1');
-  title.textContent = '课后论坛';
+  title.textContent = '小论坛';
   title.tabIndex = -1;
-  const intro = document.createElement('p');
-  intro.className = 'forum-slide-intro';
-  intro.textContent = '课堂上来不及讨论的题，课后继续。各小组先发帖，再选一组追问或补充。';
   const topics = document.createElement('ul');
   topics.className = 'forum-slide-topics';
   for (const topic of forumTopics) {
@@ -67,5 +64,5 @@ export function forumSlide(resetId) {
   const actions = document.createElement('div');
   actions.className = 'lesson-slide-actions';
   actions.append(forumLink('查看各组发帖与回复 ↗', {resetId, teacher:true}));
-  return [title, intro, topics, actions];
+  return [title, topics, actions];
 }
