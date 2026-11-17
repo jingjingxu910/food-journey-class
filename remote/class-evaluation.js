@@ -5,8 +5,9 @@ const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefine
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
 const symbols=['🔎','🤝','🌱'];
 import {discussionQuestions} from '../discussion-content.js';
+import {forumSlide} from '../forum-content.js';
 const discussion=discussionQuestions.map(item=>item.question);
-const lessonSlides=new Set(['课题封面','课堂研讨']);
+const lessonSlides=new Set(['课题封面','课堂研讨','课后论坛']);
 export function certificate(entry){
  if(entry.awardBasis?.isEncouragement){
    entry={...entry,title:'课堂探索家',reasonParagraphs:[participationPraise],awardBasis:{isAdditional:true}};
@@ -65,6 +66,8 @@ function setupTeacher(){
    schedule();
  };
  const fullscreen=button('全屏',()=>window.requestLessonFullscreen?.(),'ev-button lesson-fullscreen');
+ const forumStatus=el('p','','forum-stage-status');
+ forumStatus.setAttribute('role','status');
  let discussionIndex=0;
  const status=el('span','连接课堂中…','ev-status');
  const header=el('div',undefined,'ev-star-heading');
@@ -121,6 +124,7 @@ function setupTeacher(){
  }
  async function choose(name){
    if(busy)return;
+   if(name==='课后论坛')forumStatus.textContent='正在打开学生端论坛…';
    showStage(name);
 
    busy=true;renderStars();
@@ -134,20 +138,29 @@ function setupTeacher(){
        makeAwards(records,next.groups,next.shares).forEach(a=>next.groups[a.groupId]=a);
        await saveFeedback(next);state=next;
      }
-     const phases={'课题封面':'cover','初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards','课堂研讨':'discussion'};
+     const phases={'课题封面':'cover','初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards','课堂研讨':'discussion','课后论坛':'forum'};
      await sendClassCommand(state.resetId,phases[name],String(Date.now()),name==='课堂研讨'?{discussionIndex}:{});
      if(name!=='专属奖状')void flush().catch(()=>{status.textContent='课堂环节已切换，评价记录可点击重试保存';});
      status.textContent=name==='专属奖状'?'已颁发，学生端自动展示':'学生端正在进入'+name;
+     if(name==='课后论坛')forumStatus.textContent='已发出指令，学生端将进入论坛。';
      render();
-   }catch(error){status.textContent=error.message;}finally{busy=false;renderStars();}
+   }catch(error){
+     status.textContent=error.message;
+     if(name==='课后论坛')forumStatus.textContent='论坛切换未完成，'+error.message;
+   }finally{busy=false;renderStars();}
  }
- ['课题封面','初始模型','AR观察','修正模型','实体拼装','食物旅行','课堂研讨','小组自评','专属奖状'].forEach(name=>{
+ ['课题封面','初始模型','AR观察','修正模型','实体拼装','食物旅行','课堂研讨','小组自评','专属奖状','课后论坛'].forEach(name=>{
    const tab=button(name,()=>choose(name));
    tab.title=name==='课题封面'?'展示封面并带领学生回到课堂初始页':'展示并带领学生进入'+name;
    tabs.append(tab);
  });
  tabs.append(fullscreen);
  function renderSlide(){
+   if(stage==='课后论坛'){
+     slide.dataset.page=stage;
+     slide.replaceChildren(...forumSlide(ready?state.resetId:undefined),forumStatus);
+     return;
+   }
    const cover=stage==='课题封面';
    const slideTitle=el('h1',cover?'食物在身体里的旅行':'课堂研讨');
    slideTitle.tabIndex=-1;

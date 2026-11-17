@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>课后论坛 · 食物在身体里的旅行</title>
+  <script src="frame-entry.js"></script>
+  <script defer src="cloud-loader.js"></script>
+  <link rel="stylesheet" href="forum.css">
+  <script type="module" src="forum.js"></script>
+</head>
+<body>
+  <main>
+    <header class="forum-header">
+      <div><p id="audience">食物在身体里的旅行</p><h1>课后论坛</h1></div>
+      <button type="button" id="fullscreen">全屏</button>
+    </header>
+    <p id="instructions">先发帖，再读其他小组的帖子，说说你想补充什么，或还有什么想问。</p>
+    <nav id="topics" aria-label="论坛话题"></nav>
+    <section class="topic-panel" aria-labelledby="topic-title">
+      <h2 id="topic-title"></h2>
+      <p id="question"></p>
+      <p id="prompt"></p>
+      <div id="composer"></div>
+    </section>
+    <section class="forum-board" aria-labelledby="board-title">
+      <div class="board-heading"><h2 id="board-title">小组交流</h2><button type="button" id="refresh">刷新帖子</button></div>
+      <p id="status" role="status"></p>
+      <div id="threads"></div>
+    </section>
+  </main>
+</body>
+</html>

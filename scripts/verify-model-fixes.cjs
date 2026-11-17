@@ -3,8 +3,8 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../model-workbench.js'),'utf8');
 function extract(name){const start=source.indexOf('function '+name+'('),body=source.indexOf('{',start);let depth=1,i=body+1;for(;depth&&i<source.length;i++){if(source[i]==='{')depth++;if(source[i]==='}')depth--;}return source.slice(start,i);}
-const context=vm.createContext({});
-vm.runInContext(source.slice(0,source.indexOf('const CLOUD_ENV'))+'\n'+['organById','appearanceFor','colonWallDistance','sampleFoodRoute','routeOrganDistance','intestinalContacts','inferRouteOrder','routeLayers','compareModels'].map(extract).join('\n')+'\nthis.infer=inferRouteOrder;this.layers=routeLayers;this.compare=compareModels;',context);
+const context=vm.createContext({...require('../model-preview.js')});
+vm.runInContext(['inferRouteOrder','compareModels'].map(extract).join('\n')+'\nthis.infer=inferRouteOrder;this.layers=routeLayers;this.compare=compareModels;',context);
 const model={positions:{'small-intestine':{x:50,y:60},'large-intestine':{x:50,y:60}},routePoints:[]};
 const order=points=>Array.from(context.infer({...model,routePoints:points.map(([x,y])=>({x,y}))}).order);
 assert.deepEqual(order([[50,40],[50,60],[42,60],[42,52]]),['small-intestine','large-intestine'],'Passing behind transverse colon must reach small intestine first');

@@ -1,7 +1,7 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
 import {readDocument,roundId} from '../evaluation-data.js?v=20261113-awards';
-export const stages=['课题封面','初始模型','AR观察','修正模型','实体拼装','食物旅行','课堂研讨','小组自评','专属奖状'];
-export const phases=['cover','v1','observation','v2','assembly','journey','discussion','evaluation','awards'];
+export const stages=['课题封面','初始模型','AR观察','修正模型','实体拼装','食物旅行','课堂研讨','小组自评','专属奖状','课后论坛'];
+export const phases=['cover','v1','observation','v2','assembly','journey','discussion','evaluation','awards','forum'];
 export const round=roundId;
 export async function readDisplayRecord(id){
  try{return await readDocument(id);}

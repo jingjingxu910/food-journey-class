@@ -32,6 +32,12 @@ body.evaluation-teacher.lesson-presenting{padding-bottom:0!important}
 .lesson-slide-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:clamp(5px,2vh,22px)}
 .lesson-slide-actions .ev-button{font-size:clamp(15px,1.45vw,22px);min-height:44px}
 .lesson-slide-actions .primary{background:#176459}
+.forum-link{text-decoration:none}
+.forum-slide-intro,.forum-slide-topics{margin:0;font-size:clamp(16px,2.1vw,28px)}
+.forum-slide-topics{display:grid;gap:10px;max-width:50em;padding-left:1.4em}
+.forum-slide-topics strong{display:block;color:#176459}
+.forum-stage-status{margin:0;color:#176459}
+.forum-stage-status:empty{display:none}
 .lesson-slide[data-page="课题封面"] .primary{background:#d1ebac;color:#173c36;font-weight:700}
 body.evaluation-teacher{height:auto!important;min-height:100vh;overflow-y:auto!important;padding-bottom:145px!important}
 .evaluation-teacher .teacher-model-view,.evaluation-teacher .model-shell{height:auto!important;overflow:visible!important}

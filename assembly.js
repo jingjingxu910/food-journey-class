@@ -1,39 +1,57 @@
 import { groupId, currentRecord, saveRecord, submitRecord, homeUrl, isPhotoPreview } from './student-data.js?v=20261116-tablet-fixes';
+import { readDocument } from './evaluation-data.js?v=award-journey-evidence';
+import { miniModel } from './model-preview.js';
 const $=(selector)=>document.querySelector(selector);
 $('#group-label').textContent=`第 ${groupId} 组`;
 $('#back-link').href=homeUrl();
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
 let record,stream;
+let cameraRequest=0, showingPhoto=false;
 const video=$('#assembly-camera');
+const reference=$('#assembly-model');
+const photo=$('#photo-preview');
+const previewButton=$('#toggle-preview');
+
+function renderFrame(){
+  const cameraOpen=Boolean(stream);
+  const hasPhoto=photo.hasAttribute('src');
+  reference.hidden=cameraOpen||showingPhoto;
+  video.hidden=!cameraOpen;
+  photo.hidden=cameraOpen||!showingPhoto;
+  $('#open-camera').hidden=cameraOpen;
+  $('#open-camera').textContent=showingPhoto?'重新拍摄':'开启相机';
+  $('#take-photo').hidden=!cameraOpen;
+  $('#close-camera').hidden=!cameraOpen;
+  previewButton.hidden=cameraOpen||!hasPhoto;
+  previewButton.textContent=showingPhoto?'返回 V2 参考':'查看拼装照片';
+}
+
 function closeCamera(){
+  cameraRequest++;
   stream?.getTracks().forEach(track=>track.stop());
   stream=null;
   video.srcObject=null;
-  video.hidden=true;
-  $('#open-camera').hidden=false;
-  $('#take-photo').hidden=true;
-  $('#close-camera').hidden=true;
+  if($('#assembly-status').textContent==='对准作品后，点击拍照。')$('#assembly-status').textContent='';
+  renderFrame();
 }
 async function openCamera(){
   const button=$('#open-camera');
+  const request=++cameraRequest;
   button.disabled=true;
   try{
     if(!navigator.mediaDevices?.getUserMedia)throw new Error();
     const camera=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:960},height:{ideal:720}}});
-    if(document.hidden){camera.getTracks().forEach(track=>track.stop());return;}
+    if(document.hidden||request!==cameraRequest){camera.getTracks().forEach(track=>track.stop());return;}
     stream=camera;
     video.srcObject=stream;
     video.muted=true;
     video.playsInline=true;
-    video.hidden=false;
+    renderFrame();
     await video.play();
     if(stream!==camera)return;
-    video.hidden=false;
-    button.hidden=true;
-    $('#take-photo').hidden=false;
-    $('#close-camera').hidden=false;
     $('#assembly-status').textContent='对准作品后，点击拍照。';
   }catch{
+    if(request!==cameraRequest)return;
     closeCamera();
     $('#assembly-status').textContent='相机无法开启，可以选择已拍好的照片。';
   }finally{button.disabled=false;}
@@ -51,6 +69,7 @@ function takePhoto(){
 $('#open-camera').onclick=openCamera;
 $('#take-photo').onclick=takePhoto;
 $('#close-camera').onclick=closeCamera;
+previewButton.onclick=()=>{showingPhoto=!showingPhoto;renderFrame();};
 document.addEventListener('visibilitychange',()=>{if(document.hidden)closeCamera();});
 window.addEventListener('pagehide',closeCamera);
 
@@ -68,12 +87,6 @@ function photoData(file, maxSide, quality) {
     img.src=url;
   });
 }
-function showPhoto(data) {
-  $('#photo-preview').src=data;
-  $('#open-camera').textContent='重新拍摄';
-  $('#photo-preview').hidden=false;
-  $('#photo-frame').querySelector('span').hidden=true;
-}
 async function savePhoto(file) {
   const button=$('#submit-assembly');
   if(!file||!record||button.disabled)return;
@@ -90,7 +103,9 @@ async function savePhoto(file) {
     record.assembly.photoLocal=local;
     record.assembly.photoPreview=preview;
     record.assembly.photoTakenAt=Date.now();
-    showPhoto(local);
+    photo.src=local;
+    showingPhoto=true;
+    renderFrame();
     await saveRecord(record);
     $('#assembly-status').textContent='照片已保存在本机。';
   } catch(error) { $('#assembly-status').textContent=error.message; }
@@ -121,15 +136,37 @@ async function submit() {
     button.disabled=false;
   }
 }
+async function loadReference() {
+  let model=record.v2?.completedAt?record.v2:null;
+  try {
+    if(!model){
+      const group=await readDocument('group-'+groupId);
+      model=(group.records||[])
+        .filter(item=>Number(item.groupId)===groupId && (item.resetId||null)===(record.resetId||null) && item.v2?.completedAt)
+        .sort((first,second)=>second.v2.completedAt-first.v2.completedAt)[0]?.v2;
+    }
+    if(model)reference.innerHTML=miniModel(model,'本组提交的 V2',{phase:'v2'});
+    else reference.querySelector('p').textContent='本组还没有提交 V2。';
+  } catch {
+    reference.querySelector('p').textContent='暂时无法读取本组提交的 V2。';
+  }
+}
+
 async function initialize() {
   record=await currentRecord();
-  if(record.assembly?.photoLocal||record.assembly?.photoPreview) showPhoto(record.assembly.photoLocal||record.assembly.photoPreview);
+  const savedPhoto=record.assembly?.photoLocal||record.assembly?.photoPreview;
+  if(savedPhoto)photo.src=savedPhoto;
   $('#assembly-note').value=record.assembly?.note||'';
   $('#open-camera').disabled=false;
+  renderFrame();
+  void loadReference();
 }
 $('#photo-input').onchange=event=>{closeCamera();void savePhoto(event.target.files?.[0]);event.target.value='';};
 $('#submit-assembly').onclick=submit;
 $('#assembly-note').oninput=()=>{if(record){record.assembly||={startedAt:Date.now(),completedAt:null};record.assembly.note=$('#assembly-note').value.slice(0,160);void saveRecord(record);}};
-initialize().catch((error)=>$('#assembly-status').textContent=`记录无法读取：${error.message}`);
+initialize().catch((error)=>{
+  reference.querySelector('p').textContent='暂时无法读取本组提交的 V2。';
+  $('#assembly-status').textContent=`记录无法读取：${error.message}`;
+});
 
 window.prepareClassNavigation = async () => { if (!record || $('#submit-assembly').disabled) return false; await saveRecord(record); closeCamera(); };
