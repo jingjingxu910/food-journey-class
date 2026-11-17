@@ -54,9 +54,12 @@ const organNames = {
   trachea:'气管', lungs:'肺'
 };
 
+function currentJourneyEvents(journey) {
+  return journey.history?.some(e=>e.type)?journey.history:journey.events||[];
+}
+
 export function journeyEvents(journey={}) {
-  const current=journey.history?.some(e=>e.type)?journey.history:journey.events||[];
-  return [...(journey.attempts||[]).flatMap(a=>a.events||[]),...current];
+  return [...(journey.attempts||[]).flatMap(a=>a.events||[]),...currentJourneyEvents(journey)];
 }
 
 // Praise observable choices and revisions. Completion alone does not establish understanding.
@@ -82,8 +85,9 @@ export function awardEvidence(record, stars) {
       '我们在'+organs+'的辨认中，从选错到选对，没有停在第一次答案上。我们用重新判断纠正了最初的答案。'
     ]);
   }
-  const airway = events.findIndex(event => event.type === 'airway');
-  if (airway >= 0 && events.slice(airway + 1).some(event => event.type === 'safe-swallow')) {
+  const submittedEvents = currentJourneyEvents(journey);
+  const airway = submittedEvents.findIndex(event => event.type === 'airway');
+  if (airway >= 0 && submittedEvents.slice(airway + 1).some(event => event.type === 'safe-swallow')) {
     add('swallow-correction','通道辨析',2,10,[
       '食团误入气管后，我们重新选择了通向食管的路。能把这次尝试改过来，我们又向前迈进了一步！',
       '我们经历了“走错通道”，随后选中了食管。把刚才的错误变成下一次选择的提醒，我们学会了从尝试中寻找线索！'

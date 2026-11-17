@@ -25,6 +25,9 @@ const fs=require('node:fs'),path=require('node:path'),assert=require('node:asser
  assert.equal(repeated.filter(a=>a.evidenceKey==='villi'&&!a.awardBasis.isAdditional).length,1);
  const current=[{type:'safe-swallow'}],past=[{type:'airway'}];
  assert.deepEqual(journeyEvents({history:current,events:current,attempts:[{events:past}]}),[...past,...current]);
- assert.equal(makeAwards([{id:'a',groupId:9,journey:{events:current,attempts:[{events:past}]}},...fixed],{})[0].evidenceKey,'swallow-correction');
+ const evidence=journey=>makeAwards([{id:'a',groupId:9,journey},...fixed],{})[0].evidenceKey;
+ assert.notEqual(evidence({events:current,attempts:[{events:past}]}),'swallow-correction','Restarted attempts cannot supply the airway event');
+ assert.notEqual(evidence({events:[...current,...past]}),'swallow-correction','A prior safe swallow cannot count as a correction');
+ assert.equal(evidence({history:[...past,...current],events:current}),'swallow-correction','Both events on the submitted run count');
  console.log('Awards verified: unique families/icons, observed evidence, counts, teacher dimensions, stable ties, earlier attempts.');
 })().catch(error=>{console.error(error);process.exitCode=1});

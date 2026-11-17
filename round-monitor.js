@@ -1,5 +1,5 @@
 // Lightweight control checks. Artwork and records are fetched only when commands change.
-import {readDocument} from './evaluation-data.js?v=20261109-ui3';
+import {readDocument} from './evaluation-data.js?v=award-journey-evidence';
 import {cloudDb} from './student-data.js?v=20261116-tablet-fixes';
 let checking=false,lastCheck=0,lastRoundCheck=0,lastStageCommand=null;
 let commandWatcher=null,cachedCommand=null,lastCommandRead=0,nextWatchAttempt=0,retryAfter=0,failureDelay=2000;

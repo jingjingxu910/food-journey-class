@@ -1,5 +1,5 @@
 import {chewForms,chewLabels,chewStep} from './journey-chew-stages.js';
-import {journeyEvents} from './evaluation-data.js?v=20261113-awards';
+import {journeyEvents} from './evaluation-data.js?v=award-journey-evidence';
 import {cloudDb} from './student-data.js?v=20261116-tablet-fixes';
 import {isLocalPreview} from './local-preview-db.js';
 import {LIVE_COLLECTION,writeTeacherFocus} from './live-sync.js?v=20261118-classroom-review';
