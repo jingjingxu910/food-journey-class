@@ -19,7 +19,7 @@ function shareKey(display){return display.stage==='课堂研讨'?'研讨'+(displ
 function disconnected(message){
  active=null;
  $('#remote-controls').hidden=true;
- $('#pairing').hidden=false;
+ $('#pairing-panel').hidden=false;
  $('#status').textContent=message;
 }
 async function connection(){
@@ -35,17 +35,28 @@ async function feedbackFor(resetId){
 }
 $('#pairing').onsubmit=async event=>{
  event.preventDefault();
+ const connect=$('#connect-button');
+ if(connect.disabled)return;
+ connect.disabled=true;
+ $('#status').textContent='正在确认大屏配对码…';
  try{
-  const display=await connection();
+  let timeout;
+  let display;
+  try{
+   display=await Promise.race([connection(),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('连接大屏超时，请检查网络后重试')),10000);})]);
+  }finally{clearTimeout(timeout);}
   if(display.code!==$('#code').value.trim().toLowerCase())throw Error('配对码不正确');
   feedback=await feedbackFor(display.resetId);
   active=display;
-  $('#pairing').hidden=true;
+  $('#pairing-panel').hidden=true;
   $('#remote-controls').hidden=false;
   $('#status').textContent='已连接大屏';
   render();
- }catch(error){disconnected(error.message);}
+ }catch(error){disconnected(error.message||'连接失败，请重试');}
+ finally{connect.disabled=false;}
 };
+$('#connect-button').disabled=false;
+$('#status').textContent='等待配对';
 function run(operation){
  const session=active?.session;
  queue=queue.then(async()=>{

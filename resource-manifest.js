@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-46a2026de8051627",
-  "bytes": 102860237,
+  "version": "20261102-chunks-ed1afa1fa3db5809",
+  "bytes": 102861966,
   "files": [
     {
       "path": "app.js",
@@ -44,8 +44,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-prepare.html",
-      "bytes": 1506,
-      "hash": "7bed5bb51b6351e619350b1b906e1544b849d19ceb6614f9e7182f9cd161579c"
+      "bytes": 1509,
+      "hash": "6c0d930b9c17a9f80f9120b9674135bd66f50478c4bdb7e057ab35eca4dc7012"
     },
     {
       "path": "ar-prepare.js",
@@ -1809,13 +1809,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "journey-game.html",
-      "bytes": 6410,
-      "hash": "b8559ebff68a05481dfef964cd8d42581c68ad91a6abd643b5160c9a368e540b"
+      "bytes": 6409,
+      "hash": "9cc41b96e4d449df2616e1aadc57cc2761f97561983a2a7eb6e936fae5067393"
     },
     {
       "path": "journey-game.js",
-      "bytes": 57868,
-      "hash": "09d3d1b4c4807218caaf7bb4fdf5c4133780c2f64bf3734991f8e3aa85709b37"
+      "bytes": 58273,
+      "hash": "50a396d663c4caa54083eeafe2999ba512ca0cb9f803b9b166fdf45e53370b2d"
     },
     {
       "path": "journey-head-3d.js",
@@ -1914,8 +1914,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "live-dashboard.js",
-      "bytes": 22157,
-      "hash": "c2d2e233e31db38703496796531fd3913debb27979169c3e5b2a43f37e224e7c"
+      "bytes": 23352,
+      "hash": "1c324f5f5c5dfa460dcedf8bc90570fea0572ab842d94094cbb27f1e82981c6c"
     },
     {
       "path": "live-sync.js",
@@ -1934,8 +1934,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-workbench.html",
-      "bytes": 6076,
-      "hash": "eeec4870f58a1de5370a712b293ccfb503f8b095e5684e3a316af7be2d4569bc"
+      "bytes": 6203,
+      "hash": "0de6dcb62c00d6e5e32dd3f52b5eb9698272215ac114ce52bb53607fcf62b463"
     },
     {
       "path": "model-workbench.js",
@@ -2348,7 +2348,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-46a2026de8051627"
+      "hash": "manifest-20261102-chunks-ed1afa1fa3db5809"
     }
   ]
 };

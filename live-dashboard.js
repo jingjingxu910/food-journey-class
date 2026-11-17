@@ -24,16 +24,36 @@ function setup(){
  gameViewport.append(gameFrame);
  dialog.querySelector('.live-focus-content').before(gameViewport);
  let gameSrc='';
+ const renderedStages=new WeakMap();
+ const sentStates=new WeakMap();
+ const previewImages={outside:'outside.webp',mouth:'mouth.webp',pharynx:'pharynx-mouth-style-v5.webp',esophagus:'esophagus-wall-v9.webp',stomach:'stomach.webp',small:'small-mucosa-v3.webp',large:'large-intestine.webp'};
+ window.addEventListener('message',event=>{
+  if(event.origin!==location.origin||event.data?.channel!=='journey-rendered')return;
+  const frame=[gameFrame,...wall.querySelectorAll('iframe')].find(item=>item.contentWindow===event.source);
+  if(!frame)return;
+  renderedStages.set(frame,event.data.stage);
+  if(sentStates.get(frame)?.stage===event.data.stage)frame.style.opacity='1';
+ });
+ function setGamePlaceholder(frame,state){
+  const box=frame.parentElement;
+  const image=Object.hasOwn(previewImages,state.stage)?previewImages[state.stage]:null;
+  const covered=renderedStages.get(frame)===state.stage||!image;
+  frame.style.opacity=covered?'1':'0';
+  box.style.backgroundImage=image?'url("assets/journey/'+image+'")':'';
+  box.style.backgroundSize='cover';
+  box.style.backgroundPosition='center';
+ }
+
  function showGame(){
   const state=phase==='journey'&&focus&&stateFor(focus);
   const active=!!state;
   gameViewport.hidden=gameFrame.hidden=!active;
   if(!active){
-   if(gameSrc){gameFrame.removeAttribute('src');gameSrc='';}
+   if(gameSrc){gameFrame.removeAttribute('src');renderedStages.delete(gameFrame);gameSrc='';}
    return;
   }
   if(!gameSrc){
-   gameSrc='journey-game.html?observe=1&layout=landscape&v=classroom-last-frame';
+   gameSrc='journey-game.html?observe=1&layout=landscape&v=game-observer-ready';
    gameFrame.src=gameSrc;
   }
   sendGameState(gameFrame,state);
@@ -51,6 +71,8 @@ function setup(){
    frame.style.height=height+'px';
    frame.style.transform='translate(-50%, -50%) scale('+scale+')';
   }
+  sentStates.set(frame,state);
+  setGamePlaceholder(frame,state);
   frame.contentWindow?.postMessage({channel:'journey-observer',state},location.origin);
  }
  function updateGameCards(grid){
@@ -66,7 +88,7 @@ function setup(){
     frame=document.createElement('iframe');
     frame.title='本组游戏画面';
     frame.className='live-game-card-frame';
-    frame.src='journey-game.html?observe=1&v=classroom-last-frame';
+    frame.src='journey-game.html?observe=1&v=game-observer-ready';
     frame.onload=()=>{
      if(focus)frame.contentWindow?.postMessage({channel:'journey-observer',paused:true},location.origin);
      else sendGameState(frame,stateFor(id));
