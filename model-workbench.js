@@ -138,6 +138,8 @@ function render() {
   placementCount.textContent = `${count} 个`;
   document.querySelector("#organ-size-controls").hidden = !selectedOrgan || !activeModel().positions[selectedOrgan] || drawMode;
   drawButton.disabled = false;
+  const clearStructureButton = document.querySelector('#clear-structure-button');
+  if (clearStructureButton) clearStructureButton.disabled = !(activeModel().structureStrokes?.length);
   taskHint.textContent = phase === "v1" ? "按我们的想法摆放，也可以补画。" : "重新摆放消化和呼吸器官，再画出食物路线。";
   const order = [];
   routeSummary.textContent = order.length ? `我们的路线：${order.join(" → ")}` : "等待画路线";
@@ -404,6 +406,19 @@ function clearRoute() {
   queueDraftSave();
 }
 
+function clearStructure() {
+  const model = activeModel();
+  if (phase !== "v1" || !model.structureStrokes?.length) return;
+  snapshot();
+  model.structureStrokes = [];
+  model.modificationCount += 1;
+  calculateRouteOrder();
+  setDrawMode(false);
+  render();
+  saveStatus.textContent = "已清除橙色补画，可撤销。";
+  queueDraftSave();
+}
+
 function openDatabase() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open("foodJourneyClass", 2);
@@ -577,6 +592,8 @@ function applyRevisionView() {
   }
   document.querySelector('#model-prompt').setAttribute('title','气管位于食管前方；重叠时气管显示在前。');
   document.querySelector('#structure-button').hidden=true;
+  const clearStructureButton = document.querySelector('#clear-structure-button');
+  if (clearStructureButton) clearStructureButton.hidden = true;
   drawingKind='route';setDrawMode(false);
   document.querySelector("#phase-label").textContent = "V2 · 证据修正";
   document.querySelector("#model-title").textContent = "我们修正";
@@ -944,6 +961,7 @@ for(const [id,factor] of [['organ-smaller',.9],['organ-larger',1.1]]) document.q
 });
 document.querySelector("#undo-button").addEventListener("click", undo);
 document.querySelector("#clear-route-button").addEventListener("click", clearRoute);
+document.querySelector("#clear-structure-button")?.addEventListener("click", clearStructure);
 submitButton.addEventListener("click", submitModel);
 document.querySelector("#refresh-dashboard").addEventListener("click", refreshDashboard);
 document.querySelector("#export-button").addEventListener("click", exportRecords);

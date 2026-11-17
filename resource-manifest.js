@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-07cbcf53807b7d1c",
-  "bytes": 104666303,
+  "version": "20261102-chunks-39bd05af33db348f",
+  "bytes": 104667191,
   "files": [
     {
       "path": "app.js",
@@ -2004,13 +2004,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-workbench.html",
-      "bytes": 6210,
-      "hash": "9072b24ea14fdbdfb6c724db0c8216ec3cd713e7f306a6e990b4b93d07a7443b"
+      "bytes": 6323,
+      "hash": "e5cccedd6a219d31cd2cb10db661aeeb6497276d7988aa454af6c9d8d8c47bb6"
     },
     {
       "path": "model-workbench.js",
-      "bytes": 48415,
-      "hash": "e1f054b70c0c70edcabfcc1d5480dbea18f9178ed3b2efe8312d40abf894b520"
+      "bytes": 49190,
+      "hash": "1311a82e3732961790d8c8a4afeb54db354bd6c0361ec294e843fe3b7bc1bed8"
     },
     {
       "path": "observation.html",
@@ -2418,7 +2418,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-07cbcf53807b7d1c"
+      "hash": "manifest-20261102-chunks-39bd05af33db348f"
     }
   ]
 };
