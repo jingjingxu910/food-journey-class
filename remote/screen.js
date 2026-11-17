@@ -41,10 +41,10 @@ follow.onclick=async()=>{
  try{
   if(lease){await stop();return;}
   const resetId=await round(),command=await readDocument('class-control');
-  const value={resetId,session:crypto.randomUUID(),code:crypto.randomUUID().slice(0,6),expiresAt:Date.now()+30000,
+  const value={resetId,session:crypto.randomUUID(),pairingCode:crypto.randomUUID().slice(0,6),expiresAt:Date.now()+30000,
    stage:stages[phases.indexOf(command.phase)]||stages[0],page:0,group:0,question:command.discussionIndex||0};
   await writeRemote(value);
-  lease=value;await writeLease(value,Date.now()+30000);lastRenewal=Date.now();follow.textContent='退出跟随 · '+value.code;follow.setAttribute('aria-pressed','true');
+  lease=value;await writeLease(value,Date.now()+30000);lastRenewal=Date.now();follow.textContent='退出跟随 · '+value.pairingCode;follow.setAttribute('aria-pressed','true');
  }catch{
   lease=null;generation++;follow.setAttribute('aria-pressed','false');
   follow.textContent='跟随 iPad · 重试';

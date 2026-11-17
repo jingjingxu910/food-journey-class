@@ -59,7 +59,7 @@ $('#pairing').onsubmit=async event=>{
   try{
    display=await Promise.race([connection(),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('连接大屏超时，请检查网络后重试')),10000);})]);
   }finally{clearTimeout(timeout);}
-  if(display.code!==$('#code').value.trim().toLowerCase())throw Error('配对码不正确');
+  if(display.pairingCode!==$('#code').value.trim().toLowerCase())throw Error('配对码不正确');
   active=display;
   $('#pairing-panel').hidden=true;
   $('#remote-controls').hidden=false;
