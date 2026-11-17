@@ -1,6 +1,6 @@
 import {cloudDb, groupId} from './student-data.js?v=20261116-tablet-fixes';
 import {roundId} from './evaluation-data.js?v=award-journey-evidence';
-import {forumTopics} from './forum-content.js?v=larger-hints';
+import {forumTopics} from './forum-content.js?v=forum-voice';
 
 const $ = selector => document.querySelector(selector);
 const params = new URLSearchParams(location.search);
@@ -16,6 +16,11 @@ const topicLabels = {
 };
 let collection, round, active;
 let hintIndex = -1;
+let hintAudio;
+
+function stopHintAudio() {
+  hintAudio?.pause();
+}
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -243,6 +248,7 @@ function select(view) {
   $('#topic-title').textContent = view.topic.title;
   $('#question').textContent = view.topic.question;
   if (!teacher) {
+    stopHintAudio();
     hintIndex = -1;
     $('#hint-bubble').hidden = true;
     $('#prompt').textContent = '';
@@ -280,11 +286,17 @@ $('#show-hint').onclick = () => {
   $('#prompt').textContent = hints[hintIndex];
   $('#show-hint').dataset.pose = String(hintIndex);
   $('#hint-label').textContent = '换个提示';
+  hintAudio ??= new Audio();
+  stopHintAudio();
+  hintAudio.src = 'assets/audio/forum/' + active.topic.id + '-' + (hintIndex + 1) + '.mp3';
+  hintAudio.play().catch(() => {});
 };
 $('#close-hint').onclick = () => {
+  stopHintAudio();
   $('#hint-bubble').hidden = true;
   $('#hint-label').textContent = '点我看提示';
   $('#show-hint').focus();
 };
+window.addEventListener('pagehide', stopHintAudio);
 $('#refresh').onclick = () => active ? void refresh(active) : void connect();
 void connect();

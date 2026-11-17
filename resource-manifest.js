@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-bacde0039823de4d",
-  "bytes": 102888997,
+  "version": "20261102-chunks-dae47946a72c4797",
+  "bytes": 104660530,
   "files": [
     {
       "path": "app.js",
@@ -287,6 +287,51 @@ self.LESSON_RESOURCES = {
           "hash": "72fcb2a759fc01350fdaa2a3541172cf642d831b2760715a7bd8ddf6f5aa3e4c"
         }
       ]
+    },
+    {
+      "path": "assets/audio/forum/breathing-1.mp3",
+      "bytes": 214560,
+      "hash": "e6af7610b24e335a4aa537cc3c03876346580d5b2bf3696f6cd56900e6d7c0d0"
+    },
+    {
+      "path": "assets/audio/forum/breathing-2.mp3",
+      "bytes": 192960,
+      "hash": "fdcff2c6b36f557580e70a74706e8de3ff83a83057d782446a447ca19f2e2f6f"
+    },
+    {
+      "path": "assets/audio/forum/breathing-3.mp3",
+      "bytes": 216960,
+      "hash": "6bc92ee2c223ea1f54933eb43229b62e3420d34eab32c1ca7ccf185aad245fb9"
+    },
+    {
+      "path": "assets/audio/forum/homework-1.mp3",
+      "bytes": 190560,
+      "hash": "1d40487c8ffc275af9bc3df9ee24fecfe3f2cda08142663cd1b3ceaa7a4e42e8"
+    },
+    {
+      "path": "assets/audio/forum/homework-2.mp3",
+      "bytes": 190080,
+      "hash": "67ae9b0d3e96e9b070d4a62b8182e1ba1b9c955f7e459dbd05047e99521cd233"
+    },
+    {
+      "path": "assets/audio/forum/homework-3.mp3",
+      "bytes": 180960,
+      "hash": "a8d544b2aad599daa9fd95f1118921edae5459779de5fea462e7cc22e6fa7efd"
+    },
+    {
+      "path": "assets/audio/forum/movement-1.mp3",
+      "bytes": 173760,
+      "hash": "c446c65670c2d05c60fbabbebd2fb6d29fb8cba0dd84923322eea8fb70e4ded3"
+    },
+    {
+      "path": "assets/audio/forum/movement-2.mp3",
+      "bytes": 234720,
+      "hash": "a5bc7dcd5c3c6811ae1c99aa25e04802d04c75c889a829917d3d0d0a663d752e"
+    },
+    {
+      "path": "assets/audio/forum/movement-3.mp3",
+      "bytes": 176640,
+      "hash": "ec28de638f9f16ed205b7b2aeab4ac6c99bd20c0bebee22cd26dd2ec85121dae"
     },
     {
       "path": "assets/audio/xiaoya/0366eb2c61a9.mp3",
@@ -1759,13 +1804,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "forum.html",
-      "bytes": 1745,
-      "hash": "a7c90204214d1e913f0c7f341c46d87e632bdf05266731b8f160a046f0d2a4e6"
+      "bytes": 1744,
+      "hash": "b7695c5472fb4ae03c3d0e9290aecfa64965ff109e9f212e241ffa2364dabce1"
     },
     {
       "path": "forum.js",
-      "bytes": 11543,
-      "hash": "d2ef7ea07163e4927f2f7ccfafc49f554dff5a259a8cda63c6257d6d29660b87"
+      "bytes": 11877,
+      "hash": "762257084f7153513fc2e4a336f7f968eea51847d00ca6619520b5400e9b49f6"
     },
     {
       "path": "frame-entry.js",
@@ -2373,7 +2418,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-bacde0039823de4d"
+      "hash": "manifest-20261102-chunks-dae47946a72c4797"
     }
   ]
 };
