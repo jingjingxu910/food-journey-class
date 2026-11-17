@@ -22,6 +22,9 @@ export const readRemote=()=>readDisplayRecord('class-display-remote');
 export const readLease=()=>readDisplayRecord('class-display-lease');
 export async function writeRemote(value){
  const db=await cloudDb();
- const result=await db.collection('food-journey-groups').doc('class-display-remote').set(value);
+ const result=await db.collection('food-journey-groups').doc('class-display-remote').set({
+  resetId:value.resetId,session:value.session,pairingCode:value.pairingCode,expiresAt:value.expiresAt,
+  stage:value.stage,page:value.page,group:value.group,question:value.question
+ });
  if(result?.code||!(result?.updated>0||result?.upsertedId||result?.id))throw Error('控制状态未保存');
 }
