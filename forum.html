@@ -6,21 +6,25 @@
   <title>课后论坛 · 食物在身体里的旅行</title>
   <script src="frame-entry.js"></script>
   <script defer src="cloud-loader.js"></script>
-  <link rel="stylesheet" href="forum.css">
-  <script type="module" src="forum.js"></script>
+  <link rel="stylesheet" href="forum.css?v=forum-club">
+  <script type="module" src="forum.js?v=forum-club"></script>
 </head>
 <body>
   <main>
     <header class="forum-header">
-      <div><p id="audience">食物在身体里的旅行</p><h1>课后论坛</h1></div>
+      <div><h1>课后论坛</h1><p id="instructions">发帖分享你的发现，给有启发的帖子点赞，也可以留言提问。</p></div>
+      <div class="header-actions"><p id="audience"></p>
       <button type="button" id="fullscreen">全屏</button>
+      </div>
     </header>
-    <p id="instructions">先发帖，再读其他小组的帖子，说说你想补充什么，或还有什么想问。</p>
     <nav id="topics" aria-label="论坛话题"></nav>
     <section class="topic-panel" aria-labelledby="topic-title">
       <h2 id="topic-title"></h2>
       <p id="question"></p>
-      <p id="prompt"></p>
+      <div class="sprout-guide">
+        <div class="sprout" aria-hidden="true"></div>
+        <div class="sprout-bubble"><strong>小芽</strong><p id="prompt" aria-live="polite"></p></div>
+      </div>
       <div id="composer"></div>
     </section>
     <section class="forum-board" aria-labelledby="board-title">

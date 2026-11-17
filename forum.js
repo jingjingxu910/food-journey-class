@@ -8,7 +8,12 @@ const teacher = params.get('mode') === 'teacher';
 const group = Math.trunc(groupId);
 const groupName = id => '第 ' + id + ' 组';
 const discussionFields = [{name:'message', label:'我们组的想法', max:600}];
-const replyFields = [{name:'message', label:'我们组的追问或补充', max:400}];
+const replyFields = [{name:'message', label:'我们组想说', placeholder:'我想补充…… / 我还想问……', max:400}];
+const topicLabels = {
+  breathing:['💨','消化与呼吸'],
+  movement:['🪢','跳绳时'],
+  homework:['🛡️','保护器官']
+};
 let collection, round, active;
 
 function element(tag, text, className) {
@@ -22,17 +27,18 @@ function forumKey(topic, parent=0) {
   return ['forum', encodeURIComponent(round || 'initial'), topic.id, parent].join('-');
 }
 
-async function readEntries(key) {
-  const result = await collection.where({forumKey:key}).limit(12).get();
+async function readEntries(key, limit=12) {
+  const result = await collection.where({forumKey:key}).limit(limit).get();
   if (result.code) throw new Error('暂时无法读取论坛。');
   return result.data
     .filter(entry => Number.isInteger(entry.groupId) && entry.groupId >= 1 && entry.groupId <= 12)
     .sort((a,b) => a.groupId - b.groupId);
 }
 
-async function saveEntry(key, values) {
-  const result = await collection.doc(key + '-' + group).set({
-    kind:'lesson-forum', forumKey:key, resetId:round, groupId:group, values, updatedAt:Date.now()
+async function saveEntry(key, values, like=false) {
+  const result = await collection.doc(key + (like ? '-like-' : '-') + group).set({
+    kind:like ? 'lesson-forum-like' : 'lesson-forum',
+    forumKey:key, resetId:round, groupId:group, values, updatedAt:Date.now()
   });
   if (result.code || !(result.updated > 0 || result.upsertedId || result.id)) {
     throw new Error('暂时无法保存，请再试一次。');
@@ -47,6 +53,7 @@ function composer(key, fields, publishText, saved, onSave) {
     input.name = field.name;
     input.rows = fields.length === 1 ? 3 : 1;
     input.maxLength = field.max;
+    if (field.placeholder) input.placeholder = field.placeholder;
     input.required = true;
     input.value = saved?.values?.[field.name] || '';
     input.oninput = () => input.setCustomValidity('');
@@ -96,37 +103,85 @@ function thread(view, post) {
     line.append(value);
     article.append(line);
   }
-  const details = element('details');
-  const summary = element('summary', '查看回复');
+  const actions = element('div', undefined, 'thread-actions');
+  const like = element(teacher ? 'span' : 'button', '♡ 点赞', teacher ? 'like-total' : 'like');
+  const comment = element('button', '💬 评论', 'comment-toggle');
+  const feedback = element('p', '', 'thread-status');
+  const panel = element('div', undefined, 'comment-panel');
+  panel.id = 'comments-' + view.topic.id + '-' + post.groupId;
+  panel.hidden = true;
+  comment.type = 'button';
+  comment.setAttribute('aria-controls', panel.id);
+  comment.setAttribute('aria-expanded','false');
+  feedback.setAttribute('role','status');
   const replies = element('div', undefined, 'replies');
   const replyEditor = element('div');
   const key = forumKey(view.topic, post.groupId);
-  let reading = false;
-  async function showReplies() {
-    reading = true;
-    try {
-      const entries = await readEntries(key);
-      const messages = entries.map(entry => {
-        const reply = element('div', undefined, 'reply');
-        reply.append(element('strong', groupName(entry.groupId)), element('p', entry.values?.message));
-        return reply;
-      });
-      replies.replaceChildren(...(messages.length ? messages : [element('p','还没有回复。')]));
-      if (!teacher && post.groupId !== group && !replyEditor.firstChild) {
-        replyEditor.append(composer(key, replyFields, '发布回复', entries.find(entry => entry.groupId === group), showReplies));
-      }
-    } catch {
-      replies.replaceChildren(element('p','回复暂时无法读取，合上后重新展开可重试。'));
-    } finally {
-      reading = false;
+  let liked = false, likeCount = 0, savingLike = false, loaded = false, revision = 0;
+  function drawLike() {
+    like.textContent = (liked ? '♥ 已点赞' : '♡ 点赞') + (loaded ? ' ' + likeCount : '');
+    if (!teacher) {
+      like.disabled = !loaded || savingLike;
+      like.setAttribute('aria-pressed', String(liked));
     }
   }
-  details.ontoggle = () => {
-    if (details.open && !reading) void showReplies();
+  async function update() {
+    const request = ++revision;
+    try {
+      const entries = await readEntries(key, 24);
+      if (request !== revision) return;
+      const likes = entries.filter(entry => entry.kind === 'lesson-forum-like' && entry.values?.liked === true);
+      const comments = entries.filter(entry => entry.kind !== 'lesson-forum-like' && typeof entry.values?.message === 'string');
+      if (!savingLike) {
+        liked = !teacher && likes.some(entry => entry.groupId === group);
+        likeCount = likes.length;
+      }
+      loaded = true;
+      drawLike();
+      comment.textContent = '💬 评论 ' + comments.length;
+      feedback.textContent = '';
+      const messages = comments.map(entry => {
+        const reply = element('div', undefined, 'reply');
+        reply.append(element('strong', groupName(entry.groupId)), element('p', entry.values.message));
+        return reply;
+      });
+      replies.replaceChildren(...(messages.length ? messages : [element('p','还没有评论。')]));
+      if (!teacher && !panel.hidden && !replyEditor.firstChild) {
+        replyEditor.append(composer(key, replyFields, '发布评论', comments.find(entry => entry.groupId === group), update));
+      }
+    } catch {
+      if (request === revision) feedback.textContent = '暂时读不到点赞和评论，可以刷新重试。';
+    }
+  }
+  if (!teacher) {
+    like.type = 'button';
+    like.onclick = async () => {
+      if (savingLike || !loaded) return;
+      savingLike = true;
+      drawLike();
+      try {
+        await saveEntry(key, {liked:!liked}, true);
+        liked = !liked;
+        likeCount = Math.max(0, likeCount + (liked ? 1 : -1));
+        void update();
+      } catch {
+        feedback.textContent = '点赞没有保存，请再点一次。';
+      } finally {
+        savingLike = false;
+        drawLike();
+      }
+    };
+  }
+  drawLike();
+  comment.onclick = () => {
+    panel.hidden = !panel.hidden;
+    comment.setAttribute('aria-expanded', String(!panel.hidden));
+    if (!panel.hidden) void update();
   };
-  details.append(summary, replies, replyEditor);
-  article.append(details);
-  return article;
+  actions.append(like, comment);
+  panel.append(replies, replyEditor);
+  article.append(actions, feedback, panel);
+  return {node:article, update};
 }
 
 async function refresh(view) {
@@ -139,7 +194,7 @@ async function refresh(view) {
     const entries = await readEntries(key);
     if (active !== view || request !== view.request) return;
     const threads = $('#threads');
-    // Keep open replies and drafts when an unchanged thread is refreshed.
+    // Keep open comments and drafts when an unchanged post is refreshed.
     const previous = view.threads;
     view.threads = new Map();
     const cards = entries.map(post => {
@@ -147,7 +202,8 @@ async function refresh(view) {
       const signature = JSON.stringify(post.values);
       const card = cached?.signature === signature ? cached.card : thread(view, post);
       view.threads.set(post.groupId, {signature, card});
-      return card;
+      void card.update();
+      return card.node;
     });
     cards.forEach((card, index) => {
       if (threads.children[index] !== card) threads.insertBefore(card, threads.children[index] || null);
@@ -168,7 +224,12 @@ async function refresh(view) {
 
 const views = forumTopics.map(topic => ({topic, request:0, threads:new Map()}));
 const tabs = views.map(view => {
-  const tab = element('button', view.topic.title);
+  const [symbol, label] = topicLabels[view.topic.id];
+  const tab = element('button', undefined, 'topic-tab');
+  const icon = element('span', symbol, 'topic-icon');
+  icon.setAttribute('aria-hidden','true');
+  tab.dataset.topic = view.topic.id;
+  tab.append(icon, element('span',label));
   tab.type = 'button';
   tab.onclick = () => select(view);
   return tab;
@@ -182,7 +243,7 @@ function select(view) {
   $('#question').textContent = view.topic.question;
   $('#prompt').textContent = view.topic.prompt;
   $('#composer').replaceChildren(...(view.editor ? [view.editor] : []));
-  $('#threads').replaceChildren(...Array.from(view.threads.values(), entry => entry.card));
+  $('#threads').replaceChildren(...Array.from(view.threads.values(), entry => entry.card.node));
   void refresh(view);
 }
 
@@ -202,7 +263,7 @@ async function connect() {
 }
 
 $('#audience').textContent = teacher ? '教师查看' : groupName(group);
-if (teacher) $('#instructions').textContent = '选择话题查看各组的帖子，展开帖子可查看回复。';
+if (teacher) $('#instructions').textContent = '选择话题查看各组的帖子、点赞和评论。';
 $('#fullscreen').onclick = () => window.requestLessonFullscreen?.();
 $('#refresh').onclick = () => active ? void refresh(active) : void connect();
 void connect();
