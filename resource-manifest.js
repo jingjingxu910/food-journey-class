@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-ce6a24ac3114b0e0",
-  "bytes": 106394393,
+  "version": "20261102-chunks-1825559fcfcb32a2",
+  "bytes": 106395729,
   "files": [
     {
       "path": "app.js",
@@ -762,6 +762,11 @@ self.LESSON_RESOURCES = {
       "path": "assets/audio/xiaoya/fcfb8be48393.mp3",
       "bytes": 82080,
       "hash": "b5f9993330f29fbb4b159abe5690a60fa6f3829b7f875a67ba0bb2ce5def3e03"
+    },
+    {
+      "path": "assets/forum/jump-rope.svg",
+      "bytes": 434,
+      "hash": "cfc1ab2757a4de41278ffb661409bf33280ca45d4a7ebbaf5c36324be7391e7a"
     },
     {
       "path": "assets/journey/biscuit-fractures-v4.webp",
@@ -1859,8 +1864,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "class-evaluation.js",
-      "bytes": 24630,
-      "hash": "c956a0a0e5f8b51a8b6b7407ece53399a4e33991627aab262272305c01ff6a97"
+      "bytes": 24719,
+      "hash": "a15f9fe10f8c4f33e5844962dfa33ef80256b035e0f29028266406c8c09e4140"
     },
     {
       "path": "cloud-loader.js",
@@ -1894,8 +1899,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "evaluation-data.js",
-      "bytes": 24140,
-      "hash": "b23653b90c91e6bcd05d955d0a79dce6ebc4314f06d0dd4347e1fcbf2d3dae9a"
+      "bytes": 24146,
+      "hash": "044dc9e8e5f130598bf0b6e5d5f15a5949a168ca4dfa7aaba4aecf24b2310460"
     },
     {
       "path": "evaluation.html",
@@ -1904,23 +1909,23 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "forum-content.js",
-      "bytes": 2739,
-      "hash": "030138e58410a7611ae207049abbfdd071d2e5c5f9a2f9650bd4cdae9300cba8"
+      "bytes": 2745,
+      "hash": "5338d8a41d89047fe406944b3117585ae523a87c7594531eb2cab3ee2c915b68"
     },
     {
       "path": "forum.css",
-      "bytes": 7208,
-      "hash": "8fb0ef6f98b3b6801bba18a2026b30ce9ce6d9ae37cbed7821594859ca27566e"
+      "bytes": 7380,
+      "hash": "b584c287cd8d979994b9d14fb784f2a3ae3e03d48ab47b1ed00643e5e880c46b"
     },
     {
       "path": "forum.html",
-      "bytes": 2265,
-      "hash": "2411c73704829c782b50981e04ae54bcf279bcd24bc44779e15f45075f8797e2"
+      "bytes": 2277,
+      "hash": "a4d17651f7191391d11e15d4ca2d6d96d48b27beda19ee8dfdeb3eab8ff33b70"
     },
     {
       "path": "forum.js",
-      "bytes": 16668,
-      "hash": "31da713b3242d60a397238ad1153b6d83ea78a31807507bba5f13a90ee3b3599"
+      "bytes": 16934,
+      "hash": "fbb8f091df4ea05d7e538d1af08476fc48337d3f0cc33c0e8bdf827c7e19da2b"
     },
     {
       "path": "frame-entry.js",
@@ -1929,8 +1934,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "index.html",
-      "bytes": 4750,
-      "hash": "6a40d55bd9e97afa787942af7993d040cfed25f70485877a7b1caa1e2afdbc55"
+      "bytes": 4762,
+      "hash": "d75bce59b69a75098788662020edc9f008533fc67384d0772c326972548c51c6"
     },
     {
       "path": "journey-3d.js",
@@ -2139,8 +2144,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "organ-reader.js",
-      "bytes": 3294,
-      "hash": "a519a628f8bf3d711a8d92c46dfc49a89115ef60329e476b6bd56a41f5792f13"
+      "bytes": 3633,
+      "hash": "972c49a9e3c8ccb8a05eed6a2407ca1cf4cc520af6c279f652ddf4dcf11dbfed"
     },
     {
       "path": "organ-reading-data.js",
@@ -2563,7 +2568,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-ce6a24ac3114b0e0"
+      "hash": "manifest-20261102-chunks-1825559fcfcb32a2"
     }
   ]
 };

@@ -156,8 +156,10 @@ function setupTeacher(){
    }finally{busy=false;renderStars();}
  }
  ['课题封面','初始模型','AR观察','修正模型','实体拼装','食物旅行','课堂研讨','小组自评','专属奖状','小论坛'].forEach(name=>{
-   const tab=button(name,()=>choose(name));
-   tab.title=name==='课题封面'?'展示封面并带领学生回到课堂初始页':'展示并带领学生进入'+name;
+   const label=name==='小论坛'?'身体小论坛':name;
+   const tab=button(label,()=>choose(name));
+   tab.dataset.stage=name;
+   tab.title=name==='课题封面'?'展示封面并带领学生回到课堂初始页':'展示并带领学生进入'+label;
    tabs.append(tab);
  });
  const autoStars=makeAutomaticStarsButton({el,button,symbols,readState:()=>({ready,resetId:state.resetId,records})});
@@ -167,7 +169,7 @@ function setupTeacher(){
    if(stage==='小论坛'){
      slide.dataset.page=stage;
      if(remoteForum!==undefined){
-       const title=el('h1','小论坛');
+       const title=el('h1','身体小论坛');
        title.tabIndex=-1;
        const frame=el('iframe');
        frame.title='各组发帖和回复';
@@ -221,7 +223,7 @@ function setupTeacher(){
    renderSharing();
    [...tabs.children].forEach(b=>{
      if(b===autoStars||b===fullscreen||b===sharingControl)return;
-     const current=b.textContent===stage;
+     const current=b.dataset.stage===stage;
      b.setAttribute('aria-selected',String(current));
      if(current)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
    });

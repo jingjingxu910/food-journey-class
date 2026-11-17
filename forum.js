@@ -14,9 +14,9 @@ const groupName = id => id===0 ? '许老师' : '第 ' + id + ' 组';
 const discussionFields = [{name:'message', label:'我们组的想法', max:600}];
 const replyFields = [{name:'message', label:'我们组想说', placeholder:'我想补充…… / 我还想问……', max:400}];
 const topicLabels = {
-  breathing:['💨','消化与呼吸'],
-  movement:['↻','跳绳时'],
-  homework:['🛡️','保护器官']
+  breathing:{label:'消化与呼吸', image:'./assets/organs/lungs-soft.webp'},
+  movement:{label:'跳绳时', image:'./assets/forum/jump-rope.svg'},
+  homework:{label:'保护器官', symbol:'🛡️'}
 };
 let collection, round, active;
 let awards = {};
@@ -312,10 +312,17 @@ async function refresh(view) {
 
 const views = forumTopics.map(topic => ({topic, request:0, threads:new Map()}));
 const tabs = views.map(view => {
-  const [symbol, label] = topicLabels[view.topic.id];
+  const {symbol, label, image} = topicLabels[view.topic.id];
   const tab = element('button', undefined, 'topic-tab');
   const icon = element('span', symbol, 'topic-icon');
   icon.setAttribute('aria-hidden','true');
+  if (image) {
+    const topicImage = element('img');
+    topicImage.src = image;
+    topicImage.alt = '';
+    topicImage.width = 25;
+    icon.append(topicImage);
+  }
   tab.dataset.topic = view.topic.id;
   tab.append(icon, element('span',label));
   tab.type = 'button';

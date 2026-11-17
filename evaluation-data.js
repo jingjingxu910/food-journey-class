@@ -78,7 +78,7 @@ export function automaticStars(record={}, forumReply=false) {
   if(record.v2?.completedAt&&route?.length===digestiveRoute.length&&digestiveRoute.every((organ,i)=>route[i]===organ)){
     add(0,1,'V2 提交了正确的食物路线');
   }
-  if(forumReply)add(1,1,'在小论坛追问或补充了其他组的帖子');
+  if(forumReply)add(1,1,'在身体小论坛追问或补充了其他组的帖子');
   if(record.journey?.completedAt){
     add(2,1,'完成并提交食物旅行');
     const events=currentJourneyEvents(record.journey);

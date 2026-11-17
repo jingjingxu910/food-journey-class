@@ -45,7 +45,7 @@ export function forumLink(text, {resetId, teacher=false}={}) {
 
 export function forumSlide(resetId) {
   const title = document.createElement('h1');
-  title.textContent = '小论坛';
+  title.textContent = '身体小论坛';
   title.tabIndex = -1;
   const topics = document.createElement('ul');
   topics.className = 'forum-slide-topics';

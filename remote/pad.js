@@ -100,7 +100,7 @@ async function switchStage(display,stage,question=display.question){
 function render(){
  const state=active;
  if(!state)return;
- $('#phases').replaceChildren(...stages.map(stage=>button(stage,()=>run(display=>switchStage(display,stage)),stage===state.stage)));
+ $('#phases').replaceChildren(...stages.map(stage=>button(stage==='小论坛'?'身体小论坛':stage,()=>run(display=>switchStage(display,stage)),stage===state.stage)));
  const actions=element('div');actions.className='actions';
  actions.append(button('清除数据',()=>{
   if(!window.confirm('确定结束本轮课堂并清除本轮显示的数据吗？'))return;
@@ -143,7 +143,7 @@ function render(){
   });
  };
  sharing.append(select);
- $('#controls').replaceChildren(element('strong',state.group?'正在展示第 '+state.group+' 组':state.stage),actions,groupButtons);
+ $('#controls').replaceChildren(element('strong',state.group?'正在展示第 '+state.group+' 组':(state.stage==='小论坛'?'身体小论坛':state.stage)),actions,groupButtons);
  if(state.stage!=='小论坛')$('#controls').append(sharing);
  const stars=element('div');stars.className='star-grid';
  for(let id=1;id<=12;id++){

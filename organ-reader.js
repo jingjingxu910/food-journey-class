@@ -30,7 +30,7 @@ export function createOrganReader(container, onDone, playPrompt) {
           dialog.querySelector('.reading-abstract').textContent = summary;
           const link = dialog.querySelector('a');
           link.href = url;
-          link.textContent = '打开中文原文 ↗';
+          link.textContent = '打开原文 ↗';
           dialog.showModal();
           return;
         }
@@ -44,6 +44,11 @@ export function createOrganReader(container, onDone, playPrompt) {
     });
     if (system) {
       const back = makeButton('返回上一步');
+      back.className = 'reading-back';
+      const arrow = document.createElement('span');
+      arrow.setAttribute('aria-hidden', 'true');
+      arrow.textContent = '← ';
+      back.prepend(arrow);
       back.onclick = () => {
         if (condition) { condition = undefined; visited.clear(); }
         else if (organ) organ = undefined;
@@ -51,7 +56,10 @@ export function createOrganReader(container, onDone, playPrompt) {
         render(true);
         optionsFocus();
       };
-      options.append(back);
+      const navigation = document.createElement('div');
+      navigation.className = 'reading-navigation';
+      navigation.append(back);
+      options.append(navigation);
     }
     container.replaceChildren(question, options);
     if (narrate) playPrompt(!system ? 'choose-system'
