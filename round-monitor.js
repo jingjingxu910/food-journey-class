@@ -66,7 +66,12 @@ async function check(force=false){
    }
    failureDelay=2000;retryAfter=0;
    const known=JSON.parse(localStorage.getItem('lesson-known-round')||'null');
-   if((command.resetId||null)!==known)return;
+   if((command.resetId||null)!==known){
+     if(command.resetId&&(!known||Number(command.resetId.split('-')[1])>Number(known.split('-')[1]))){
+       lastRoundCheck=0;
+     }
+     return;
+   }
    if(url.pathname.endsWith('/index.html')){
      frame.contentWindow.dispatchEvent(new frame.contentWindow.CustomEvent('class-command',{detail:command}));
    }

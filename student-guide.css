@@ -37,22 +37,17 @@
 .student-guide:has(.student-guide-spotlight[hidden]) { background: #142f32b8; }
 .student-guide-card {
   position: absolute;
-  inset-inline: 12px;
-  bottom: max(12px, env(safe-area-inset-bottom));
+  top: 8px;
+  left: 8px;
   box-sizing: border-box;
-  width: min(440px, calc(100% - 24px));
-  max-height: calc(100% - 24px);
-  margin-inline: auto;
+  width: min(360px, calc(100% - 16px));
+  max-height: calc(100% - 16px);
   overflow: auto;
   padding: clamp(13px, 3vw, 22px);
   border: 2px solid #b8ded0;
   border-radius: 21px;
   background: #fffdf4;
   box-shadow: 0 5px 26px #12372e55;
-}
-.student-guide[data-panel="top"] .student-guide-card {
-  top: max(12px, env(safe-area-inset-top));
-  bottom: auto;
 }
 .student-guide-count { margin: 0 0 4px; color: #386a5e; }
 .student-guide h2 { margin: 0 0 5px; font-size: clamp(20px, 3.5vw, 27px); }

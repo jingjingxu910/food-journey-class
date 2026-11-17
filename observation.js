@@ -184,22 +184,27 @@ function paint(now){
  const visible=targets&&age<trackingHold()&&targetMotion.sceneRevision===motion.sceneRevision&&targetMotion.width===video.videoWidth&&targetMotion.height===video.videoHeight;
  if(targets&&!visible){targets=null;tracker.reset();displayed.clear();}
  const currentTargets=targets?Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,{...p,x:p.x+(coherent&&motion.reliable?motion.x-targetMotion.x:0),y:p.y+(coherent&&motion.reliable?motion.y-targetMotion.y:0)}])):null;
+ setCameraFraming(!visible && !dialogOpen);
  if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
   for(const [id,b]of buttons){const point=currentTargets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
    if(prior)for(const key of ['x','y','w','h','angle'])next[key]=prior[key]+(next[key]-prior[key])*alpha;
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
   }
- }else{connected?.update(null);updateLinks();$('#ar-organs').hidden=true;if(lastPose&&!targets)$('#camera-status').textContent='请面向镜头，让肩部和腰部都进入画面';}
+ }else{connected?.update(null);updateLinks();$('#ar-organs').hidden=true;if(lastPose&&!targets)$('#camera-status').textContent='请正对镜头，让脸、双肩和裤腰两侧进入画面';}
  lastPaint=now;if(busy && now-lastSent>15000){stopCamera();$('#camera-status').textContent='识别暂时没有响应，请重新开启相机';return;}
  lastPaint=now;if(now-lastSent>=interval)void sendFrame(now);
 }
-function stopCamera(){connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();motion.reset();targetMotion=null;$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
+function setCameraFraming(show){
+ const guide=$('#camera-framing');
+ if(guide.hidden===show)guide.hidden=!show;
+}
+function stopCamera(){setCameraFraming(false);connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();motion.reset();targetMotion=null;$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
 async function startCamera(){
  if(starting||running||!record)return;starting=true;startupController=new AbortController();$('#cancel-camera').hidden=false;$('#start-camera').disabled=true;
  try{$('#camera-status').textContent='正在开启后置相机…';if(!navigator.mediaDevices?.getUserMedia)throw new Error('请使用支持网页相机的浏览器，并通过 HTTPS 打开课件');
   stream=await waitStartup(navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:'environment'},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}}}),45000,'相机开启等待较久，请检查浏览器相机权限',late=>late.getTracks().forEach(t=>t.stop()));
   if(startupController.signal.aborted){stream.getTracks().forEach(t=>t.stop());throw new DOMException('已取消','AbortError');}
-  $('#camera-video').srcObject=stream;await waitStartup($('#camera-video').play(),15000,'相机画面未就绪，请重新开启');$('#camera-placeholder').hidden=true;
+  $('#camera-video').srcObject=stream;await waitStartup($('#camera-video').play(),15000,'相机画面未就绪，请重新开启');$('#camera-placeholder').hidden=true;setCameraFraming(true);
   $('#camera-status').textContent='正在准备观察…';
   const {preparePoseResources}=await waitStartup(import('./pose-resources.js'),30000,'识别资源程序未加载完成，请检查网络后重试');
   await preparePoseResources(startupController.signal,message=>{$('#camera-status').textContent=message;});
@@ -213,7 +218,7 @@ async function startCamera(){
 }
 async function openViewer(){
  if(!selected)return;viewerDispose?.();viewerDispose=null;processStop?.();closeSelected();const id=selected,o=organs.find(o=>o.id===id),generation=++viewerGeneration;
- observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;stopMedia();$('#show-organ-media').hidden=!organSegments[id];$('#show-organ-media').textContent='科普短片';$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#show-organ-process').hidden=['liver','pancreas','gallbladder','heart','submandibular','left-kidney','right-kidney','spleen','bladder'].includes(id);if(!$('#organ-dialog').open)$('#organ-dialog').show();showCandidateMedia();
+ observation.local3dEntries.push({organId:id,at:Date.now()});observation.local3dEntries=observation.local3dEntries.slice(-120);saveSoon();dialogOpen=true;setCameraFraming(false);stopMedia();$('#show-organ-media').hidden=!organSegments[id];$('#show-organ-media').textContent='科普短片';$('#ar-organs').hidden=true;$('#organ-dialog-title').textContent=o.name;$('#organ-dialog-note').textContent=o.feature;$('#organ-process').hidden=true;$('#organ-3d').hidden=false;$('#organ-dialog footer').hidden=false;$('#show-organ-process').hidden=['liver','pancreas','gallbladder','heart','submandibular','left-kidney','right-kidney','spleen','bladder'].includes(id);if(!$('#organ-dialog').open)$('#organ-dialog').show();showCandidateMedia();
  const credit=$('#organ-model-credit');credit.textContent=['small-intestine','large-intestine','liver','pancreas'].includes(id)?'模型：Human Reference Atlas / HuBMAP · CC BY 4.0':id==='mouth'?'模型：Alexander Antipov · CC BY 4.0':['right-lung','left-lung'].includes(id)?'模型：Human Reference Atlas · Kristen Browne、Heidi Schlehlein · CC BY 4.0':id==='pharynx'?'模型：BodyParts3D / OrganUI · CC BY-SA 2.1 Japan':'模型：BodyParts3D · DBCLS · CC BY 4.0';
  const mount=$('#organ-3d');mount.textContent='正在准备模型…';
 
