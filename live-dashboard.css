@@ -176,3 +176,5 @@ button.teacher-award-tile{display:block;padding:0;overflow:hidden;text-align:ini
 .evaluation-teacher .live-grid[data-phase="observation"] .live-camera-still{width:min(100%,var(--game-preview-width,260px));aspect-ratio:3/4;margin:8px auto 0;background:#edf5f0}
 .live-focus .live-camera-still{background:#edf5f0}
 .evaluation-teacher .live-grid[data-phase="observation"] .live-empty{flex:none;height:88px}
+
+.teacher-controls .teacher-download{display:flex;align-items:center;justify-content:center;text-align:center;text-decoration:none;box-sizing:border-box;width:100%;min-height:38px}

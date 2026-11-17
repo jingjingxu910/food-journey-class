@@ -35,7 +35,7 @@ function showProgress(record) {
   document.body.classList.toggle('home-start',step===0);
   document.querySelectorAll('.module-card[data-step]').forEach((card) => {
     const index = Number(card.dataset.step);
-    card.hidden = index > step;
+    card.hidden = step === 0 ? index !== 0 : index >= step;
     card.classList.toggle('module-card--active', index === step);
     card.classList.toggle('module-card--complete', index < step);
     const action = card.querySelector('.module-action');
@@ -45,6 +45,7 @@ function showProgress(record) {
   document.querySelector('.section-heading h2').textContent = [
     '从我们的想法开始', '接下来，仔细观察', '回到模型，再想一想', '现在，动手拼装', '跟着食物去旅行', '最后，一起回顾表现', '完成的活动',
   ][step];
+  if(step>0)document.querySelector('.section-heading h2').textContent='请等待老师开启下一项活动';
 }
 
 async function refreshProgress() {

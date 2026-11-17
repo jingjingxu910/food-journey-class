@@ -629,15 +629,12 @@ function showSavedTransition(record) {
   studentView.hidden = true;
   transitionPanel.hidden = false;
   if (!record.v2?.completedAt) {
-    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已提交</p><h1>初始想法已提交</h1>${record.pendingSync ? '<p>已保存在本机，暂未传给老师。</p>' : ''}<div class="saved-model-preview">${miniModel(record.v1, "已保存模型")}</div><div class="transition-actions"><button id="start-v2-button" class="submit-model-button" type="button">去观察</button></div>`;
-    document.querySelector("#start-v2-button").addEventListener("click", () => {
-      location.href = `observation.html?group=${groupId}`;
-    });
+    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已提交</p><h1>初始想法已提交</h1>${record.pendingSync ? '<p>已保存在本机，暂未传给老师。</p>' : ''}<div class="saved-model-preview">${miniModel(record.v1, "已保存模型")}</div><p>请等待老师开启下一项活动。</p>`;
     addSyncRetry(record);
     return;
   }
   const changed = compareModels(record.v1, record.v2);
-  transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已提交</p><h1>模型修正已提交</h1><p>对比观察前后的摆放与食物路线。${record.pendingSync ? "暂未传给老师。" : ""}</p><div class="saved-model-preview student-model-compare">${miniModel(record.v1, "观察前模型")}${miniModel(record.v2, "观察后模型")}</div><div class="transition-actions"><a class="submit-model-button" href="assembly.html?group=${groupId}">去拼装 →</a></div>`;
+  transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V2 已提交</p><h1>模型修正已提交</h1><p>对比观察前后的摆放与食物路线。${record.pendingSync ? "暂未传给老师。" : ""}</p><div class="saved-model-preview student-model-compare">${miniModel(record.v1, "观察前模型")}${miniModel(record.v2, "观察后模型")}</div><p>请等待老师开启下一项活动。</p>`;
   addSyncRetry(record);
 }
 

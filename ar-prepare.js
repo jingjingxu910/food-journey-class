@@ -1,8 +1,17 @@
 import './resource-store.js?v=20261113-voice-models';
 import {selectedResources} from './resource-selection.js';
 const $=s=>document.querySelector(s),store=window.LessonResourceStore;
-const group=Math.max(1,Math.min(12,Number(new URLSearchParams(location.search).get('group'))||1));
-$('#open-observation').href=`index.html?group=${group}`;
+const params=new URLSearchParams(location.search);
+const group=Math.max(1,Math.min(12,Number(params.get('group'))||1));
+const returnLink=$('#open-observation');
+if(params.get('mode')==='teacher'){
+ const screen=params.get('from')==='screen';
+ $('#prepare-title').textContent='教师端课前下载';
+ $('#prepare-description').textContent='用投屏电脑上课时的浏览器准备资源，工作台可从本机读取游戏场景、模型、图片和配音。';
+ returnLink.href=screen?'remote/screen.html?mode=teacher':'model-workbench.html?mode=teacher';
+ returnLink.textContent=screen?'返回大屏跟随页 →':'返回教师工作台 →';
+ returnLink.target='_top';
+}else returnLink.href='index.html?group='+group;
 const mb=n=>(n/1048576).toFixed(1);let controller,working=false;
 const first=document.createElement('button');first.id='prepare-ar';first.className='flow-primary';first.textContent='先准备人体识别';first.style.marginRight='12px';$('#prepare').before(first);
 const pause=document.createElement('button');pause.textContent='暂停';pause.hidden=true;pause.style.marginLeft='12px';$('#prepare').after(pause);

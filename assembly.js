@@ -2,7 +2,6 @@ import { groupId, currentRecord, saveRecord, submitRecord, homeUrl, isPhotoPrevi
 const $=(selector)=>document.querySelector(selector);
 $('#group-label').textContent=`第 ${groupId} 组`;
 $('#back-link').href=homeUrl();
-$('#journey-link').href=`journey.html?group=${groupId}`;
 $('.flow-fullscreen').onclick=()=>window.requestLessonFullscreen?.();
 let record,stream;
 const video=$('#assembly-camera');
@@ -116,7 +115,6 @@ async function submit() {
     const uploaded=await submitRecord(record);
     if(uploaded){record.assembly.pendingSync=false;await saveRecord(record);}
     $('#assembly-status').textContent=uploaded?'拼装记录已提交。':'已保存在本机，联网后请再次提交。';
-    $('#journey-link').hidden=!uploaded;
   } catch(error) {
     $('#assembly-status').textContent=error.message||'暂时无法提交，请重试。';
   } finally {
@@ -127,7 +125,6 @@ async function initialize() {
   record=await currentRecord();
   if(record.assembly?.photoLocal||record.assembly?.photoPreview) showPhoto(record.assembly.photoLocal||record.assembly.photoPreview);
   $('#assembly-note').value=record.assembly?.note||'';
-  if(record.assembly?.completedAt&&!record.assembly.pendingSync) $('#journey-link').hidden=false;
   $('#open-camera').disabled=false;
 }
 $('#photo-input').onchange=event=>{closeCamera();void savePhoto(event.target.files?.[0]);event.target.value='';};

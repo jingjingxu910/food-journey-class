@@ -232,8 +232,7 @@ async function finishObservation(){
   const uploaded=await submitRecord(record);
   if(!uploaded){status('发现已保存在本机，联网后点这里再提交一次。');button.textContent='重新提交观察';button.onclick=finishObservation;return;}
   observation.pendingSync=false;await saveRecord(record);
-  status('观察记录已提交。哪些发现能帮助我们检查模型？');button.textContent='去修正模型 →';
-  button.onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;
+  status('观察记录已提交，请等待老师开启下一项活动。');button.hidden=true;
  }catch{status('暂时未能提交，请再试一次。');button.textContent='重新提交观察';button.onclick=finishObservation;}
  finally{button.disabled=false;observationSubmitting=false;}
 }
@@ -246,7 +245,7 @@ window.addEventListener('pagehide',()=>{connected?.dispose();connected=null;star
 async function initialize(){
  $('#start-camera').disabled=true;$('#camera-status').textContent='正在读取本组记录…';
  let timer;try{record=isPreview?{id:'ar-local-preview',groupId:9,observation:freshObservation()}:await Promise.race([currentRecord(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('本组记录读取超时')),8000);})]);}finally{clearTimeout(timer);}
- $('#camera-status').textContent='等待开启';$('#start-camera').textContent='开启后置相机';$('#start-camera').onclick=startCamera;observation=record.observation||freshObservation();record.observation=observation;renderList();$('#start-camera').disabled=false;if(observation.completedAt&&!observation.pendingSync){$('#finish-observation').disabled=false;$('#finish-observation').textContent='去修正模型 →';$('#finish-observation').onclick=()=>location.href=`model-workbench.html?group=${groupId}&phase=v2`;}else {$('#finish-observation').onclick=finishObservation;if(observation.pendingSync){$('#finish-observation').disabled=false;$('#finish-observation').textContent='重新提交观察';}}}
+ $('#camera-status').textContent='等待开启';$('#start-camera').textContent='开启后置相机';$('#start-camera').onclick=startCamera;observation=record.observation||freshObservation();record.observation=observation;renderList();$('#start-camera').disabled=false;if(observation.completedAt&&!observation.pendingSync){$('#finish-observation').hidden=true;status('观察记录已提交，请等待老师开启下一项活动。');}else {$('#finish-observation').onclick=finishObservation;if(observation.pendingSync){$('#finish-observation').disabled=false;$('#finish-observation').textContent='重新提交观察';}}}
 function initializeOrRetry(){initialize().catch(error=>{status(`记录暂时无法读取：${error.message}`);$('#camera-status').textContent='页面准备未完成，请重试';$('#start-camera').disabled=false;$('#start-camera').textContent='重试准备';$('#start-camera').onclick=initializeOrRetry;});}
 initializeOrRetry();if(isPreview)import('./ar-simulation.js').then(m=>m.startSimulation({mount:$('#anatomy-overlay'),select:selectOrgan,onReady:view=>{connected=view;$('#start-camera').hidden=true;$('#finish-observation').hidden=true;$('#camera-status').textContent='模拟预览 · 正面 / 侧面 / 背面';},onFrame:updateLinks}));
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./ar-assets-sw.js').catch(error=>console.info('Resource cache unavailable',error));
