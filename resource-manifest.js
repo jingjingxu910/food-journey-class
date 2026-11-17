@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-1825559fcfcb32a2",
-  "bytes": 106395729,
+  "version": "20261102-chunks-7147ce80bf9c919c",
+  "bytes": 106397374,
   "files": [
     {
       "path": "app.js",
@@ -14,8 +14,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-entry.js",
-      "bytes": 859,
-      "hash": "e1fde41678202f8477a75a25ea2b1c95e14f8be3849e2779a946c3b54fd5169c"
+      "bytes": 857,
+      "hash": "47443ea3b73f2b372930f8c11ab0333bf08607c7391bd66a39465c5a8fbcc3c1"
     },
     {
       "path": "ar-guide-lines.js",
@@ -34,8 +34,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-observation.css",
-      "bytes": 16754,
-      "hash": "f4696f2f81b4434540a333a0958cef9096e0ba0f0bf5ffad31758762a72ead83"
+      "bytes": 17220,
+      "hash": "a41a6cbdc00879e6c18595ab43b11f0514a23d8574b137f5b9b546b5797e0c88"
     },
     {
       "path": "ar-organ-viewer.js",
@@ -2129,13 +2129,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "observation.html",
-      "bytes": 5207,
-      "hash": "3a6356ef9c7457a675da35674d40493bc4a316206e47740e75dd31250cb233f6"
+      "bytes": 5185,
+      "hash": "0b037a0b141752a4d540224f2d920751921f18f219fe05db6a6b0db6fe2a900b"
     },
     {
       "path": "observation.js",
-      "bytes": 35300,
-      "hash": "127da6c6215064ced423d7e4d08f793778b2476d04d81a3327a36a828d67fb4a"
+      "bytes": 36342,
+      "hash": "26d462bf8f03bb3d687e5bef401974a95a014b28f1792f22b36ba49a3edf2c83"
     },
     {
       "path": "organ-drag.js",
@@ -2174,8 +2174,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "sprout-controls.js",
-      "bytes": 2361,
-      "hash": "ab1fb9e0029c522e3cce81e711caaabb5644ad5dbc24b45e4c2e920f26621f61"
+      "bytes": 2522,
+      "hash": "3f26a236b64e761cd834a3223ee06ccbcdf962882ba2b5104fec8ba640c3d0c7"
     },
     {
       "path": "sprout.css",
@@ -2568,7 +2568,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-1825559fcfcb32a2"
+      "hash": "manifest-20261102-chunks-7147ce80bf9c919c"
     }
   ]
 };

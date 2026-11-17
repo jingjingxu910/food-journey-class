@@ -1,4 +1,4 @@
-export function bindSproutDrag(guide,hintButton,hideHint,onTap){
+export function bindSproutDrag(guide,hintButton,hideHint,onTap,moveFreely){
   let drag;
   let ignorePointerClick = false;
 
@@ -20,6 +20,10 @@ export function bindSproutDrag(guide,hintButton,hideHint,onTap){
       guide.dataset.dragging = '';
       hideHint();
     }
+    if(moveFreely){
+      moveFreely(drag.left + dx,drag.top + dy,drag.width,drag.height);
+      return;
+    }
     const left = Math.max(0, Math.min(drag.left + dx, window.innerWidth - drag.width));
     const top = Math.max(12, Math.min(drag.top + dy, window.innerHeight - drag.height - 12));
     guide.style.setProperty('--drag-x', left + 'px');
@@ -28,10 +32,12 @@ export function bindSproutDrag(guide,hintButton,hideHint,onTap){
   function finishDrag(event) {
     if (drag?.id !== event.pointerId) return;
     if (drag.moved) {
-      const bounds = hintButton.getBoundingClientRect();
-      guide.dataset.side = bounds.left + bounds.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
-      guide.style.setProperty('--sprout-y', (100 * bounds.top / window.innerHeight) + '%');
-      guide.style.removeProperty('--drag-x');
+      if(!moveFreely){
+        const bounds = hintButton.getBoundingClientRect();
+        guide.dataset.side = bounds.left + bounds.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
+        guide.style.setProperty('--sprout-y', (100 * bounds.top / window.innerHeight) + '%');
+        guide.style.removeProperty('--drag-x');
+      }
       delete guide.dataset.dragging;
     }
     drag = undefined;

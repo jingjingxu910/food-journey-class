@@ -1,6 +1,7 @@
 import './live-sync.js?v=20261118-classroom-review';
 import {organSegments} from './ar-media-segments.js';
 import {arGuideLines} from './ar-guide-lines.js';
+import {bindSproutDrag} from './sprout-controls.js?v=ar-sprout-drag';
 const isPreview=new URLSearchParams(location.search).get('preview')==='1';
 import {CameraMotion} from './ar-motion.js';
 import {BodyTracker,mapOverlay} from './ar-tracking.js';
@@ -205,7 +206,7 @@ function showArTip(id,queue=false){
  tip.querySelector('p').textContent=arGuideLines[id];
  tip.querySelector('p').hidden=false;
  tip.hidden=false;
- $('#ar-tip-trigger').disabled=!finishedFirstVideo;
+ $('#ar-tip-trigger').setAttribute('aria-label',finishedFirstVideo?'听一条观察提示，也可以拖动小芽':'拖动小芽');
  if(!queue)stopTipVoice();
  const version=tipVoiceVersion;
  tipVoiceQueue=tipVoiceQueue.then(async()=>{
@@ -233,19 +234,33 @@ function showArTip(id,queue=false){
    });
  }).catch(()=>tipBuffers.delete(id));
 }
-$('#ar-tip-trigger').onclick=async()=>{
+const arTip=$('#ar-tap-tip'),arTipTrigger=$('#ar-tip-trigger');
+bindSproutDrag(arTip,arTipTrigger,()=>{},async()=>{
  if(!finishedFirstVideo)return;
  await prepareTapTipVoice();
  if(!finishedFirstVideo)return;
  const options=questionIds.filter(id=>id!==lastQuestion);
  lastQuestion=options[Math.floor(Math.random()*options.length)];
  showArTip(lastQuestion);
-};
-$('#organ-video').addEventListener('ended',()=>{
- if(!dialogOpen||finishedFirstVideo||$('#organ-media').hidden||$('#organ-video').hidden)return;
- finishedFirstVideo=true;
- showArTip('back');
+},(x,y,width,height)=>{
+ const bounds=$('#camera-stage').getBoundingClientRect();
+ const left=Math.max(4,Math.min(x-bounds.left,bounds.width-width-4));
+ const top=Math.max(4,Math.min(y-bounds.top,bounds.height-height-4));
+ const right=left+width/2>bounds.width/2;
+ arTip.style.left=left+'px';
+ arTip.style.top=top+'px';
+ arTip.style.bottom='auto';
+ arTip.dataset.side=right?'right':'left';
+ arTip.dataset.bubbleAnchor=top+height/2>bounds.height/2?'bottom':'top';
+ arTip.style.setProperty('--ar-tip-room',Math.max(68,(right?left:bounds.width-left-width)-14)+'px');
 });
+function showBackObservationTip(){
+ if(finishedFirstVideo||$('#organ-media').hidden||$('#organ-video').hidden||!$('#organ-video').hasAttribute('src'))return;
+ finishedFirstVideo=true;
+ showedOrganTip=true;
+ showArTip('back');
+}
+$('#organ-video').addEventListener('ended',()=>{if(dialogOpen)showBackObservationTip();});
 function paint(now){
  if(!running)return;frame=requestAnimationFrame(paint);if(hidden||now-lastPaint<30)return;
  const video=$('#camera-video'),stage=$('#camera-stage'),age=now-lastPose;motion.update(video,now);
@@ -317,7 +332,15 @@ async function finishObservation(){
 $('#cancel-camera').onclick=()=>{startupController?.abort();stopCamera();$('#camera-status').textContent='已取消开启，下载完成的资源已保留';};
 window.addEventListener('online',()=>{if(observation?.pendingSync)void finishObservation();});
 $('#start-camera').onclick=startCamera;$('#open-local-3d').onclick=()=>{if(!dialogOpen)void openViewer();};$('#close-organ-dialog').onclick=()=>$('#organ-dialog').close();
-$('#organ-dialog').addEventListener('close',()=>{if($('#organ-dialog').open)return;viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;selectedAt=performance.now();tracker.reset();targets=null;if(finishedFirstVideo)$('#ar-tap-tip').hidden=false;});
+$('#organ-dialog').addEventListener('close',()=>{
+ if($('#organ-dialog').open)return;
+ $('#organ-video').pause();
+ if(dialogOpen&&(running||isPreview))showBackObservationTip();
+ stopMedia();
+ viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;
+ selectedAt=performance.now();tracker.reset();targets=null;
+ if(finishedFirstVideo)arTip.hidden=false;
+});
 document.addEventListener('visibilitychange',()=>{hidden=document.hidden;if(hidden)closeSelected();else{selectedAt=performance.now();targets=null;tracker.reset();}});
 window.addEventListener('pagehide',()=>{connected?.dispose();connected=null;startupController?.abort();closeSelected();clearTimeout(saveTimer);if(record&&!isPreview)void saveRecord(record);stopCamera();stopMedia();viewerDispose?.();});
 async function initialize(){
@@ -335,7 +358,7 @@ if(framingPreview){
  setCameraFraming(true);
 }else{
  initializeOrRetry();
- if(isPreview)import('./ar-simulation.js').then(m=>m.startSimulation({mount:$('#anatomy-overlay'),select:selectOrgan,onReady:view=>{connected=view;$('#start-camera').hidden=true;$('#finish-observation').hidden=true;$('#camera-status').textContent='模拟预览 · 正面 / 侧面 / 背面';},onFrame:updateLinks}));
+ if(isPreview)import('./ar-simulation.js').then(m=>m.startSimulation({mount:$('#anatomy-overlay'),select:selectOrgan,onReady:view=>{connected=view;$('#start-camera').hidden=true;$('#finish-observation').hidden=true;$('#camera-status').textContent='模拟预览 · 正面 / 侧面 / 背面';showArTip('recognized');},onFrame:updateLinks}));
 }
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./ar-assets-sw.js').catch(error=>console.info('Resource cache unavailable',error));
 
