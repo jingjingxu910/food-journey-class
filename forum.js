@@ -1,6 +1,6 @@
 import {cloudDb, groupId} from './student-data.js?v=20261116-tablet-fixes';
 import {roundId} from './evaluation-data.js?v=award-journey-evidence';
-import {forumTopics} from './forum-content.js?v=floating-hints';
+import {forumTopics} from './forum-content.js?v=jump-rope-unit';
 
 const $ = selector => document.querySelector(selector);
 const params = new URLSearchParams(location.search);
