@@ -1,6 +1,8 @@
+import {bindSproutDrag,positionSproutBubble} from './sprout-controls.js';
+import {createOrganReader} from './organ-reader.js';
 import {cloudDb, groupId, readOptionalDocument} from './student-data.js?v=20261116-tablet-fixes';
 import {roundId, readDocument, awardIcon} from './evaluation-data.js?v=automatic-stars';
-import {forumTopics} from './forum-content.js?v=forum-voice';
+import {forumTopics} from './forum-content.js?v=classroom-reading';
 
 const $ = selector => document.querySelector(selector);
 const params = new URLSearchParams(location.search);
@@ -12,7 +14,7 @@ const discussionFields = [{name:'message', label:'我们组的想法', max:600}]
 const replyFields = [{name:'message', label:'我们组想说', placeholder:'我想补充…… / 我还想问……', max:400}];
 const topicLabels = {
   breathing:['💨','消化与呼吸'],
-  movement:['🪢','跳绳时'],
+  movement:['↻','跳绳时'],
   homework:['🛡️','保护器官']
 };
 let collection, round, active;
@@ -319,6 +321,9 @@ function select(view) {
   if (!teacher) {
     stopHintAudio();
     hintIndex = -1;
+    organReader.reset();
+    $('#organ-reading').hidden = true;
+    $('#prompt').hidden = false;
     $('#hint-bubble').hidden = true;
     $('#prompt').textContent = '';
     $('#hint-label').textContent = '点我看提示';
@@ -354,65 +359,35 @@ if (teacher) $('#instructions').textContent = '选择话题查看各组的帖子
 $('#fullscreen').onclick = () => window.requestLessonFullscreen?.();
 const guide = $('.sprout-guide');
 const hintButton = $('#show-hint');
-let drag;
-let ignorePointerClick = false;
-
+const organReader = createOrganReader($('#organ-reading'), () => {
+  hideHint();
+  hintButton.focus();
+}, filename => {
+  stopHintAudio();
+  if (!filename) return;
+  hintAudio ??= new Audio();
+  hintAudio.src = 'assets/audio/organ-reader/' + filename + '.mp3';
+  void hintAudio.play().catch(() => {});
+});
 function hideHint() {
   stopHintAudio();
   $('#hint-bubble').hidden = true;
   $('#hint-label').textContent = '点我看提示';
 }
 
-hintButton.addEventListener('pointerdown', event => {
-  if (!event.isPrimary || event.button !== 0 || drag) return;
-  const {left, top, width, height} = hintButton.getBoundingClientRect();
-  drag = {id:event.pointerId, x:event.clientX, y:event.clientY, left, top, width, height, moved:false};
-  ignorePointerClick = false;
-  hintButton.setPointerCapture(event.pointerId);
-});
-hintButton.addEventListener('pointermove', event => {
-  if (drag?.id !== event.pointerId) return;
-  const dx = event.clientX - drag.x;
-  const dy = event.clientY - drag.y;
-  if (!drag.moved) {
-    if (Math.hypot(dx, dy) < 10) return;
-    drag.moved = true;
-    ignorePointerClick = true;
-    guide.dataset.dragging = '';
-    hideHint();
-  }
-  const left = Math.max(0, Math.min(drag.left + dx, window.innerWidth - drag.width));
-  const top = Math.max(12, Math.min(drag.top + dy, window.innerHeight - drag.height - 12));
-  guide.style.setProperty('--drag-x', left + 'px');
-  guide.style.setProperty('--sprout-y', top + 'px');
-});
-function finishDrag(event) {
-  if (drag?.id !== event.pointerId) return;
-  if (drag.moved) {
-    const bounds = hintButton.getBoundingClientRect();
-    guide.dataset.side = bounds.left + bounds.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
-    guide.style.setProperty('--sprout-y', (100 * bounds.top / window.innerHeight) + '%');
-    guide.style.removeProperty('--drag-x');
-    delete guide.dataset.dragging;
-  }
-  drag = undefined;
-}
-hintButton.addEventListener('pointerup', finishDrag);
-hintButton.addEventListener('pointercancel', finishDrag);
-hintButton.addEventListener('lostpointercapture', finishDrag);
-
-hintButton.onclick = event => {
-  if (ignorePointerClick && event.detail !== 0) {
-    ignorePointerClick = false;
+bindSproutDrag(guide,hintButton,hideHint,()=>{
+  if (active.topic.id === 'homework') {
+    positionSproutBubble(guide,hintButton);
+    $('#prompt').hidden = true;
+    $('#organ-reading').hidden = false;
+    $('#hint-bubble').hidden = false;
+    $('#hint-label').textContent = '查资料';
+    organReader.show();
     return;
   }
   const hints = active.topic.hints;
   hintIndex = (hintIndex + 1) % hints.length;
-  const bounds = hintButton.getBoundingClientRect();
-  const spaceAbove = bounds.top;
-  const spaceBelow = window.innerHeight - bounds.bottom;
-  guide.dataset.bubble = spaceAbove >= spaceBelow ? 'above' : 'below';
-  guide.style.setProperty('--hint-space', Math.max(0, Math.max(spaceAbove, spaceBelow) - 16) + 'px');
+  positionSproutBubble(guide,hintButton);
   $('#hint-bubble').hidden = false;
   $('#prompt').textContent = hints[hintIndex];
   $('#show-hint').dataset.pose = String(hintIndex);
@@ -421,7 +396,7 @@ hintButton.onclick = event => {
   stopHintAudio();
   hintAudio.src = 'assets/audio/forum/' + active.topic.id + '-' + (hintIndex + 1) + '.mp3';
   hintAudio.play().catch(() => {});
-};
+});
 $('#close-hint').onclick = () => {
   hideHint();
   hintButton.focus();

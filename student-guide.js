@@ -1,14 +1,20 @@
 const steps = {
   v1: [
     ['#organ-palette', '把器官拖进去', '按住一个器官，拖到人体图上你认为合适的位置。'],
+    ['#organ-size-controls', '调整器官大小', '点一下已经放在人体图上的器官，再点「－」缩小或「＋」放大。'],
     ['#structure-button', '补画缺少的结构', '点「补画结构」，用橙色在人体图上画。'],
     ['#clear-structure-button', '橙色画错了怎么办', '点「清除橙色补画」重新画。误清后可点「撤销上一步」。'],
     ['#draw-route-button', '画食物的路线', '点「画食物路线」，用绿色画出食物经过的路线。'],
+    ['#clear-route-button', '绿色路线画错了', '点「清除绿色路线」，再重新画一遍。'],
+    ['#undo-button', '撤销上一步', '误拖、误画或误清时，点「撤销上一步」，回到上一步的样子。'],
     ['#submit-model-button', '提交本组想法', '和组员看一遍器官位置和路线，再提交。'],
   ],
   v2: [
     ['#organ-palette', '用观察到的证据修改', '回想刚才的观察。把需要移动的器官拖到新位置。'],
+    ['#organ-size-controls', '调整器官大小', '点一下已放置的器官，再用「－」和「＋」调整大小。'],
     ['#draw-route-button', '重新画食物路线', '点「画食物路线」，用绿色画出食物经过的器官。'],
+    ['#clear-route-button', '清除路线', '点「清除绿色路线」，可以重新画。'],
+    ['#undo-button', '撤销上一步', '点「撤销上一步」，恢复刚才修改前的样子。'],
     ['#submit-model-button', '提交修正模型', '和组员说说改了哪儿、为什么改，再提交。'],
   ],
   observation: [
@@ -27,7 +33,7 @@ const steps = {
   ],
   forum: [
     ['#topics', '选一个话题', '点上方的话题按钮，先看清楚要讨论的问题。'],
-    ['#show-hint', '需要时点一下角色', '轻点角色可以听一条提示。挡住内容时，可以按住它拖到另一边。'],
+    ['#show-hint', '需要时点一下角色', '点角色可以听提示，或在「保护器官」话题里查资料。挡住内容时可以拖到另一边。'],
     ['#composer button[type="submit"] | #composer', '发帖分享', '写下本组的想法，点「发布帖子」。'],
     ['.thread-actions | #board-title', '看看其他组怎么想', '读到有启发的帖子可以点赞，也可以点「评论」，写下你的问题或补充。'],
   ],
@@ -52,8 +58,9 @@ export function installStudentGuide(frame, url) {
 
   const stylesheet=doc.createElement('link');
   stylesheet.rel='stylesheet';
-  stylesheet.href=new URL('./student-guide.css?v=anchored-guide',import.meta.url).href;
+  stylesheet.href=new URL('./student-guide.css?v=classroom-reading',import.meta.url).href;
   stylesheet.onload=()=>mount();
+  stylesheet.onerror=()=>doc.dispatchEvent(new view.CustomEvent('student-guide-closed'));
   doc.head.append(stylesheet);
 
   function mount(){
@@ -62,7 +69,8 @@ export function installStudentGuide(frame, url) {
     replay.type='button';
     replay.className='student-guide-replay';
     replay.textContent='操作指引';
-    doc.querySelector('.home-actions, .header-actions, .model-topbar, .flow-topbar, .ev-heading, main > header, body > header')?.append(replay);
+    const fullscreen=doc.querySelector('.model-topbar .student-fullscreen, .flow-topbar .student-fullscreen, .ev-heading .student-fullscreen, .forum-header #fullscreen');
+    fullscreen?.before(replay);
 
     const dialog=doc.createElement('dialog');
     dialog.className='student-guide';
@@ -131,6 +139,7 @@ export function installStudentGuide(frame, url) {
     function render(){
       const list=steps[stage];
       const [selector,title,message]=list[index];
+      doc.body.toggleAttribute('data-guide-size',selector==='#organ-size-controls');
       target=selector.split(' | ').flatMap(part=>[...doc.querySelectorAll(part)])
         .find(node=>node.getClientRects().length>0);
       const bounds=target?.getBoundingClientRect();
@@ -155,6 +164,10 @@ export function installStudentGuide(frame, url) {
     next.onclick=()=>{if(index===steps[stage].length-1)close();else{index++;render();}};
     back.onclick=()=>{index--;render();};
     dialog.querySelector('[data-guide-skip]').onclick=close;
+    dialog.addEventListener('close',()=>{
+      doc.body.removeAttribute('data-guide-size');
+      doc.dispatchEvent(new view.CustomEvent('student-guide-closed'));
+    });
     dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
     view.addEventListener('resize',position);
     doc.addEventListener('scroll',position,true);
@@ -172,6 +185,8 @@ export function installStudentGuide(frame, url) {
       const medal=doc.querySelector('#award-unlock[open]');
       if(medal)medal.addEventListener('close',open,{once:true});
       else open();
+    }else{
+      doc.dispatchEvent(new view.CustomEvent('student-guide-closed'));
     }
   }
 }

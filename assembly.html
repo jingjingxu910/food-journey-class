@@ -2,11 +2,11 @@
 <html lang="zh-CN">
 <head><script src="frame-entry.js?v=20261105-tablet"></script><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"><title>实体拼装｜食物在身体里的旅行</title>
 <link rel="stylesheet" href="styles.css?v=20261031-1"><link rel="stylesheet" href="student-flow.css?v=assembly-v2">
-<script defer src="cloud-loader.js?v=20261031-1"></script><script type="module" src="assembly.js?v=teacher-task-visibility"></script>  <script defer src="watermark.js?v=20261031-1"></script>
+<script defer src="cloud-loader.js?v=20261031-1"></script><script type="module" src="assembly.js?v=classroom-reading"></script>  <script defer src="watermark.js?v=20261031-1"></script>
 <link rel="stylesheet" href="tablet.css?v=20261118-classroom-review">
 <script defer src="tablet-runtime.js?v=20261105-tablet"></script>
 <link rel="stylesheet" href="model-learning.css?v=assembly-v2">
-<link rel="stylesheet" href="student-fullscreen.css?v=20261113-classroom"></head>
+<link rel="stylesheet" href="student-fullscreen.css?v=20261113-classroom"><link rel="stylesheet" href="sprout.css"></head>
 <body class="flow-page assembly-page"><main class="flow-shell">
 <header class="flow-topbar"><a id="back-link" href="index.html">← 课堂首页</a><span id="group-label">第 1 组</span><button class="flow-fullscreen student-fullscreen" type="button">全屏</button></header>
 <div class="flow-heading"><span>拼装</span><h1>把模型拼出来</h1></div>
@@ -19,4 +19,14 @@
     <label class="flow-secondary photo-picker">选择照片<input id="photo-input" type="file" accept="image/*"></label>
   </div></div>
   <aside class="assembly-side"><p>对照本组的 V2 模型拼装，完成后点「开启相机」拍下作品。</p><label for="assembly-note">哪处连接最值得说一说？</label><textarea id="assembly-note" maxlength="160" placeholder="可以写下一个发现，或一个还想弄清的问题（选填）"></textarea><button id="submit-assembly" class="flow-primary" type="button">把作品提交给老师</button><p id="assembly-status" class="flow-status" role="status"></p></aside>
-</section></main></body></html>
+</section></main>
+  <div class="sprout-guide" hidden>
+    <button id="show-hint" class="sprout" type="button" aria-controls="hint-bubble">
+      <span class="sprout-art" aria-hidden="true"></span><span id="hint-label">点我看提示</span>
+    </button>
+    <div id="hint-bubble" class="sprout-bubble" hidden>
+      <p id="prompt" aria-live="polite" aria-atomic="true"></p>
+      <button id="close-hint" type="button" aria-label="收起提示">×</button>
+    </div>
+  </div>
+</body></html>

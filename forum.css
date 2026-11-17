@@ -82,86 +82,6 @@ button:focus-visible, textarea:focus-visible { outline: 3px solid #278271; outli
 }
 .forum-board { margin-top: 16px; }
 #question { margin-top: 7px; font-weight: 700; font-size: clamp(16px, 2.5vw, 20px); }
-.sprout-guide {
-  --edge-left: max(12px, env(safe-area-inset-left));
-  --edge-right: max(12px, env(safe-area-inset-right));
-  --edge-bottom: max(12px, env(safe-area-inset-bottom));
-  --sprout-height: calc(clamp(106px, 17vw, 166px) + 24px);
-  --sprout-facing: -1;
-  position: fixed;
-  top: clamp(12px, var(--sprout-y, 100%), calc(100% - var(--sprout-height) - var(--edge-bottom)));
-  right: var(--edge-right);
-  z-index: 5;
-  display: grid;
-  justify-items: end;
-  gap: 5px;
-  pointer-events: none;
-}
-.sprout-guide[data-side="left"] { left: var(--edge-left); right: auto; --sprout-facing: 1; }
-.sprout-guide[data-dragging] { left: var(--drag-x); right: auto; }
-.sprout {
-  display: grid;
-  justify-items: center;
-  padding: 0 4px;
-  border: 0;
-  background: transparent;
-  color: #743653;
-  font-size: .85rem;
-  pointer-events: auto;
-  touch-action: none;
-  user-select: none;
-  cursor: grab;
-}
-.sprout-guide[data-dragging] .sprout { cursor: grabbing; }
-.sprout-art {
-  width: clamp(106px, 17vw, 166px);
-  aspect-ratio: 1;
-  background: url("assets/journey/companion-pink-poses.png") left top / 300% 200% no-repeat;
-  filter: drop-shadow(0 5px 5px #153f4b40);
-  transform: scaleX(var(--sprout-facing));
-  animation: sprout-float 3.8s ease-in-out infinite;
-}
-.sprout[data-pose="0"] .sprout-art { background-position: right top; }
-.sprout[data-pose="1"] .sprout-art { background-position: center bottom; }
-.sprout[data-pose="2"] .sprout-art { background-position: right bottom; }
-#hint-label { text-shadow: 0 0 4px #fff, 0 0 8px #fff; }
-@keyframes sprout-float {
-  0%, 100% { transform: translateY(0) rotate(3deg) scaleX(var(--sprout-facing)); }
-  50% { transform: translateY(-7px) rotate(-3deg) scaleX(var(--sprout-facing)); }
-}
-.sprout-bubble {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 5px);
-  display: flex;
-  align-items: flex-start;
-  width: min(540px, calc(100vw - var(--edge-left) - var(--edge-right)));
-  max-height: min(38vh, var(--hint-space, 38vh));
-  overflow: auto;
-  padding: clamp(14px, 2.4vw, 24px);
-  gap: 6px;
-  border: 2px solid #f3e5c4;
-  border-radius: 18px 18px 5px 18px;
-  box-shadow: 0 6px 20px #213e3d29;
-  background: #fffdf3;
-  color: #264b42;
-  pointer-events: auto;
-}
-.sprout-guide[data-side="left"] .sprout-bubble { left: 0; right: auto; border-radius: 18px 18px 18px 5px; }
-.sprout-guide[data-bubble="below"] .sprout-bubble { top: calc(100% + 5px); bottom: auto; }
-.sprout-bubble p { flex: 1; font-size: clamp(19px, 2.6vw, 25px); line-height: 1.55; font-weight: 700; }
-#close-hint {
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-size: 24px;
-  line-height: 1;
-}
-@media (prefers-reduced-motion: reduce) {
-  .sprout-art { animation: none; }
-}
 form { display: grid; gap: 9px; margin-top: 12px; }
 label { display: grid; gap: 4px; font-weight: 700; }
 textarea {
@@ -181,13 +101,6 @@ form button { justify-self: start; background: var(--primary); color: #fff; bord
 #status { margin-top: 6px; }
 #threads { display: grid; gap: 14px; margin-top: 12px; }
 .thread { min-width: 0; padding: 14px; border: 1px solid var(--edge); border-radius: 16px; }
-button.forum-delete{position:relative;flex:0 0 28px;width:28px;height:28px;min-height:0;padding:0;border:none;border-radius:6px;color:#914449;background:transparent}
-button.forum-delete:hover,button.forum-delete:focus-visible{background:#fbe8e6}
-.forum-delete::before,.forum-delete::after{content:"";position:absolute;box-sizing:border-box;left:50%;transform:translateX(-50%);pointer-events:none}
-.forum-delete::before{top:10px;width:10px;height:10px;border:1.5px solid currentColor;border-radius:0 0 3px 3px}
-.forum-delete::after{top:7px;width:14px;border-top:2px solid currentColor}
-.reply:has(.forum-delete){position:relative;padding-inline-end:42px}
-.reply .forum-delete{position:absolute;right:6px;top:4px}
 .thread h3 { margin-bottom: 8px; color: #185446; }
 .group-award-badge {
   display: inline-grid;
@@ -238,6 +151,22 @@ button.forum-delete:hover,button.forum-delete:focus-visible{background:#fbe8e6}
 @keyframes award-arrive { from { opacity: 0; transform: translateY(12px) scale(.92); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .award-unlock[open] { animation: none; } }
 .thread p { white-space: pre-wrap; overflow-wrap: anywhere; }
+button.forum-delete{position:relative;flex:0 0 28px;width:28px;height:28px;min-height:0;padding:0;border:none;border-radius:6px;color:#914449;background:transparent}
+button.forum-delete:hover,button.forum-delete:focus-visible{background:#fbe8e6}
+.forum-delete::before,.forum-delete::after{content:"";position:absolute;box-sizing:border-box;left:50%;transform:translateX(-50%);pointer-events:none}
+.forum-delete::before{top:10px;width:10px;height:10px;border:1.5px solid currentColor;border-radius:0 0 3px 3px}
+.forum-delete::after{top:7px;width:14px;border-top:2px solid currentColor}
+.reply:has(.forum-delete){position:relative;padding-inline-end:42px}
+.reply .forum-delete{position:absolute;right:6px;top:4px}
+#organ-reading{flex:1;min-width:0}
+.reading-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.reading-options button{font-size:15px;padding:5px 9px}
+.organ-reading-dialog{box-sizing:border-box;width:min(550px,calc(100% - 24px));max-height:85vh;padding:18px;border:1px solid #b9d7cb;border-radius:18px;background:#fffdf3;color:#193e34}
+.organ-reading-dialog::backdrop{background:#1f453d78}
+.organ-reading-dialog header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.organ-reading-dialog header button{flex:none}
+.reading-abstract{margin:16px 0;line-height:1.8}
+.organ-reading-dialog a{color:#176657;overflow-wrap:anywhere}
 .thread-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
 .thread-actions button { background: #f6faf8; }
 .thread-actions .like[aria-pressed="true"] { border-color: #c36384; background: #fff0f5; color: #7b2549; }

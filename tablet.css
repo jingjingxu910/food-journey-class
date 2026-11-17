@@ -111,6 +111,9 @@ body.student-page:not(.teacher-mode),body.flow-page{height:100dvh;min-height:0;o
 .home-start .section-heading{margin:12px 0 0}
 .home-start .section-heading h2{font-size:clamp(23px,3.4vw,32px)}
 .home-page .app-shell{overflow-y:auto}
+.model-page.student-page:not(.teacher-mode) .transition-panel:has(.saved-v1-preview){display:flex;flex:1;min-height:0;flex-direction:column}
+.model-page.student-page:not(.teacher-mode) .saved-v1-preview{display:grid;place-items:center;flex:1;min-height:0;width:100%;margin-block:6px 10px;container-type:size}
+.saved-v1-preview .mini-model{width:min(100cqw,calc((100cqh - 28px) * 2 / 3),520px)}
 @media(orientation:landscape){.home-start .app-shell{gap:10px;padding:12px 28px 24px}.home-start .hero{min-height:0;padding:22px 30px}.home-start .hero h1{margin:4px 0 8px;font-size:38px}}
 @media(max-width:540px){.home-start .hero{grid-template-columns:minmax(0,1fr);gap:18px}.home-start .hero-orbit{justify-self:end}.home-start .hero h1{font-size:34px}}
 .flow-page>main:not(.flow-shell){max-height:100dvh;box-sizing:border-box;font-size:clamp(15px,2.3vh,22px)!important;margin:8px auto!important;padding:12px!important}

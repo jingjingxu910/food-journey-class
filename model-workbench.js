@@ -564,7 +564,7 @@ function showSavedTransition(record) {
   studentView.hidden = true;
   transitionPanel.hidden = false;
   if (!record.v2?.completedAt || (params.get('review')==='1' && params.get('phase')==='v1')) {
-    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已提交</p><h1>初始想法已提交</h1>${record.pendingSync ? '<p>已保存在本机，暂未传给老师。</p>' : ''}<div class="saved-model-preview">${miniModel(record.v1, "已保存模型")}</div><p>请等待老师开启下一项活动。</p>`;
+    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已提交</p><h1>初始想法已提交</h1>${record.pendingSync ? '<p>已保存在本机，暂未传给老师。</p>' : ''}<div class="saved-model-preview saved-v1-preview">${miniModel(record.v1, "已保存模型")}</div><p>请等待老师开启下一项活动。</p>`;
     addSyncRetry(record);
     return;
   }
@@ -775,10 +775,9 @@ async function clearAllClassData() {
   const status = document.querySelector("#clear-data-status");
   const resetId = `reset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   let localCleared = false;
-  status.hidden = false;
+  status.hidden = true;
   button.disabled = true;
   button.textContent = "正在清除…";
-  status.textContent = "正在清除当前浏览器记录…";
   try {
     await updateLocalLessonRecords(() => true);
     localCleared = true;
@@ -791,7 +790,6 @@ async function clearAllClassData() {
     localStorage.setItem(LOCAL_CLEAR_SIGNAL_KEY, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`);
   } catch {}
   renderDashboard([]);
-  status.textContent = "本机记录已清除，正在开启新一轮…";
   try {
     const database = await initializeCloud();
     const result = await database.collection(CLOUD_COLLECTION).doc("class-reset").set({ id: "class-reset", resetId, updatedAt: Date.now() });
@@ -801,10 +799,11 @@ async function clearAllClassData() {
     activeResetId = resetId;
     renderDashboard([]);
     await refreshDashboard();
-    status.textContent = "新一轮已开启，旧记录已从教师端隐藏。";
-    window.alert(`本机记录${localCleared ? "已" : "未能完全"}清除，新一轮已开启。学生设备联网后会清除本机旧记录；云端旧文档仍保留，但不会显示在本轮教师看板中。`);
+    status.textContent = "";
+    status.hidden = true;
   } catch (error) {
     console.error("清除课堂记录失败", error);
+    status.hidden = false;
     status.textContent = localCleared ? "本机记录已清除；云端清除未完成。" : "本机和云端清除均未完成。";
     window.alert(localCleared
       ? "本机浏览器记录已清除；云端连接失败，因此平板等其他设备的数据尚未清除。联网后请再点一次清除。"

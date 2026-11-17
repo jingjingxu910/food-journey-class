@@ -361,7 +361,7 @@ function setupTeacher(){
 async function setupStudent(){
  const root=document.querySelector('#student-evaluation');
  let record,levels=[0,0,0],locked=false,loading=false,displayedCommand=null;
- const header=el('header',undefined,'ev-heading');header.append(el('span','第 '+groupId+' 组'),el('span','我们的成长花园 🌿'),button('全屏',()=>window.requestLessonFullscreen?.(),'student-fullscreen'));
+ const header=el('header',undefined,'ev-heading');header.append(el('span','我们的成长花园 🌿'),el('span','第 '+groupId+' 组'),button('全屏',()=>window.requestLessonFullscreen?.(),'student-fullscreen'));
  const title=el('h1','今天，我们闪闪发光！'),subtitle=el('p','一起商量，给自己的表现点亮星星。','self-hint');
  const form=el('form',undefined,'self-panel'),status=el('p','','ev-status'),awardArea=el('section',undefined,'student-award');
  const rows=[];

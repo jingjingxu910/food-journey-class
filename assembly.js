@@ -1,6 +1,8 @@
 import { groupId, currentRecord, saveRecord, submitRecord, homeUrl, isPhotoPreview } from './student-data.js?v=20261116-tablet-fixes';
 import { readDocument } from './evaluation-data.js?v=award-journey-evidence';
 import { miniModel } from './model-preview.js';
+import { assemblyHints } from './assembly-hints.js';
+import { bindSproutDrag, positionSproutBubble } from './sprout-controls.js';
 const $=(selector)=>document.querySelector(selector);
 $('#group-label').textContent=`第 ${groupId} 组`;
 $('#back-link').href=homeUrl();
@@ -12,6 +14,44 @@ const reference=$('#assembly-model');
 const photo=$('#photo-preview');
 const previewButton=$('#toggle-preview');
 const reviewing=new URLSearchParams(location.search).get('review')==='1';
+
+if (!reviewing) {
+  const guide = $('.sprout-guide');
+  const hintButton = $('#show-hint');
+  const bubble = $('#hint-bubble');
+  let previous = 0;
+  let voice;
+  function hideHint() {
+    voice?.pause();
+    bubble.hidden = true;
+    $('#hint-label').textContent = '点我看提示';
+  }
+  function showHint(index) {
+    previous = index;
+    positionSproutBubble(guide, hintButton);
+    $('#prompt').textContent = assemblyHints[index];
+    bubble.hidden = false;
+    hintButton.dataset.pose = String(index % 3);
+    $('#hint-label').textContent = '换个提示';
+    voice ??= new Audio();
+    voice.pause();
+    voice.src = './assets/audio/assembly/' + (index + 1) + '.mp3';
+    void voice.play().catch(() => {});
+  }
+  function revealSprout() {
+    if (!guide.hidden || document.querySelector('.student-guide[open]')) return;
+    guide.hidden = false;
+    showHint(0);
+  }
+  bindSproutDrag(guide, hintButton, hideHint, () => {
+    const choices = [1,2,3].filter(index => index !== previous);
+    showHint(choices[Math.floor(Math.random() * choices.length)]);
+  });
+  $('#close-hint').onclick = () => { hideHint(); hintButton.focus(); };
+  document.addEventListener('student-guide-closed', revealSprout);
+  if (!window.parent.lessonShell || typeof window.HTMLDialogElement?.prototype.showModal !== 'function') revealSprout();
+  window.addEventListener('pagehide', hideHint);
+}
 
 function renderFrame(){
   const cameraOpen=Boolean(stream);

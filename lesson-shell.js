@@ -1,4 +1,4 @@
-import {installStudentGuide} from './student-guide.js?v=forum-medals';
+import {installStudentGuide} from './student-guide.js?v=classroom-reading';
 
 window.lessonShell = true;
 // The award page can stay open without loading any other lesson scripts.

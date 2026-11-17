@@ -9,6 +9,11 @@
   font: 700 14px/1.3 "Microsoft YaHei", sans-serif;
   cursor: pointer;
 }
+[data-guide-size] #organ-size-controls[hidden] { display: flex !important; gap: 8px; }
+.model-topbar .model-identity { margin-inline-start: auto; }
+.model-topbar .model-identity strong { background: transparent; color: inherit; }
+.evaluation-page:not(.award-mode) .ev-heading { justify-content: flex-end; gap: 12px; }
+.evaluation-page:not(.award-mode) .ev-heading > span:first-child { margin-inline-end: auto; }
 .student-guide {
   position: fixed;
   inset: 0;

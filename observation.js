@@ -100,7 +100,7 @@ function renderList(){
  const columns=$('#camera-stage').clientWidth>=600?6:4;$('#organ-list').style.gridTemplateColumns=`repeat(${columns},minmax(0,1fr))`;$('#organ-list').style.gridTemplateRows=`repeat(${Math.max(1,Math.ceil(seen.length/columns))},minmax(0,1fr))`;const trayHeight=Math.min(Math.ceil(seen.length/columns)*44,$('#camera-stage').clientHeight*.24);$('.observe-panel').style.height=`${trayHeight}px`;$('#camera-stage').style.setProperty('--ar-tray-height',`${trayHeight}px`);$('#organ-list').replaceChildren(...seen.map(id=>{const o=organs.find(o=>o.id===id);if(!o)return document.createElement('span');const b=document.createElement('button');b.type='button';b.className='is-seen';b.innerHTML=`<img src="assets/models/ar-thumbnails/${id}.png" alt=""><span>${o.name}</span>`;b.onclick=()=>selectOrgan(id);return b;}));
 }
 function selectOrgan(id){
- if(!record)return;closeSelected();selected=id;selectedAt=performance.now();
+ if(!record)return;$('#ar-tap-tip').hidden=true;closeSelected();selected=id;selectedAt=performance.now();
  observation.views.push({organId:id,at:Date.now(),durationMs:0});observation.views=observation.views.slice(-120);
  const o=organs.find(o=>o.id===id);if(!o)return;connected?.select(id);$('.observe-panel').hidden=false;$('#organ-detail').hidden=false;
  $('#organ-detail').innerHTML=`<p class="organ-question">${o.question}</p>${["mouth","nasal-cavity","trachea","right-lung","left-lung","pharynx","liver","pancreas","gallbladder","heart","submandibular","left-kidney","right-kidney","spleen","bladder"].includes(id)?"":`<img src="${asset(id,'png')}" alt="${o.name}整体结构">`}<strong>${o.name}</strong><p>${o.note}</p>`;
@@ -176,6 +176,7 @@ async function sendFrame(now){
 function trackingHold(){
  return Math.min(1200,Math.max(650,interval+meanCost*2+100));
 }
+let showedOrganTip=false;
 function paint(now){
  if(!running)return;frame=requestAnimationFrame(paint);if(hidden||now-lastPaint<30)return;
  const video=$('#camera-video'),stage=$('#camera-stage'),age=now-lastPose;motion.update(video,now);
@@ -185,12 +186,14 @@ function paint(now){
  if(targets&&!visible){targets=null;tracker.reset();displayed.clear();}
  const currentTargets=targets?Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,{...p,x:p.x+(coherent&&motion.reliable?motion.x-targetMotion.x:0),y:p.y+(coherent&&motion.reliable?motion.y-targetMotion.y:0)}])):null;
  setCameraFraming(!visible && !dialogOpen);
- if(visible){$('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
+ if(visible){
+  if(!showedOrganTip&&!dialogOpen){showedOrganTip=true;$('#ar-tap-tip').hidden=false;}
+  $('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
   for(const [id,b]of buttons){const point=currentTargets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
    if(prior)for(const key of ['x','y','w','h','angle'])next[key]=prior[key]+(next[key]-prior[key])*alpha;
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
   }
- }else{connected?.update(null);updateLinks();$('#ar-organs').hidden=true;if(lastPose&&!targets)$('#camera-status').textContent='请正对镜头，让脸、双肩和裤腰两侧进入画面';}
+ }else{connected?.update(null);updateLinks();$('#ar-organs').hidden=true;$('#ar-tap-tip').hidden=true;if(lastPose&&!targets)$('#camera-status').textContent='请正对镜头，让脸、双肩和裤腰两侧进入画面';}
  lastPaint=now;if(busy && now-lastSent>15000){stopCamera();$('#camera-status').textContent='识别暂时没有响应，请重新开启相机';return;}
  lastPaint=now;if(now-lastSent>=interval)void sendFrame(now);
 }
@@ -198,7 +201,7 @@ function setCameraFraming(show){
  const guide=$('#camera-framing');
  if(guide.hidden===show)guide.hidden=!show;
 }
-function stopCamera(){setCameraFraming(false);connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();motion.reset();targetMotion=null;$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
+function stopCamera(){showedOrganTip=false;$('#ar-tap-tip').hidden=true;setCameraFraming(false);connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();motion.reset();targetMotion=null;$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
 async function startCamera(){
  if(starting||running||!record)return;starting=true;startupController=new AbortController();$('#cancel-camera').hidden=false;$('#start-camera').disabled=true;
  try{$('#camera-status').textContent='正在开启后置相机…';if(!navigator.mediaDevices?.getUserMedia)throw new Error('请使用支持网页相机的浏览器，并通过 HTTPS 打开课件');
