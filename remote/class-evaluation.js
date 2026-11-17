@@ -1,11 +1,12 @@
+import {makeAutomaticStarsButton} from '../teacher-auto-stars.js';
 import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from '../student-data.js?v=20261116-tablet-fixes';
-import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from '../evaluation-data.js?v=automatic-stars';
+import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from '../evaluation-data.js?v=classroom-remote';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
 const symbols=['🔎','🤝','🌱'];
 import {discussionQuestions} from '../discussion-content.js';
-import {forumSlide} from '../forum-content.js?v=larger-hints';
+import {forumLink,forumSlide} from '../forum-content.js?v=classroom-reading';
 const discussion=discussionQuestions.map(item=>item.question);
 const lessonSlides=new Set(['课题封面','课堂研讨','小论坛']);
 export function certificate(entry){
@@ -33,6 +34,7 @@ function setupTeacher(){
  const requestedStage=new URLSearchParams(location.search).get('stage');
  let records=[],state={resetId:null,groups:{}},ready=false,dirty=false,version=0,timer,saving=null,busy=false,stage=requestedStage==='awards'?'专属奖状':'课题封面';
  const slide=el('section',undefined,'lesson-slide');
+ let remoteForum;
  slide.setAttribute('aria-label','课堂投屏');
  const summary=document.querySelector('#teacher-summary');
  const heading=host.querySelector('.teacher-model-heading');
@@ -80,6 +82,7 @@ function setupTeacher(){
  host.insertBefore(tabs,heading);
  host.insertBefore(slide,summary);
  function showStage(name){
+   if(stage!==name) document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
    stage=name;
    galleryPage=0;
    render();
@@ -124,6 +127,10 @@ function setupTeacher(){
  }
  async function choose(name){
    if(busy)return;
+   if(remoteForum!==undefined){
+     remoteForum=undefined;
+     delete slide.dataset.page;
+   }
    if(name==='小论坛')forumStatus.textContent='';
    showStage(name);
 
@@ -153,10 +160,22 @@ function setupTeacher(){
    tab.title=name==='课题封面'?'展示封面并带领学生回到课堂初始页':'展示并带领学生进入'+name;
    tabs.append(tab);
  });
- tabs.append(fullscreen);
+ const autoStars=makeAutomaticStarsButton({el,button,symbols,readState:()=>({ready,resetId:state.resetId,records})});
+ tabs.append(autoStars,fullscreen);
  function renderSlide(){
+   slide.classList.toggle('remote-forum-direct',stage==='小论坛'&&remoteForum!==undefined);
    if(stage==='小论坛'){
      slide.dataset.page=stage;
+     if(remoteForum!==undefined){
+       const title=el('h1','小论坛');
+       title.tabIndex=-1;
+       const frame=el('iframe');
+       frame.title='各组发帖和回复';
+       frame.allowFullscreen=true;
+       frame.src=forumLink('',{resetId:remoteForum,teacher:true}).href;
+       slide.replaceChildren(title,frame);
+       return;
+     }
      slide.replaceChildren(...forumSlide(ready?state.resetId:undefined),forumStatus);
      return;
    }
@@ -201,7 +220,7 @@ function setupTeacher(){
    window.dispatchEvent(new CustomEvent('teacher-live-phase',{detail:window.currentTeacherLivePhase}));
    renderSharing();
    [...tabs.children].forEach(b=>{
-     if(b===fullscreen||b===sharingControl)return;
+     if(b===autoStars||b===fullscreen||b===sharingControl)return;
      const current=b.textContent===stage;
      b.setAttribute('aria-selected',String(current));
      if(current)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');
@@ -306,9 +325,13 @@ function setupTeacher(){
  window.addEventListener('remote-display-state',event=>{
    const remote=event.detail;
    const previous=stage;
+   const forumRound=remote.stage==='小论坛'?(remote.resetId||null):undefined;
+   const forumChanged=forumRound!==remoteForum;
+   remoteForum=forumRound;
+   document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
    discussionIndex=remote.question;
    if(remote.stage!==stage)showStage(remote.stage);
-   else if(stage==='课堂研讨')renderSlide();
+   else if(stage==='课堂研讨'||forumChanged)renderSlide();
    if(['实体拼装','小组自评','专属奖状'].includes(stage)){
      const id=remote.group||remote.page*6+1;
      if(panel.querySelector('[data-remote-group="'+id+'"]')===null&&id>0){galleryPage=Math.floor((id-1)/Number(panel.dataset.pageSize||6));render();}

@@ -72,6 +72,7 @@ async function check(force=false){
      }
      return;
    }
+   if(command.phase==='forum')localStorage.setItem('lesson-forum-open-round',JSON.stringify(known));
    if(url.pathname.endsWith('/index.html')){
      frame.contentWindow.dispatchEvent(new frame.contentWindow.CustomEvent('class-command',{detail:command}));
    }

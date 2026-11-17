@@ -1,5 +1,6 @@
+import {makeAutomaticStarsButton} from './teacher-auto-stars.js';
 import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js?v=20261116-tablet-fixes';
-import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards,automaticStars,readForumStarGroups} from './evaluation-data.js?v=automatic-stars';
+import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=classroom-remote';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
@@ -71,13 +72,7 @@ function setupTeacher(){
  let discussionIndex=0;
  const status=el('span','连接课堂中…','ev-status');
  const header=el('div',undefined,'ev-star-heading');
- const autoDialog=el('dialog',undefined,'ev-auto-stars');
- autoDialog.setAttribute('aria-label','自动加星明细');
- const autoBody=el('div');
- autoDialog.append(el('h2','自动加星明细'),autoBody,button('关闭',()=>autoDialog.close()));
- document.body.append(autoDialog);
- header.append(el('b','点一下，送一颗星'),el('span','🔎 观察   🤝 合作   🌱 坚持'),status,
-   button('自动星明细',showAutomaticStars));
+ header.append(el('b','点一下，送一颗星'),el('span','🔎 观察   🤝 合作   🌱 坚持'),status);
  const rows=el('div',undefined,'ev-star-groups');dock.append(header,rows);const galleryPages=el('nav',undefined,'gallery-pages live-pages');galleryPages.hidden=true;galleryPages.setAttribute('aria-label','小组分页');
  host.append(galleryPages,panel,dock);
  let galleryPage=0;
@@ -86,6 +81,7 @@ function setupTeacher(){
  host.insertBefore(tabs,heading);
  host.insertBefore(slide,summary);
  function showStage(name){
+   if(stage!==name) document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
    stage=name;
    galleryPage=0;
    render();
@@ -93,34 +89,6 @@ function setupTeacher(){
    if(lessonSlides.has(stage))slide.querySelector('h1').focus({preventScroll:true});
  }
  function entry(id){return state.groups[id]||={stars:[0,0,0]};}
- async function showAutomaticStars(){
-   if(autoDialog.open)return;
-   if(!ready){
-     autoBody.replaceChildren(el('p','请等工作台连接课堂后再查看。'));
-     autoDialog.showModal();
-     return;
-   }
-   const round=state.resetId;
-   autoBody.replaceChildren(el('p','正在读取本轮记录…'));
-   autoDialog.showModal();
-   const [submissions,forum]=await Promise.allSettled([submittedRecords(round),readForumStarGroups(round)]);
-   if(!autoDialog.open)return;
-   if(round!==state.resetId){autoBody.replaceChildren(el('p','课堂已换轮次，请关闭后重新查看。'));return;}
-   const current=submissions.status==='fulfilled'?submissions.value:records;
-   const replies=forum.status==='fulfilled'?forum.value:new Set();
-   const table=el('div',undefined,'ev-auto-groups');
-   for(let id=1;id<=12;id++){
-     const record=current.find(item=>Number(item.groupId)===id);
-     const {stars,reasons}=automaticStars(record,replies.has(id));
-     const group=el('section');
-     group.append(el('h3','第 '+id+' 组'),el('p',stars.map((count,index)=>symbols[index]+' '+count).join('　')));
-     for(const {count,reason} of reasons)group.append(el('p',reason+' · +'+count+' 星'));
-     if(!reasons.length)group.append(el('p','暂时没有符合条件的记录。'));
-     table.append(group);
-   }
-   autoBody.replaceChildren(table);
-   if(submissions.status==='rejected'||forum.status==='rejected')autoBody.prepend(el('p','部分课堂记录暂不可用，请稍后重查。'));
- }
  async function flush(){
    clearTimeout(timer);
    if(saving)await saving;
@@ -187,7 +155,8 @@ function setupTeacher(){
    tab.title=name==='课题封面'?'展示封面并带领学生回到课堂初始页':'展示并带领学生进入'+name;
    tabs.append(tab);
  });
- tabs.append(fullscreen);
+ const autoStars=makeAutomaticStarsButton({el,button,symbols,readState:()=>({ready,resetId:state.resetId,records})});
+ tabs.append(autoStars,fullscreen);
  function renderSlide(){
    if(stage==='小论坛'){
      slide.dataset.page=stage;
@@ -235,7 +204,7 @@ function setupTeacher(){
    window.dispatchEvent(new CustomEvent('teacher-live-phase',{detail:window.currentTeacherLivePhase}));
    renderSharing();
    [...tabs.children].forEach(b=>{
-     if(b===fullscreen||b===sharingControl)return;
+     if(b===autoStars||b===fullscreen||b===sharingControl)return;
      const current=b.textContent===stage;
      b.setAttribute('aria-selected',String(current));
      if(current)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');

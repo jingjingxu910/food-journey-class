@@ -1,5 +1,5 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
-import {stages,phases,round,readRemote,writeRemote} from './channel.js?v=mini-forum';
+import {stages,phases,round,readRemote,writeRemote} from './channel.js?v=classroom-remote';
 import {readDocument} from '../evaluation-data.js?v=20261113-awards';
 const stopText='跟随 iPad';
 const toolbar=document.createElement('div');
@@ -9,6 +9,7 @@ for(const button of [follow,fullscreen]){button.type='button';button.className='
 follow.textContent=stopText;
 fullscreen.textContent='全屏';
 let lease, generation=0, busy=false, lastApplied='', lastRenewal=0;
+let resetMismatchAt=0;
 function mount(){
  const tabs=document.querySelector('.ev-tabs');
  if(tabs){tabs.append(toolbar);return true;}
@@ -60,12 +61,21 @@ async function check(){
   if(current.session!==active.session){await stop();return;}
   if(Date.now()-lastRenewal>10000){
    // Lease renewals use their own document, so they cannot overwrite a new display command.
-   if((await round())!==active.resetId){await stop();return;}
+   const liveRound=await round();
+   if(liveRound!==active.resetId){
+    if(liveRound&&current.resetId===liveRound)active.resetId=liveRound;
+    else{
+     resetMismatchAt||=Date.now();
+     if(Date.now()-resetMismatchAt>5000)await stop();
+     return;
+    }
+   }
+   resetMismatchAt=0;
    if(lease!==active)return;
    await writeLease(active,Date.now()+30000);
    lastRenewal=Date.now();
   }
-  const key=JSON.stringify([current.stage,current.page,current.group,current.question]);
+  const key=JSON.stringify([current.resetId,current.stage,current.page,current.group,current.question,current.displayRevision]);
   if(key!==lastApplied){
    window.dispatchEvent(new CustomEvent('remote-display-state',{detail:current}));
    lastApplied=key;

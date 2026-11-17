@@ -21,6 +21,9 @@ export async function sendClassCommand(resetId, phase, commandId, details={}) {
   const db=await cloudDb();
   const result=await db.collection('food-journey-groups').doc('class-control').set({resetId,phase,commandId,...(phase==='discussion'?{discussionIndex:Math.max(0,Math.min(2,Number(details.discussionIndex)||0))}:{})});
   if(result?.code||!(result?.updated>0||result?.upsertedId||result?.id))throw new Error('课堂指令未发送，请再点一次。');
+  if(phase==='forum'){
+    void db.collection('food-journey-groups').doc('class-forum-open').set({resetId,opened:true}).catch(()=>{});
+  }
 }
 export async function submittedRecords(resetId) {
   const groups=await Promise.all(Array.from({length:12},async(_,index)=>{
@@ -97,20 +100,32 @@ export function automaticStars(record={}, forumReply=false) {
   return {stars,reasons};
 }
 
+export async function* forumPages(query) {
+  const pageSize=50;
+  for(let offset=0;;offset+=pageSize){
+    const result=await query.orderBy('_id','asc').skip(offset).limit(pageSize).get();
+    if(result?.code)throw Error(result.message||'暂时无法读取论坛记录');
+    const entries=result.data;
+    yield entries;
+    if(entries.length<pageSize)return;
+  }
+}
+
 export async function readForumStarGroups(resetId) {
   const db=await cloudDb();
   const collection=db.collection('food-journey-groups');
   const prefix='forum-'+encodeURIComponent(resetId||'initial')+'-';
   const groups=await Promise.all(Array.from({length:12},async(_,i)=>{
     const id=i+1;
-    const result=await collection.where({kind:'lesson-forum',resetId:resetId||null,groupId:id}).limit(40).get();
-    if(result?.code)throw Error(result.message||'暂时无法读取论坛记录');
-    const replied=result.data.some(entry=>{
-      if(entry.removedAt||!entry.forumKey?.startsWith(prefix)||typeof entry.values?.message!=='string'||!entry.values.message.trim())return false;
-      const match=/^(breathing|movement|homework)-([1-9]|1[0-2])$/.exec(entry.forumKey.slice(prefix.length));
-      return Boolean(match&&Number(match[2])!==id);
-    });
-    return replied?id:null;
+    for await(const entries of forumPages(collection.where({kind:'lesson-forum',resetId:resetId||null,groupId:id}))){
+      const replied=entries.some(entry=>{
+        if(entry.removedAt||!entry.forumKey?.startsWith(prefix)||typeof entry.values?.message!=='string'||!entry.values.message.trim())return false;
+        const match=/^(breathing|movement|homework)-([1-9]|1[0-2])$/.exec(entry.forumKey.slice(prefix.length));
+        return Boolean(match&&Number(match[2])!==id);
+      });
+      if(replied)return id;
+    }
+    return null;
   }));
   return new Set(groups.filter(Boolean));
 }

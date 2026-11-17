@@ -1,9 +1,10 @@
 import { currentRecord } from "./student-data.js?v=20261116-tablet-fixes";
+import { readDocument } from "./evaluation-data.js?v=classroom-remote";
 
 const appVersion = "0.3.0";
 
 const groupId = Number(new URLSearchParams(location.search).get("group"));
-const phases = ['v1','observation','v2','assembly','journey','evaluation'];
+const phases = ['v1','observation','v2','assembly','journey','evaluation','forum'];
 const cards = Array.from(document.querySelectorAll('.module-card[data-step]'), card => {
   const action = card.querySelector('.module-action');
   return {card, action, startLabel:action.textContent, href:card.href, phase:phases[Number(card.dataset.step)]};
@@ -30,13 +31,19 @@ function showProgress() {
   for (const {card, action, startLabel, href, phase} of cards) {
     const complete = currentRound && Boolean(record?.[phase]?.completedAt);
     const open = command?.phase === phase;
-    card.hidden = !complete && !open;
+    const round = command?.resetId ?? record?.resetId ?? null;
+    const openedForum = phase==='forum' && localStorage.getItem('lesson-forum-open-round')===JSON.stringify(round);
+    card.hidden = !complete && !open && !openedForum;
     card.classList.toggle('module-card--active', open && !complete);
     card.classList.toggle('module-card--complete', complete);
     action.textContent = complete ? '已完成 · 查看' : startLabel;
     const url = new URL(href);
     if (groupId >= 1 && groupId <= 12 && Number.isInteger(groupId)) url.searchParams.set('group',groupId);
     if (complete) {
+      url.searchParams.set('review','1');
+      if (command?.commandId != null) url.searchParams.set('reviewCommand',command.commandId);
+    } else if (openedForum || (phase==='forum' && open)) {
+      url.searchParams.set('round',round||'');
       url.searchParams.set('review','1');
       if (command?.commandId != null) url.searchParams.set('reviewCommand',command.commandId);
     } else if (open) {
@@ -50,7 +57,15 @@ function showProgress() {
 }
 
 async function refreshProgress() {
-  try { record = await currentRecord(); showProgress(); }
+  try {
+    record = await currentRecord();
+    showProgress();
+    const forum=await readDocument('class-forum-open');
+    if(forum.opened&&(forum.resetId||null)===(record.resetId||null)){
+      localStorage.setItem('lesson-forum-open-round',JSON.stringify(record.resetId||null));
+      showProgress();
+    }
+  }
   catch (error) { console.warn('本机进度暂时无法读取', error); }
 }
 

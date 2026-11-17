@@ -38,6 +38,9 @@ body.evaluation-teacher.lesson-presenting{padding-bottom:0!important}
 .forum-slide-topics strong{display:block;color:#176459}
 .forum-stage-status{margin:0;color:#176459}
 .forum-stage-status:empty{display:none}
+.lesson-slide.remote-forum-direct{padding:0;gap:0;min-height:0}
+.remote-forum-direct h1{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.remote-forum-direct iframe{display:block;width:100%;height:max(480px,calc(100dvh - 155px));border:0}
 .ev-auto-stars{box-sizing:border-box;width:min(780px,calc(100% - 24px));max-height:85vh;padding:18px;color:#214a43;border:1px solid #bfdacf;border-radius:16px;background:#fbfffb}
 .ev-auto-stars::backdrop{background:#193b38a8}
 .ev-auto-stars>button{margin-top:12px}

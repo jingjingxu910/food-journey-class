@@ -1,5 +1,6 @@
 import './live-sync.js?v=20261118-classroom-review';
 import {organSegments} from './ar-media-segments.js';
+import {arGuideLines} from './ar-guide-lines.js';
 const isPreview=new URLSearchParams(location.search).get('preview')==='1';
 import {CameraMotion} from './ar-motion.js';
 import {BodyTracker,mapOverlay} from './ar-tracking.js';
@@ -100,7 +101,7 @@ function renderList(){
  const columns=$('#camera-stage').clientWidth>=600?6:4;$('#organ-list').style.gridTemplateColumns=`repeat(${columns},minmax(0,1fr))`;$('#organ-list').style.gridTemplateRows=`repeat(${Math.max(1,Math.ceil(seen.length/columns))},minmax(0,1fr))`;const trayHeight=Math.min(Math.ceil(seen.length/columns)*44,$('#camera-stage').clientHeight*.24);$('.observe-panel').style.height=`${trayHeight}px`;$('#camera-stage').style.setProperty('--ar-tray-height',`${trayHeight}px`);$('#organ-list').replaceChildren(...seen.map(id=>{const o=organs.find(o=>o.id===id);if(!o)return document.createElement('span');const b=document.createElement('button');b.type='button';b.className='is-seen';b.innerHTML=`<img src="assets/models/ar-thumbnails/${id}.png" alt=""><span>${o.name}</span>`;b.onclick=()=>selectOrgan(id);return b;}));
 }
 function selectOrgan(id){
- if(!record)return;$('#ar-tap-tip').hidden=true;closeSelected();selected=id;selectedAt=performance.now();
+ if(!record)return;hideArTip();closeSelected();selected=id;selectedAt=performance.now();
  observation.views.push({organId:id,at:Date.now(),durationMs:0});observation.views=observation.views.slice(-120);
  const o=organs.find(o=>o.id===id);if(!o)return;connected?.select(id);$('.observe-panel').hidden=false;$('#organ-detail').hidden=false;
  $('#organ-detail').innerHTML=`<p class="organ-question">${o.question}</p>${["mouth","nasal-cavity","trachea","right-lung","left-lung","pharynx","liver","pancreas","gallbladder","heart","submandibular","left-kidney","right-kidney","spleen","bladder"].includes(id)?"":`<img src="${asset(id,'png')}" alt="${o.name}整体结构">`}<strong>${o.name}</strong><p>${o.note}</p>`;
@@ -176,7 +177,75 @@ async function sendFrame(now){
 function trackingHold(){
  return Math.min(1200,Math.max(650,interval+meanCost*2+100));
 }
-let showedOrganTip=false;
+let showedOrganTip=false, finishedFirstVideo=false, lastQuestion;
+const questionIds=Object.keys(arGuideLines).filter(id=>id.startsWith('question-'));
+const tipBuffers=new Map();
+let tapTipContext, tapTipSource, tipVoiceVersion=0, tipVoiceQueue=Promise.resolve();
+function prepareTapTipVoice(){
+ const Context=window.AudioContext||window.webkitAudioContext;
+ if(!Context)return;
+ try{
+  tapTipContext??=new Context();
+  return tapTipContext.resume().catch(()=>{});
+ }catch{}
+}
+function stopTipVoice(){
+ tipVoiceVersion++;
+ tipVoiceQueue=Promise.resolve();
+ tapTipSource?.stop();
+ tapTipSource=null;
+}
+function hideArTip(){
+ stopTipVoice();
+ $('#ar-tap-tip').hidden=true;
+}
+function showArTip(id,queue=false){
+ const tip=$('#ar-tap-tip');
+ tip.dataset.stage=id;
+ tip.querySelector('p').textContent=arGuideLines[id];
+ tip.querySelector('p').hidden=false;
+ tip.hidden=false;
+ $('#ar-tip-trigger').disabled=!finishedFirstVideo;
+ if(!queue)stopTipVoice();
+ const version=tipVoiceVersion;
+ tipVoiceQueue=tipVoiceQueue.then(async()=>{
+   if(version!==tipVoiceVersion||tapTipContext?.state!=='running')return;
+   const path=id==='recognized'?'./assets/audio/ar-tap-tip.mp3':'./assets/audio/ar-guide/'+id+'.mp3';
+   if(!tipBuffers.has(id)){
+     tipBuffers.set(id,fetch(new URL(path,import.meta.url)).then(response=>{
+       if(!response.ok)throw new Error('提示音频未加载');
+       return response.arrayBuffer();
+     }).then(data=>tapTipContext.decodeAudioData(data)));
+   }
+   const buffer=await tipBuffers.get(id);
+   if(version!==tipVoiceVersion)return;
+   await new Promise(resolve=>{
+     const source=tapTipContext.createBufferSource();
+     source.buffer=buffer;
+     source.connect(tapTipContext.destination);
+     tapTipSource=source;
+     source.onended=()=>{
+       if(tapTipSource===source)tapTipSource=null;
+       source.disconnect();
+       resolve();
+     };
+     source.start();
+   });
+ }).catch(()=>tipBuffers.delete(id));
+}
+$('#ar-tip-trigger').onclick=async()=>{
+ if(!finishedFirstVideo)return;
+ await prepareTapTipVoice();
+ if(!finishedFirstVideo)return;
+ const options=questionIds.filter(id=>id!==lastQuestion);
+ lastQuestion=options[Math.floor(Math.random()*options.length)];
+ showArTip(lastQuestion);
+};
+$('#organ-video').addEventListener('ended',()=>{
+ if(!dialogOpen||finishedFirstVideo||$('#organ-media').hidden||$('#organ-video').hidden)return;
+ finishedFirstVideo=true;
+ showArTip('back');
+});
 function paint(now){
  if(!running)return;frame=requestAnimationFrame(paint);if(hidden||now-lastPaint<30)return;
  const video=$('#camera-video'),stage=$('#camera-stage'),age=now-lastPose;motion.update(video,now);
@@ -187,13 +256,13 @@ function paint(now){
  const currentTargets=targets?Object.fromEntries(Object.entries(targets).map(([id,p])=>[id,{...p,x:p.x+(coherent&&motion.reliable?motion.x-targetMotion.x:0),y:p.y+(coherent&&motion.reliable?motion.y-targetMotion.y:0)}])):null;
  setCameraFraming(!visible && !dialogOpen);
  if(visible){
-  if(!showedOrganTip&&!dialogOpen){showedOrganTip=true;$('#ar-tap-tip').hidden=false;}
+  if(!showedOrganTip&&!dialogOpen){showedOrganTip=true;showArTip('recognized',true);}
   $('#ar-organs').hidden=false;connected?.update(mapOverlay(currentTargets.esophagus,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight));updateLinks();const alpha=1-Math.exp(-Math.min(60,now-lastPaint)/38);
   for(const [id,b]of buttons){const point=currentTargets[id];b.hidden=!point;if(!point)continue;const next=mapOverlay(point,stage.clientWidth,stage.clientHeight,video.videoWidth,video.videoHeight),prior=displayed.get(id);
    if(prior)for(const key of ['x','y','w','h','angle'])next[key]=prior[key]+(next[key]-prior[key])*alpha;
    displayed.set(id,next);b.style.width=`${next.w}px`;b.style.height=`${next.h}px`;b.style.transform=`translate3d(${next.x-next.w/2}px,${next.y-next.h/2}px,0) rotate(${next.angle}rad)`;
   }
- }else{connected?.update(null);updateLinks();$('#ar-organs').hidden=true;$('#ar-tap-tip').hidden=true;if(lastPose&&!targets)$('#camera-status').textContent='请正对镜头，让脸、双肩和裤腰两侧进入画面';}
+ }else{connected?.update(null);updateLinks();$('#ar-organs').hidden=true;if(lastPose&&!targets)$('#camera-status').textContent='请正对镜头，让脸、双肩和裤腰两侧进入画面';}
  lastPaint=now;if(busy && now-lastSent>15000){stopCamera();$('#camera-status').textContent='识别暂时没有响应，请重新开启相机';return;}
  lastPaint=now;if(now-lastSent>=interval)void sendFrame(now);
 }
@@ -201,13 +270,14 @@ function setCameraFraming(show){
  const guide=$('#camera-framing');
  if(guide.hidden===show)guide.hidden=!show;
 }
-function stopCamera(){showedOrganTip=false;$('#ar-tap-tip').hidden=true;setCameraFraming(false);connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();motion.reset();targetMotion=null;$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
+function stopCamera(){showedOrganTip=false;finishedFirstVideo=false;lastQuestion=undefined;hideArTip();setCameraFraming(false);connected?.update(null);running=false;cancelAnimationFrame(frame);worker?.terminate();worker=null;workerReady=false;mainDetector?.close();mainDetector=null;stream?.getTracks().forEach(t=>t.stop());stream=null;$('#camera-video').srcObject=null;$('#ar-organs').hidden=true;targets=null;busy=false;tracker.reset();displayed.clear();motion.reset();targetMotion=null;$('#start-camera').disabled=false;$('#start-camera').textContent='开启后置相机';}
 async function startCamera(){
  if(starting||running||!record)return;starting=true;startupController=new AbortController();$('#cancel-camera').hidden=false;$('#start-camera').disabled=true;
+ prepareTapTipVoice();
  try{$('#camera-status').textContent='正在开启后置相机…';if(!navigator.mediaDevices?.getUserMedia)throw new Error('请使用支持网页相机的浏览器，并通过 HTTPS 打开课件');
   stream=await waitStartup(navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{exact:'environment'},width:{ideal:640},height:{ideal:480},frameRate:{ideal:24,max:30}}}),45000,'相机开启等待较久，请检查浏览器相机权限',late=>late.getTracks().forEach(t=>t.stop()));
   if(startupController.signal.aborted){stream.getTracks().forEach(t=>t.stop());throw new DOMException('已取消','AbortError');}
-  $('#camera-video').srcObject=stream;await waitStartup($('#camera-video').play(),15000,'相机画面未就绪，请重新开启');$('#camera-placeholder').hidden=true;setCameraFraming(true);
+  $('#camera-video').srcObject=stream;await waitStartup($('#camera-video').play(),15000,'相机画面未就绪，请重新开启');$('#camera-placeholder').hidden=true;setCameraFraming(true);showArTip('framing');
   $('#camera-status').textContent='正在准备观察…';
   const {preparePoseResources}=await waitStartup(import('./pose-resources.js'),30000,'识别资源程序未加载完成，请检查网络后重试');
   await preparePoseResources(startupController.signal,message=>{$('#camera-status').textContent=message;});
@@ -247,7 +317,7 @@ async function finishObservation(){
 $('#cancel-camera').onclick=()=>{startupController?.abort();stopCamera();$('#camera-status').textContent='已取消开启，下载完成的资源已保留';};
 window.addEventListener('online',()=>{if(observation?.pendingSync)void finishObservation();});
 $('#start-camera').onclick=startCamera;$('#open-local-3d').onclick=()=>{if(!dialogOpen)void openViewer();};$('#close-organ-dialog').onclick=()=>$('#organ-dialog').close();
-$('#organ-dialog').addEventListener('close',()=>{if($('#organ-dialog').open)return;viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;selectedAt=performance.now();tracker.reset();targets=null;});
+$('#organ-dialog').addEventListener('close',()=>{if($('#organ-dialog').open)return;viewerGeneration++;viewerDispose?.();viewerDispose=null;dialogOpen=false;selectedAt=performance.now();tracker.reset();targets=null;if(finishedFirstVideo)$('#ar-tap-tip').hidden=false;});
 document.addEventListener('visibilitychange',()=>{hidden=document.hidden;if(hidden)closeSelected();else{selectedAt=performance.now();targets=null;tracker.reset();}});
 window.addEventListener('pagehide',()=>{connected?.dispose();connected=null;startupController?.abort();closeSelected();clearTimeout(saveTimer);if(record&&!isPreview)void saveRecord(record);stopCamera();stopMedia();viewerDispose?.();});
 async function initialize(){
@@ -255,7 +325,18 @@ async function initialize(){
  let timer;try{record=isPreview?{id:'ar-local-preview',groupId:9,observation:freshObservation()}:await Promise.race([currentRecord(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error('本组记录读取超时')),8000);})]);}finally{clearTimeout(timer);}
  $('#camera-status').textContent='等待开启';$('#start-camera').textContent='开启后置相机';$('#start-camera').onclick=startCamera;observation=record.observation||freshObservation();record.observation=observation;renderList();$('#start-camera').disabled=false;if(observation.completedAt&&!observation.pendingSync){$('#finish-observation').hidden=true;status('观察记录已提交，请等待老师开启下一项活动。');}else {$('#finish-observation').onclick=finishObservation;if(observation.pendingSync){$('#finish-observation').disabled=false;$('#finish-observation').textContent='重新提交观察';}}}
 function initializeOrRetry(){initialize().catch(error=>{status(`记录暂时无法读取：${error.message}`);$('#camera-status').textContent='页面准备未完成，请重试';$('#start-camera').disabled=false;$('#start-camera').textContent='重试准备';$('#start-camera').onclick=initializeOrRetry;});}
-initializeOrRetry();if(isPreview)import('./ar-simulation.js').then(m=>m.startSimulation({mount:$('#anatomy-overlay'),select:selectOrgan,onReady:view=>{connected=view;$('#start-camera').hidden=true;$('#finish-observation').hidden=true;$('#camera-status').textContent='模拟预览 · 正面 / 侧面 / 背面';},onFrame:updateLinks}));
+const framingPreview=isPreview&&['localhost','127.0.0.1','[::1]'].includes(location.hostname)
+ &&new URLSearchParams(location.search).get('framingPreview')==='1';
+if(framingPreview){
+ $('#camera-placeholder').hidden=true;
+ $('#start-camera').hidden=true;
+ $('#finish-observation').hidden=true;
+ $('#camera-status').textContent='本地模拟 · 取景轮廓';
+ setCameraFraming(true);
+}else{
+ initializeOrRetry();
+ if(isPreview)import('./ar-simulation.js').then(m=>m.startSimulation({mount:$('#anatomy-overlay'),select:selectOrgan,onReady:view=>{connected=view;$('#start-camera').hidden=true;$('#finish-observation').hidden=true;$('#camera-status').textContent='模拟预览 · 正面 / 侧面 / 背面';},onFrame:updateLinks}));
+}
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./ar-assets-sw.js').catch(error=>console.info('Resource cache unavailable',error));
 
 document.querySelector('#show-respiratory').onchange=e=>connected?.respiratory(e.target.checked);

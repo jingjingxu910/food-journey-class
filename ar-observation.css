@@ -6,8 +6,13 @@
 .ar-organ.is-selected{outline:none}.ar-organ.is-selected img{filter:drop-shadow(0 0 5px #fff7a2)}
 .camera-stage video{position:absolute;inset:0;display:block}
 .camera-framing{position:absolute;inset:0;z-index:3;display:grid;grid-template-rows:minmax(0,1fr) auto;justify-items:center;gap:8px;padding:clamp(10px,3%,24px);pointer-events:none}
-.camera-framing-outline{align-self:center;width:min(65%,340px);height:100%;object-fit:contain;mix-blend-mode:multiply}
-#ar-tap-tip{position:absolute;z-index:4;pointer-events:none;top:12px;left:50%;transform:translateX(-50%);width:max-content;max-width:90%;margin:0;padding:8px 14px;border-radius:14px;background:#fff8dd;color:#20483d;font-weight:750;text-align:center}
+.camera-framing-outline{align-self:center;width:min(98%,680px);height:100%;min-height:0;object-fit:contain;transform:scale(1.2);transform-origin:center 35%}
+#ar-tap-tip{position:absolute;z-index:9;pointer-events:none;left:12px;bottom:10px;width:min(94%,700px);display:flex;align-items:center;gap:10px}
+#ar-tap-tip[data-stage="framing"],#ar-tap-tip[data-stage="recognized"]{top:8px;bottom:auto}
+#ar-tap-tip p{margin:0;padding:10px 16px;border:2px solid #f2d89a;border-radius:20px;background:#fff8ed;color:#20483d;font-size:clamp(20px,3.7vw,34px);font-weight:800;box-shadow:0 4px 18px #13383262}
+#ar-tip-trigger{width:clamp(66px,14vw,124px);padding:0;border:0;background:none;flex:none;pointer-events:auto;cursor:pointer}
+#ar-tip-trigger:disabled{opacity:1;pointer-events:none}
+#ar-tip-trigger span{display:block;width:100%;aspect-ratio:1;background:url("assets/journey/companion-pink-poses.png") right top/300% 200% no-repeat;filter:drop-shadow(0 4px 5px #183a4055)}
 .camera-framing p{margin:0;padding:5px 12px;border-radius:12px;background:#19353be8;color:#fff9d9;text-align:center;font-size:clamp(14px,2.4vw,20px);font-weight:700}
 .camera-stage{aspect-ratio:auto}.camera-actions{flex-shrink:0;min-height:54px}
 .camera-actions span{font-size:15px;line-height:1.35}

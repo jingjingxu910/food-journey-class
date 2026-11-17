@@ -289,7 +289,11 @@ function setup(){
   const remote=event.detail;
   const nextFocus=remote.group||null;
   const nextPage=Math.floor(((nextFocus||remote.page*6+1)-1)/pageSize);
-  if(nextFocus===focus&&nextPage===page)return;
+  if(nextFocus){
+   const key=phase+':'+nextFocus;
+   unread.delete(key);
+   flashes.delete(key);
+  }
   if(!nextFocus&&dialog.open)dialog.close();
   focus=nextFocus;
   page=nextPage;
@@ -306,7 +310,7 @@ function setup(){
   initial=false;render();if(added.length)setTimeout(render,3400);void control();
  });
  wall.addEventListener('click',e=>{const pager=e.target.closest('[data-page]');if(pager){page=Number(pager.dataset.page);focus=null;render();void control();return;}const card=e.target.closest('[data-group]');if(card){focus=Number(card.dataset.group);unread.delete(phase+':'+focus);render();dialog.showModal();void control();}});
- dialog.querySelector('header button').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{focus=null;window.speechSynthesis?.cancel();render();void control();});
+ dialog.querySelector('header button').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{if(dialog.open)return;focus=null;window.speechSynthesis?.cancel();render();void control();});
  window.addEventListener('resize',()=>{render();void control();});
  document.querySelector('#refresh-dashboard')?.addEventListener('click',()=>{if(phase&&!demo){void control(true);void subscribe();}});
  const previewPoll=setInterval(()=>{if(!document.hidden&&!watcher&&phase&&!demo)void subscribe();},2000);

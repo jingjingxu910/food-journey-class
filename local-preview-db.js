@@ -9,10 +9,21 @@ bus?.addEventListener('message',notify);
 if(isLocalPreview)window.addEventListener('storage',e=>{if(e.key?.startsWith(prefix))notify();});
 function read(name){const found=[];for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i);if(!key.startsWith(prefix+name+':'))continue;try{found.push(JSON.parse(localStorage.getItem(key)));}catch{}}return found;}
 function matches(doc,query){return Object.entries(query||{}).every(([key,value])=>value?.$in?value.$in.includes(doc[key]):doc[key]===value);}
-function reference(name,query={},id=null){
- const docs=()=>read(name).filter(d=>(id===null||d._id===id)&&matches(d,query));
+function reference(name,query={},id=null,options={}){
+ const docs=()=>{
+  const entries=read(name).filter(d=>(id===null||d._id===id)&&matches(d,query));
+  if(options.field){
+   const field=options.field, order=options.direction==='desc'?-1:1;
+   entries.sort((a,b)=>order*(a[field]<b[field]?-1:a[field]>b[field]?1:0));
+  }
+  const offset=options.offset||0;
+  return entries.slice(offset,offset+(options.size??entries.length));
+ };
  const ref={
-  doc:next=>reference(name,{},next),where:next=>reference(name,{...query,...next}),limit:()=>ref,orderBy:()=>ref,
+  doc:next=>reference(name,{},next),where:next=>reference(name,{...query,...next},id,options),
+  limit:size=>reference(name,query,id,{...options,size}),
+  skip:offset=>reference(name,query,id,{...options,offset}),
+  orderBy:(field,direction)=>reference(name,query,id,{...options,field,direction}),
   get:async()=>({data:clone(docs())}),
   async set(value){if(id===null)throw Error('需要文档编号');localStorage.setItem(prefix+name+':'+id,JSON.stringify({...clone(value),_id:id}));notify();bus?.postMessage({changed:id});return {updated:1,id};},
   async update(value){return ref.set({...docs()[0],...value});},

@@ -1,7 +1,7 @@
 import {bindSproutDrag,positionSproutBubble} from './sprout-controls.js';
 import {createOrganReader} from './organ-reader.js';
 import {cloudDb, groupId, readOptionalDocument} from './student-data.js?v=20261116-tablet-fixes';
-import {roundId, readDocument, awardIcon} from './evaluation-data.js?v=automatic-stars';
+import {roundId, readDocument, awardIcon, forumPages} from './evaluation-data.js?v=forum-replies';
 import {forumTopics} from './forum-content.js?v=classroom-reading';
 
 const $ = selector => document.querySelector(selector);
@@ -9,7 +9,8 @@ const params = new URLSearchParams(location.search);
 const teacher = params.get('mode') === 'teacher';
 const canModerate = teacher;
 const group = Math.trunc(groupId);
-const groupName = id => '第 ' + id + ' 组';
+const actor = teacher ? 0 : group;
+const groupName = id => id===0 ? '许老师' : '第 ' + id + ' 组';
 const discussionFields = [{name:'message', label:'我们组的想法', max:600}];
 const replyFields = [{name:'message', label:'我们组想说', placeholder:'我想补充…… / 我还想问……', max:400}];
 const topicLabels = {
@@ -74,19 +75,23 @@ function forumKey(topic, parent=0) {
   return ['forum', encodeURIComponent(round || 'initial'), topic.id, parent].join('-');
 }
 
-async function readEntries(key, limit=12) {
-  const result = await collection.where({forumKey:key}).limit(limit).get();
-  if (result.code) throw new Error('暂时无法读取论坛。');
-  return result.data
-    .filter(entry => !entry.removedAt && Number.isInteger(entry.groupId) && entry.groupId >= 1 && entry.groupId <= 12)
-    .sort((a,b) => a.groupId - b.groupId);
+async function readEntries(key) {
+  const entries = new Map();
+  for await (const page of forumPages(collection.where({forumKey:key}))) {
+    for (const entry of page) {
+      if (!entry.removedAt && Number.isInteger(entry.groupId) && entry.groupId >= 0 && entry.groupId <= 12) {
+        entries.set(entry._id, entry);
+      }
+    }
+  }
+  return [...entries.values()];
 }
 
-async function saveEntry(key, values, like=false) {
-  const ref = collection.doc(key + (like ? '-like-' : '-') + group);
+async function saveEntry(key, values, like=false, replyId) {
+  const ref = collection.doc(replyId ? 'forum-comment-' + replyId : key + (like ? '-like-' : '-') + actor);
   const data = {
     kind:like ? 'lesson-forum-like' : 'lesson-forum',
-    forumKey:key, resetId:round, groupId:group, values, updatedAt:Date.now()
+    forumKey:key, resetId:round, groupId:actor, values, updatedAt:Date.now()
   };
   const existing = like ? null : (await readOptionalDocument(ref)).data;
   const prior = Array.isArray(existing) ? existing[0] : existing;
@@ -120,7 +125,7 @@ function deleteControl(entry, type, status, onDelete) {
   return button;
 }
 
-function composer(key, fields, publishText, saved, onSave) {
+function composer(key, fields, publishText, saved, onSave, appendReply=false) {
   const form = element('form');
   const controls = fields.map(field => {
     const label = element('label', field.label);
@@ -139,10 +144,12 @@ function composer(key, fields, publishText, saved, onSave) {
   const submit = element('button', saved ? '保存修改' : publishText);
   submit.type = 'submit';
   const status = element('p', '', 'form-status');
+  let pendingReplyId;
   status.setAttribute('role','status');
   form.append(submit, status);
   form.onsubmit = async event => {
     event.preventDefault();
+    if (submit.disabled) return;
     const empty = controls.find(input => !input.value.trim());
     if (empty) {
       empty.setCustomValidity('请先填写这一项。');
@@ -153,8 +160,14 @@ function composer(key, fields, publishText, saved, onSave) {
     submit.disabled = true;
     status.textContent = '正在保存…';
     try {
-      await saveEntry(key, values);
-      submit.textContent = '保存修改';
+      if (appendReply) pendingReplyId ??= crypto.randomUUID();
+      await saveEntry(key, values, false, pendingReplyId);
+      if (appendReply) {
+        pendingReplyId = undefined;
+        form.reset();
+      } else {
+        submit.textContent = '保存修改';
+      }
       status.textContent = '已发布';
       onSave();
     } catch {
@@ -179,7 +192,7 @@ function thread(view, post) {
     article.append(line);
   }
   const actions = element('div', undefined, 'thread-actions');
-  const like = element(teacher ? 'span' : 'button', '♡ 点赞', teacher ? 'like-total' : 'like');
+  const like = element('button', '♡ 点赞', 'like');
   const comment = element('button', '💬 评论', 'comment-toggle');
   const feedback = element('p', '', 'thread-status');
   const panel = element('div', undefined, 'comment-panel');
@@ -195,20 +208,19 @@ function thread(view, post) {
   let liked = false, likeCount = 0, savingLike = false, loaded = false, revision = 0;
   function drawLike() {
     like.textContent = (liked ? '♥ 已点赞' : '♡ 点赞') + (loaded ? ' ' + likeCount : '');
-    if (!teacher) {
-      like.disabled = !loaded || savingLike;
-      like.setAttribute('aria-pressed', String(liked));
-    }
+    like.disabled = !loaded || savingLike;
+    like.setAttribute('aria-pressed', String(liked));
   }
   async function update() {
     const request = ++revision;
     try {
-      const entries = await readEntries(key, 24);
+      const entries = await readEntries(key);
       if (request !== revision) return;
       const likes = entries.filter(entry => entry.kind === 'lesson-forum-like' && entry.values?.liked === true);
-      const comments = entries.filter(entry => entry.kind !== 'lesson-forum-like' && typeof entry.values?.message === 'string');
+      const comments = entries.filter(entry => entry.kind !== 'lesson-forum-like' && typeof entry.values?.message === 'string')
+        .sort((a,b)=>(a.updatedAt||0)-(b.updatedAt||0)||String(a._id).localeCompare(String(b._id)));
       if (!savingLike) {
-        liked = !teacher && likes.some(entry => entry.groupId === group);
+        liked = likes.some(entry => entry.groupId === actor);
         likeCount = likes.length;
       }
       loaded = true;
@@ -222,15 +234,15 @@ function thread(view, post) {
         return reply;
       });
       replies.replaceChildren(...(messages.length ? messages : [element('p','还没有评论。')]));
-      if (!teacher && !panel.hidden && !replyEditor.firstChild) {
-        replyEditor.append(composer(key, replyFields, '发布评论', comments.find(entry => entry.groupId === group), update));
+      if (!panel.hidden && !replyEditor.firstChild) {
+        const fields = teacher ? [{...replyFields[0],label:'许老师的评论'}] : replyFields;
+        replyEditor.append(composer(key, fields, '发布评论', null, update, true));
       }
     } catch {
       if (request === revision) feedback.textContent = '暂时读不到点赞和评论，可以刷新重试。';
     }
   }
-  if (!teacher) {
-    like.type = 'button';
+  like.type = 'button';
     like.onclick = async () => {
       if (savingLike || !loaded) return;
       savingLike = true;
@@ -247,7 +259,6 @@ function thread(view, post) {
         drawLike();
       }
     };
-  }
   drawLike();
   comment.onclick = () => {
     panel.hidden = !panel.hidden;
@@ -268,7 +279,7 @@ async function refresh(view) {
   $('#status').textContent = '正在读取帖子…';
   try {
     const key = forumKey(view.topic);
-    const entries = await readEntries(key);
+    const entries = (await readEntries(key)).sort((a,b)=>a.groupId-b.groupId);
     if (active !== view || request !== view.request) return;
     const threads = $('#threads');
     // Keep open comments and drafts when an unchanged post is refreshed.
@@ -354,8 +365,13 @@ async function connect() {
   }
 }
 
-$('#audience').textContent = teacher ? '教师查看' : groupName(group);
-if (teacher) $('#instructions').textContent = '选择话题查看各组的帖子、点赞和评论。';
+$('#audience').textContent = groupName(actor);
+if (!teacher) {
+  const home = element('a', '← 课堂首页', 'forum-home');
+  home.href = 'index.html?group=' + group;
+  $('.header-actions').prepend(home);
+}
+if (teacher) $('#instructions').textContent = '选择话题查看各组的帖子，可以点赞或以许老师的名字留言。';
 $('#fullscreen').onclick = () => window.requestLessonFullscreen?.();
 const guide = $('.sprout-guide');
 const hintButton = $('#show-hint');

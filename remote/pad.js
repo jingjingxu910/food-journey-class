@@ -1,6 +1,6 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
-import {stages,phases,round,readRemote,readLease,writeRemote} from './channel.js?v=mini-forum';
-import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards} from '../evaluation-data.js?v=automatic-stars';
+import {stages,phases,round,readRemote,readLease,writeRemote} from './channel.js?v=classroom-remote';
+import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards} from '../evaluation-data.js?v=classroom-remote';
 const $=selector=>document.querySelector(selector);
 const symbols=['🔎','🤝','🌱'],dimensions=['观察','合作','坚持'];
 let active=null,feedback={},queue=Promise.resolve();
@@ -83,6 +83,10 @@ function run(operation){
    if(current.session!==session||current.expiresAt===0||active?.session!==session){disconnected('大屏已退出跟随');return;}
    await writeRemote(next);
    active=next;
+   if(next.resetId!==display.resetId){
+    feedback={resetId:next.resetId,groups:{},shares:{}};
+    await sendClassCommand(next.resetId,'cover',String(Date.now()));
+   }
   }
   render();
  }).catch(error=>{$('#status').textContent=error.message;});
@@ -98,6 +102,16 @@ function render(){
  if(!state)return;
  $('#phases').replaceChildren(...stages.map(stage=>button(stage,()=>run(display=>switchStage(display,stage)),stage===state.stage)));
  const actions=element('div');actions.className='actions';
+ actions.append(button('清除数据',()=>{
+  if(!window.confirm('确定结束本轮课堂并清除本轮显示的数据吗？'))return;
+  run(async display=>{
+   const resetId='reset-'+Date.now()+'-'+crypto.randomUUID().slice(0,6);
+   const db=await cloudDb();
+   const result=await db.collection('food-journey-groups').doc('class-reset').set({id:'class-reset',resetId,updatedAt:Date.now()});
+   if(result?.code||!(result?.updated>0||result?.upsertedId||result?.id))throw Error('清除数据未完成，请重试。');
+   return {...display,resetId,stage:'课题封面',group:0,page:0,question:0};
+  });
+ }));
  const grids=['初始模型','AR观察','修正模型','实体拼装','食物旅行','小组自评','专属奖状'];
  if(grids.includes(state.stage))actions.append(
   button('第 1–6 组',()=>run(display=>({...display,page:0,group:0})),state.page===0),
