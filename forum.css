@@ -107,6 +107,7 @@ button:focus-visible, textarea:focus-visible { outline: 3px solid #278271; outli
   aspect-ratio: 1;
   background: url("assets/journey/companion-pink-poses.png") left top / 300% 200% no-repeat;
   filter: drop-shadow(0 5px 5px #153f4b40);
+  transform: scaleX(-1);
   animation: sprout-float 3.8s ease-in-out infinite;
 }
 .sprout[data-pose="0"] .sprout-art { background-position: right top; }
@@ -114,8 +115,8 @@ button:focus-visible, textarea:focus-visible { outline: 3px solid #278271; outli
 .sprout[data-pose="2"] .sprout-art { background-position: right bottom; }
 #hint-label { text-shadow: 0 0 4px #fff, 0 0 8px #fff; }
 @keyframes sprout-float {
-  0%, 100% { transform: translateY(0) rotate(-3deg); }
-  50% { transform: translateY(-7px) rotate(3deg); }
+  0%, 100% { transform: translateY(0) rotate(3deg) scaleX(-1); }
+  50% { transform: translateY(-7px) rotate(-3deg) scaleX(-1); }
 }
 .sprout-bubble {
   position: relative;
