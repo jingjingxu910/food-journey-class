@@ -1,5 +1,5 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
-import {stages,phases,round,readRemote,writeRemote} from './channel.js';
+import {stages,phases,round,readRemote,readLease,writeRemote} from './channel.js?v=4';
 import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards} from '../evaluation-data.js?v=20261113-awards';
 const $=selector=>document.querySelector(selector);
 const symbols=['🔎','🤝','🌱'],dimensions=['观察','合作','坚持'];
@@ -36,7 +36,7 @@ async function connection(){
  await checkStep('iPad 登录课堂失败',cloudDb);
  const [display,lease,resetId]=await Promise.all([
   checkStep('读取大屏状态失败',readRemote),
-  checkStep('读取跟随状态失败',()=>readDocument('class-display-lease')),
+  checkStep('读取跟随状态失败',()=>readLease()),
   checkStep('读取课堂轮次失败',round)
  ]);
  if(display.expiresAt===0||!(lease.expiresAt>Date.now())||lease.session!==display.session)throw Error('大屏已退出跟随或连接超时');
@@ -159,7 +159,7 @@ setInterval(async()=>{
  if(!active||document.hidden||checking)return;
  checking=true;
  try{
-  const display=await readRemote(),lease=await readDocument('class-display-lease');
+  const display=await readRemote(),lease=await readLease();
   if(display.expiresAt===0||display.session!==active.session||lease.session!==active.session||lease.expiresAt<=Date.now())disconnected('大屏已退出跟随，请重新配对');
  }catch{/* Retry without changing the classroom. */}
  finally{checking=false;}
