@@ -34,6 +34,11 @@ assert.equal(context.compare(first,second).routeChanged,true,'V1 without a drawn
 const drawn={...first,structureStrokes:[[{x:50,y:22},{x:50,y:34}]]};
 assert.equal(context.compare(drawn,second).routeChanged,false,'A matching freehand passage and V2 esophagus preserve the sequence');
 assert.match(context.infer(drawn,'v1',second).displayOrder.join(' → '),/补画的通道/);
+const shiftedPassage={...first,structureStrokes:[[{x:50,y:19},{x:50,y:29},{x:54,y:38}]]};
+const shiftedRevision={...second,positions:{...second.positions,esophagus:{x:57,y:28}},routePoints:second.routePoints.map((point,index)=>index===1?{x:57,y:29}:point)};
+assert.match(context.infer(shiftedPassage,'v1').displayOrder.join(' → '),/口腔 → 补画的通道（推测为食管） → 胃/);
+assert.equal(context.compare(shiftedPassage,shiftedRevision).routeChanged,false,'A continuous mouth-to-stomach passage preserves the sequence even when V2 moves the esophagus');
+assert.equal(context.compare({...first,structureStrokes:[[{x:50,y:23},{x:50,y:26}]]},shiftedRevision).routeChanged,true,'A short mark alone does not identify a displaced esophagus');
 const legacy={...first,positions:{...first.positions,esophagus:{x:50,y:28}}};
 assert.equal(context.infer(legacy,'v1').order.includes('esophagus'),false,'Legacy V1 data must not show a placed esophagus');
 assert.equal(context.compare({...first,structureStrokes:[[{x:25,y:22},{x:25,y:34}]]},second).routeChanged,true,'An unrelated stroke cannot count as an esophagus');

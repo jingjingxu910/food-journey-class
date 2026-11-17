@@ -332,8 +332,13 @@ function inferRouteOrder(model, modelPhase, revision) {
     return {id:organ.id,at,distance:closest};
   });
   const placed=ranked.filter(item=>item.distance<=1).sort((a,b)=>a.at-b.at);
+  const mouth=placed.find(item=>item.id==='mouth');
+  const stomach=placed.find(item=>item.id==='stomach');
+  const mouthY=model.positions?.mouth?.y;
+  const stomachY=model.positions?.stomach?.y;
+  const passageHeight=stomachY-mouthY;
+  const revisedEsophagus=modelPhase==='v1'&&revision?.positions?.esophagus?organById('esophagus'):null;
   const drawn=[];
-  // Freehand structures are evidence too; proximity can locate them, not name them.
   for(const stroke of model.structureStrokes||[]){
     const samples=[];
     for(let i=1;i<stroke.length;i++){
@@ -341,8 +346,9 @@ function inferRouteOrder(model, modelPhase, revision) {
       for(let j=0;j<steps;j++)samples.push({x:a.x+(b.x-a.x)*j/steps,y:a.y+(b.y-a.y)*j/steps});
     }
     const near=[];
-    const esophagus=organById('esophagus');
     let esophagusHits=0;
+    let passageTop=Infinity;
+    let passageBottom=-Infinity;
     for(const p of samples){
       let best=Infinity,at=0;
       for(let i=1;i<points.length;i++){
@@ -353,16 +359,22 @@ function inferRouteOrder(model, modelPhase, revision) {
       }
       if(best<=3.5){
         near.push(at);
-        if(modelPhase==='v1'&&revision?.positions?.esophagus&&routeOrganDistance(p,esophagus,revision)<=1)esophagusHits++;
+        if(revisedEsophagus&&routeOrganDistance(p,revisedEsophagus,revision)<=1)esophagusHits++;
+        if(mouth&&stomach&&mouth.at<at&&at<stomach.at){
+          passageTop=Math.min(passageTop,p.y);
+          passageBottom=Math.max(passageBottom,p.y);
+        }
       }
     }
     if(near.length>=3&&near.length>=samples.length*.3){
       near.sort((a,b)=>a-b);
       const at=near[Math.floor(near.length/2)];
-      const mouth=placed.find(item=>item.id==='mouth');
-      const stomach=placed.find(item=>item.id==='stomach');
-      const matchesEsophagus=esophagusHits>=3&&esophagusHits>=near.length/2&&mouth&&stomach&&mouth.at<at&&at<stomach.at;
-      drawn.push({at,id:matchesEsophagus?'esophagus':'drawn',label:matchesEsophagus?'补画的通道（与修正模型的食管对应）':'补画的器官 / 通道'});
+      const betweenMouthAndStomach=mouth&&stomach&&mouth.at<at&&at<stomach.at;
+      const overlapsRevision=esophagusHits>=3&&esophagusHits>=near.length/2;
+      // V2 may move the organ, so also check whether the stroke spans the middle of the V1 passage.
+      const spansPassage=passageHeight>0&&passageTop<=mouthY+passageHeight*.25&&passageBottom>=stomachY-passageHeight*.25;
+      const matchesEsophagus=modelPhase==='v1'&&betweenMouthAndStomach&&(overlapsRevision||spansPassage);
+      drawn.push({at,id:matchesEsophagus?'esophagus':'drawn',label:matchesEsophagus?'补画的通道（推测为食管）':'补画的器官 / 通道'});
     }
   }
   const entries=[...placed.map(item=>({...item,label:organById(item.id).name})),...drawn].sort((a,b)=>a.at-b.at);
