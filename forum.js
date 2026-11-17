@@ -1,6 +1,6 @@
 import {cloudDb, groupId} from './student-data.js?v=20261116-tablet-fixes';
 import {roundId} from './evaluation-data.js?v=award-journey-evidence';
-import {forumTopics} from './forum-content.js?v=jump-rope-unit';
+import {forumTopics} from './forum-content.js?v=student-forum';
 
 const $ = selector => document.querySelector(selector);
 const params = new URLSearchParams(location.search);
@@ -242,12 +242,14 @@ function select(view) {
   tabs.forEach((tab,index) => tab.setAttribute('aria-pressed', String(views[index] === view)));
   $('#topic-title').textContent = view.topic.title;
   $('#question').textContent = view.topic.question;
-  hintIndex = -1;
-  $('#hint-bubble').hidden = true;
-  $('#prompt').textContent = '';
-  $('#hint-label').textContent = '点我看提示';
-  $('#show-hint').removeAttribute('data-pose');
-  $('.sprout-guide').hidden = false;
+  if (!teacher) {
+    hintIndex = -1;
+    $('#hint-bubble').hidden = true;
+    $('#prompt').textContent = '';
+    $('#hint-label').textContent = '点我看提示';
+    $('#show-hint').removeAttribute('data-pose');
+    $('.sprout-guide').hidden = false;
+  }
   $('#composer').replaceChildren(...(view.editor ? [view.editor] : []));
   $('#threads').replaceChildren(...Array.from(view.threads.values(), entry => entry.card.node));
   void refresh(view);

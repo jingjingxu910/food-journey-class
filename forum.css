@@ -10,7 +10,8 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { margin: 0; }
-main { width: min(1000px, 100%); margin: auto; padding: clamp(12px, 3vw, 36px); padding-bottom: 124px; }
+main { width: min(1000px, 100%); margin: auto; padding: clamp(12px, 3vw, 36px); }
+body:has(.sprout-guide:not([hidden])) main { padding-bottom: 200px; }
 h1, h2, h3, p { margin: 0; }
 h1 { font-size: clamp(34px, 6vw, 60px); line-height: 1.1; }
 h2 { font-size: clamp(21px, 3vw, 28px); line-height: 1.35; }
@@ -102,7 +103,7 @@ button:focus-visible, textarea:focus-visible { outline: 3px solid #278271; outli
   pointer-events: auto;
 }
 .sprout-art {
-  width: clamp(68px, 11vw, 106px);
+  width: clamp(106px, 17vw, 166px);
   aspect-ratio: 1;
   background: url("assets/journey/companion-pink-poses.png") left top / 300% 200% no-repeat;
   filter: drop-shadow(0 5px 5px #153f4b40);
