@@ -1,3 +1,4 @@
+import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
 import {stages,phases,round,readRemote,writeRemote} from './channel.js';
 import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards} from '../evaluation-data.js?v=20261113-awards';
 const $=selector=>document.querySelector(selector);
@@ -22,11 +23,24 @@ function disconnected(message){
  $('#pairing-panel').hidden=false;
  $('#status').textContent=message;
 }
+function errorText(error){
+ const detail=error?.message||error?.errMsg||error?.error_description||(typeof error==='string'?error:'');
+ const code=error?.code||error?.error;
+ return [code,detail].filter(Boolean).join(' · ')||'云端没有返回错误详情';
+}
+async function checkStep(label,operation){
+ try{return await operation();}
+ catch(error){throw Error(label+'：'+errorText(error));}
+}
 async function connection(){
- const display=await readRemote();
- const lease=await readDocument('class-display-lease');
+ await checkStep('iPad 登录课堂失败',cloudDb);
+ const [display,lease,resetId]=await Promise.all([
+  checkStep('读取大屏状态失败',readRemote),
+  checkStep('读取跟随状态失败',()=>readDocument('class-display-lease')),
+  checkStep('读取课堂轮次失败',round)
+ ]);
  if(display.expiresAt===0||!(lease.expiresAt>Date.now())||lease.session!==display.session)throw Error('大屏已退出跟随或连接超时');
- if((display.resetId||null)!==await round())throw Error('课堂已开始新一轮，请重新配对');
+ if((display.resetId||null)!==resetId)throw Error('课堂已开始新一轮，请重新配对');
  return display;
 }
 async function feedbackFor(resetId){
@@ -46,13 +60,13 @@ $('#pairing').onsubmit=async event=>{
    display=await Promise.race([connection(),new Promise((_,reject)=>{timeout=setTimeout(()=>reject(Error('连接大屏超时，请检查网络后重试')),10000);})]);
   }finally{clearTimeout(timeout);}
   if(display.code!==$('#code').value.trim().toLowerCase())throw Error('配对码不正确');
-  feedback=await feedbackFor(display.resetId);
   active=display;
   $('#pairing-panel').hidden=true;
   $('#remote-controls').hidden=false;
   $('#status').textContent='已连接大屏';
   render();
- }catch(error){disconnected(error.message||'连接失败，请重试');}
+  void feedbackFor(display.resetId).then(saved=>{if(active?.session===display.session){feedback=saved;render();}}).catch(error=>{if(active?.session===display.session)$('#status').textContent='已连接大屏，评价暂未读取：'+errorText(error);});
+ }catch(error){disconnected(errorText(error));}
  finally{connect.disabled=false;}
 };
 $('#connect-button').disabled=false;
