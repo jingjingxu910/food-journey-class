@@ -5,7 +5,7 @@ const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefine
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
 const symbols=['🔎','🤝','🌱'];
 import {discussionQuestions} from './discussion-content.js';
-import {forumSlide} from './forum-content.js?v=mini-forum';
+import {forumSlide} from './forum-content.js?v=larger-hints';
 const discussion=discussionQuestions.map(item=>item.question);
 const lessonSlides=new Set(['课题封面','课堂研讨','小论坛']);
 export function certificate(entry){

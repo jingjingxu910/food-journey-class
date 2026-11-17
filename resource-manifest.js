@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-a399a60c4ff24a10",
-  "bytes": 102888724,
+  "version": "20261102-chunks-132e70b63dffdb63",
+  "bytes": 102888994,
   "files": [
     {
       "path": "app.js",
@@ -1704,8 +1704,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "class-evaluation.js",
-      "bytes": 23730,
-      "hash": "892a9fe3f9a93e59fb7a836d35ba2afc06a2f2932415b517ac518db078bfa735"
+      "bytes": 23732,
+      "hash": "44a886111fab4f74db9363858ef2075ac7417510866a92aac0b663133016b0f9"
     },
     {
       "path": "cloud-loader.js",
@@ -1749,23 +1749,23 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "forum-content.js",
-      "bytes": 3021,
-      "hash": "33171b26c806f5a9702b59641f8c80a5120cfb12231a28bb952d8ef6ef291589"
+      "bytes": 3183,
+      "hash": "021c2e465e3e45cbcd96b894ad0fbcfe2df797a35276d710c2495f5adf59cc07"
     },
     {
       "path": "forum.css",
-      "bytes": 5647,
-      "hash": "d045e587d5f14956097cdcb44f7b0899d6a9351bc488c8a6a7c7f44f11079c2f"
+      "bytes": 5750,
+      "hash": "f9a752b0eefebe5c079919c1131fba0a9542f1a15e2138fbbbc791676b4f9540"
     },
     {
       "path": "forum.html",
-      "bytes": 1744,
-      "hash": "7c8cf37104a5c2a587bc955949b88bcf8403f7e6d7013a3a2741ca1fd7ae230f"
+      "bytes": 1745,
+      "hash": "a7c90204214d1e913f0c7f341c46d87e632bdf05266731b8f160a046f0d2a4e6"
     },
     {
       "path": "forum.js",
-      "bytes": 11541,
-      "hash": "8fece8629934a43e1a3a1eb15d3f5a70558a6a0a713e22a9021f4fafe53fd206"
+      "bytes": 11543,
+      "hash": "d2ef7ea07163e4927f2f7ccfafc49f554dff5a259a8cda63c6257d6d29660b87"
     },
     {
       "path": "frame-entry.js",
@@ -2373,7 +2373,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-a399a60c4ff24a10"
+      "hash": "manifest-20261102-chunks-132e70b63dffdb63"
     }
   ]
 };
