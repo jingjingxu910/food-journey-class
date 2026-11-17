@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-c2482fe89cdad5f2",
-  "bytes": 102880598,
+  "version": "20261102-chunks-2675a8f18d41a3e4",
+  "bytes": 102880842,
   "files": [
     {
       "path": "app.js",
@@ -1919,13 +1919,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "lesson-shell.html",
-      "bytes": 786,
-      "hash": "2f91668f280996610597bcb7807a369bde095de78c88449f42ca7d9da0690167"
+      "bytes": 794,
+      "hash": "ef375e77050ef4ee51f5bf0e666cdf344fc1ef0d17d0276e3e9680387a91b459"
     },
     {
       "path": "lesson-shell.js",
-      "bytes": 1393,
-      "hash": "cb3abed1e1354c3ba8fb5677a379f1daf6d1d5a79b956c454ca1441ab058184d"
+      "bytes": 1629,
+      "hash": "41cfb04f2467c3fcf436da7fcf5d3099d3f655902b940adca762f3bfb705dd18"
     },
     {
       "path": "live-dashboard.css",
@@ -2373,7 +2373,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-c2482fe89cdad5f2"
+      "hash": "manifest-20261102-chunks-2675a8f18d41a3e4"
     }
   ]
 };

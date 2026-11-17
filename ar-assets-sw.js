@@ -1,7 +1,22 @@
-importScripts('./resource-manifest.js?v=assembly-v2','./resource-store.js?v=20261113-voice-models');
+importScripts('./resource-manifest.js?v=classroom-control-refresh','./resource-store.js?v=20261113-voice-models');
 const ROOT=new URL('./',self.location.href);
 const localPreview=['localhost','127.0.0.1','[::1]'].includes(ROOT.hostname);
 const files=new Map(self.LESSON_RESOURCES.files.map(item=>[new URL(item.path,ROOT).href,item]));
+const controlFiles=new Set(['index.html','frame-entry.js','lesson-shell.html','lesson-shell.js','round-monitor.js']);
+async function getClassroomControl(request, url, item){
+ try {
+  const response=await fetch(request,{cache:'no-cache'});
+  if(!response.ok)throw new Error('课堂控制文件暂时不可用');
+  try {
+   const cache=await caches.open('food-lesson-control-v1');
+   await cache.put(url.href,response.clone());
+  } catch { /* A full device can still use the online classroom. */ }
+  return response;
+ } catch {
+  const cache=await caches.open('food-lesson-control-v1');
+  return (await cache.match(url.href))||self.LessonResourceStore.obtain(item);
+ }
+}
 async function withRange(response,range){
  if(!range)return response;
  const match=/^bytes=(\d*)-(\d*)$/.exec(range);
@@ -22,6 +37,10 @@ self.addEventListener('fetch',event=>{
  const url=new URL(event.request.url);if(url.origin!==ROOT.origin||url.searchParams.has('__lessonHash'))return;
  url.search='';url.hash='';if(url.pathname.endsWith('/'))url.pathname+='index.html';
  const item=files.get(url.href);if(!item)return;
+ if(controlFiles.has(item.path)){
+  event.respondWith(getClassroomControl(event.request,url,item));
+  return;
+ }
  event.respondWith(self.LessonResourceStore.obtain(item).then(response=>withRange(response,event.request.headers.get('Range'))).catch(async error=>{
   const response=await fetch(event.request);if(response.ok)return response;throw error;
  }));

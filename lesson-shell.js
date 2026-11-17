@@ -1,4 +1,8 @@
 window.lessonShell = true;
+// The award page can stay open without loading any other lesson scripts.
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  navigator.serviceWorker.register('./ar-assets-sw.js', {updateViaCache:'none'}).catch(() => {});
+}
 const frame = document.querySelector('#lesson-frame');
 const base = new URL('./', location.href);
 const allowed = new Set(['discussion.html','evaluation.html','forum.html','index.html','model-workbench.html','observation.html','assembly.html','journey.html','journey-game.html','ar-prepare.html']);
