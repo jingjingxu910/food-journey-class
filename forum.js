@@ -1,6 +1,6 @@
 import {cloudDb, groupId} from './student-data.js?v=20261116-tablet-fixes';
 import {roundId} from './evaluation-data.js?v=award-journey-evidence';
-import {forumTopics} from './forum-content.js';
+import {forumTopics} from './forum-content.js?v=tap-hints';
 
 const $ = selector => document.querySelector(selector);
 const params = new URLSearchParams(location.search);
@@ -15,6 +15,7 @@ const topicLabels = {
   homework:['🛡️','保护器官']
 };
 let collection, round, active;
+let hintIndex = -1;
 
 function element(tag, text, className) {
   const node = document.createElement(tag);
@@ -241,7 +242,10 @@ function select(view) {
   tabs.forEach((tab,index) => tab.setAttribute('aria-pressed', String(views[index] === view)));
   $('#topic-title').textContent = view.topic.title;
   $('#question').textContent = view.topic.question;
-  $('#prompt').textContent = view.topic.prompt;
+  hintIndex = -1;
+  $('#prompt').textContent = '需要一点灵感？';
+  $('#hint-label').textContent = '点我看提示';
+  $('#show-hint').disabled = false;
   $('#composer').replaceChildren(...(view.editor ? [view.editor] : []));
   $('#threads').replaceChildren(...Array.from(view.threads.values(), entry => entry.card.node));
   void refresh(view);
@@ -265,5 +269,11 @@ async function connect() {
 $('#audience').textContent = teacher ? '教师查看' : groupName(group);
 if (teacher) $('#instructions').textContent = '选择话题查看各组的帖子、点赞和评论。';
 $('#fullscreen').onclick = () => window.requestLessonFullscreen?.();
+$('#show-hint').onclick = () => {
+  const hints = active.topic.hints;
+  hintIndex = (hintIndex + 1) % hints.length;
+  $('#prompt').textContent = hints[hintIndex];
+  $('#hint-label').textContent = '换个提示';
+};
 $('#refresh').onclick = () => active ? void refresh(active) : void connect();
 void connect();

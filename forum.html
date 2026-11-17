@@ -6,8 +6,8 @@
   <title>课后论坛 · 食物在身体里的旅行</title>
   <script src="frame-entry.js"></script>
   <script defer src="cloud-loader.js"></script>
-  <link rel="stylesheet" href="forum.css?v=forum-club">
-  <script type="module" src="forum.js?v=forum-club"></script>
+  <link rel="stylesheet" href="forum.css?v=tap-hints">
+  <script type="module" src="forum.js?v=tap-hints"></script>
 </head>
 <body>
   <main>
@@ -22,8 +22,10 @@
       <h2 id="topic-title"></h2>
       <p id="question"></p>
       <div class="sprout-guide">
-        <div class="sprout" aria-hidden="true"></div>
-        <div class="sprout-bubble"><strong>小芽</strong><p id="prompt" aria-live="polite"></p></div>
+        <button id="show-hint" class="sprout" type="button" aria-controls="prompt" disabled>
+          <span class="sprout-art" aria-hidden="true"></span><span id="hint-label">点我看提示</span>
+        </button>
+        <div class="sprout-bubble"><p id="prompt" aria-live="polite" aria-atomic="true">需要一点灵感？</p></div>
       </div>
       <div id="composer"></div>
     </section>

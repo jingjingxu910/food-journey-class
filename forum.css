@@ -83,7 +83,18 @@ button:focus-visible, textarea:focus-visible { outline: 3px solid #278271; outli
 #question { margin-top: 7px; font-weight: 700; font-size: clamp(16px, 2.5vw, 20px); }
 .sprout-guide { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
 .sprout {
-  flex: 0 0 clamp(64px, 14vw, 106px);
+  flex: none;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  border-color: #ecd2df;
+  background: #fff8fb;
+  color: #743653;
+  font-size: .85rem;
+}
+.sprout-art {
+  width: clamp(64px, 12vw, 92px);
   aspect-ratio: 1;
   background: url("assets/journey/companion-pink-poses.png") right top / 300% 200% no-repeat;
 }
@@ -94,7 +105,6 @@ button:focus-visible, textarea:focus-visible { outline: 3px solid #278271; outli
   background: #fff1f6;
   color: #603451;
 }
-.sprout-bubble strong { display: block; color: #884568; }
 form { display: grid; gap: 9px; margin-top: 12px; }
 label { display: grid; gap: 4px; font-weight: 700; }
 textarea {
