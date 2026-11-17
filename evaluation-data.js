@@ -45,7 +45,7 @@ const evidenceIcons = {
 };
 const additionalAwardIcons = ['⭐','🌟','✨','🏅','🎖️','🏆','🎉','🎈','🌼','🍀','🚀','🎨'];
 export function awardIcon(entry) {
-  if(entry.awardBasis?.isAdditional)return additionalAwardIcons[Number(entry.groupId)-1]||'⭐';
+  if(entry.awardBasis?.isAdditional||entry.awardBasis?.isEncouragement)return additionalAwardIcons[Number(entry.groupId)-1]||'⭐';
   return evidenceIcons[entry.evidenceKey] || ['🔎','🤝','🌱'][entry.category] || '🌻';
 }
 const organNames = {
@@ -56,6 +56,63 @@ const organNames = {
 
 function currentJourneyEvents(journey) {
   return journey.history?.some(e=>e.type)?journey.history:journey.events||[];
+}
+
+const digestiveRoute=['mouth','esophagus','stomach','small-intestine','large-intestine'];
+
+export function automaticStars(record={}, forumReply=false) {
+  const stars=[0,0,0], reasons=[];
+  function add(category, count, reason){
+    stars[category]+=count;
+    reasons.push({category,count,reason});
+  }
+  if(record.observation?.completedAt){
+    const organs=new Set((record.observation.views||[])
+      .filter(view=>view.durationMs>=3000&&digestiveRoute.includes(view.organId)).map(view=>view.organId));
+    if(organs.size)add(0,organs.size===5?3:organs.size>=3?2:1,'AR 有效观察 '+organs.size+' 种器官');
+  }
+  const route=record.v2?.routeOrder;
+  if(record.v2?.completedAt&&route?.length===digestiveRoute.length&&digestiveRoute.every((organ,i)=>route[i]===organ)){
+    add(0,1,'V2 提交了正确的食物路线');
+  }
+  if(forumReply)add(1,1,'在小论坛追问或补充了其他组的帖子');
+  if(record.journey?.completedAt){
+    add(2,1,'完成并提交食物旅行');
+    const events=currentJourneyEvents(record.journey);
+    let viewedVilli=false, enteredAirway=false, exploredAbsorption=false, corrected=false;
+    const mistakes=new Set();
+    for(const {type,organId,choice} of events){
+      if(type==='villi-detail')viewedVilli=true;
+      if(type==='nutrient-absorption'&&viewedVilli)exploredAbsorption=true;
+      if(type==='airway')enteredAirway=true;
+      if(type==='safe-swallow'&&enteredAirway)corrected=true;
+      if(type==='identify'&&organNames[organId]&&typeof choice==='string'&&choice.trim()){
+        if(choice!==organNames[organId])mistakes.add(organId);
+        else if(mistakes.has(organId))corrected=true;
+      }
+    }
+    if(exploredAbsorption)add(0,1,'查看小肠绒毛后完成营养吸收探索');
+    if(corrected)add(2,1,'在本次提交的旅行中修正了错误判断');
+  }
+  return {stars,reasons};
+}
+
+export async function readForumStarGroups(resetId) {
+  const db=await cloudDb();
+  const collection=db.collection('food-journey-groups');
+  const prefix='forum-'+encodeURIComponent(resetId||'initial')+'-';
+  const groups=await Promise.all(Array.from({length:12},async(_,i)=>{
+    const id=i+1;
+    const result=await collection.where({kind:'lesson-forum',resetId:resetId||null,groupId:id}).limit(40).get();
+    if(result?.code)throw Error(result.message||'暂时无法读取论坛记录');
+    const replied=result.data.some(entry=>{
+      if(!entry.forumKey?.startsWith(prefix)||typeof entry.values?.message!=='string'||!entry.values.message.trim())return false;
+      const match=/^(breathing|movement|homework)-([1-9]|1[0-2])$/.exec(entry.forumKey.slice(prefix.length));
+      return Boolean(match&&Number(match[2])!==id);
+    });
+    return replied?id:null;
+  }));
+  return new Set(groups.filter(Boolean));
 }
 
 export function journeyEvents(journey={}) {
@@ -229,7 +286,7 @@ export function makeAwards(records, groups, shares={}) {
     const old=groups[record.groupId]||{};
     const stars=dimensions.map((_,i)=>Math.max(0,Math.min(5,Number(old.stars?.[i])||0)));
     const levels=record.evaluation?.completedAt?record.evaluation.levels||[]:[];
-    return {record,old,stars,levels,candidates:awardCandidates(record,stars)};
+    return {record,old,stars,levels,auto:automaticStars(record).stars,candidates:awardCandidates(record,stars)};
   });
   const assigned=new Map();
   // Stable round-specific tie break; refresh never rerolls an equal result.
@@ -237,7 +294,7 @@ export function makeAwards(records, groups, shares={}) {
   fixedAwards.forEach(({key,title,praise},category)=>{
     const selfScore=row=>Number(row.levels[category])||0;
     const row=rows.filter(r=>!assigned.has(r.record.groupId)).sort((a,b)=>
-      selfScore(b)-selfScore(a)||b.stars[category]-a.stars[category]||tie(a)-tie(b))[0];
+      selfScore(b)-selfScore(a)||b.stars[category]-a.stars[category]||b.auto[category]-a.auto[category]||tie(a)-tie(b))[0];
     if(!row)return;
     assigned.set(row.record.groupId,{key,title,category,metric:selfScore(row),texts:[praise]});
   });
@@ -254,7 +311,7 @@ export function makeAwards(records, groups, shares={}) {
     const eligible=rows.filter(r=>!assigned.has(r.record.groupId)&&r.candidates.some(c=>c.key===key));
     const candidate=row=>row.candidates.find(c=>c.key===key);
     eligible.sort((a,b)=>{const ca=candidate(a),cb=candidate(b);return cb.metric-ca.metric||b.stars[cb.category]-a.stars[ca.category]||
-      (Number(b.levels[cb.category])||0)-(Number(a.levels[ca.category])||0)||tie(a)-tie(b);});
+      (Number(b.levels[cb.category])||0)-(Number(a.levels[ca.category])||0)||b.auto[cb.category]-a.auto[ca.category]||tie(a)-tie(b);});
     if(eligible.length){const row=eligible[0];assigned.set(row.record.groupId,candidate(row));}
   }
   let additionalIndex=0;
@@ -278,7 +335,7 @@ export function makeAwards(records, groups, shares={}) {
     const award={...old,stars,title,
       reason:reasonParagraphs.join('\n'),reasonParagraphs,evidenceKey:primary.key,
       category:primary.category,
-      awardBasis:{metric:primary.metric,teacherStars:stars[primary.category],selfStars:Number(row.levels[primary.category])||0,isAdditional,sharingStage:primary.sharingStage||null},
+      awardBasis:{metric:primary.metric,teacherStars:stars[primary.category],automaticStars:row.auto[primary.category],selfStars:Number(row.levels[primary.category])||0,isAdditional,sharingStage:primary.sharingStage||null},
       recordId:record.id,evaluationAt:record.evaluation?.completedAt||null,issuedAt:Date.now(),groupId:record.groupId};
     return {...award,icon:awardIcon(award)};
   });

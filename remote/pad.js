@@ -1,6 +1,6 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
 import {stages,phases,round,readRemote,readLease,writeRemote} from './channel.js?v=mini-forum';
-import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards} from '../evaluation-data.js?v=award-journey-evidence';
+import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards} from '../evaluation-data.js?v=automatic-stars';
 const $=selector=>document.querySelector(selector);
 const symbols=['🔎','🤝','🌱'],dimensions=['观察','合作','坚持'];
 let active=null,feedback={},queue=Promise.resolve();

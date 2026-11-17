@@ -6,8 +6,8 @@
   <title>小论坛 · 食物在身体里的旅行</title>
   <script src="frame-entry.js"></script>
   <script defer src="cloud-loader.js"></script>
-  <link rel="stylesheet" href="forum.css?v=drag-sprout">
-  <script type="module" src="forum.js?v=drag-sprout"></script>
+  <link rel="stylesheet" href="forum.css?v=forum-medals">
+  <script type="module" src="forum.js?v=forum-medals"></script>
 </head>
 <body>
   <main>
@@ -38,5 +38,11 @@
       <button id="close-hint" type="button" aria-label="收起提示">×</button>
     </div>
   </div>
+  <dialog id="award-unlock" class="award-unlock" aria-labelledby="award-unlock-title">
+    <div class="award-unlock-art" aria-hidden="true"><span>✦</span><div id="award-unlock-icon"></div><span>✧</span></div>
+    <h2 id="award-unlock-title">恭喜你们解锁一枚新的勋章！</h2>
+    <p id="award-unlock-name"></p>
+    <form method="dialog"><button type="submit" autofocus>收下勋章</button></form>
+  </dialog>
 </body>
 </html>

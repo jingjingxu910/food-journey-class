@@ -38,6 +38,12 @@ body.evaluation-teacher.lesson-presenting{padding-bottom:0!important}
 .forum-slide-topics strong{display:block;color:#176459}
 .forum-stage-status{margin:0;color:#176459}
 .forum-stage-status:empty{display:none}
+.ev-auto-stars{box-sizing:border-box;width:min(780px,calc(100% - 24px));max-height:85vh;padding:18px;color:#214a43;border:1px solid #bfdacf;border-radius:16px;background:#fbfffb}
+.ev-auto-stars::backdrop{background:#193b38a8}
+.ev-auto-stars>button{margin-top:12px}
+.ev-auto-groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:8px}
+.ev-auto-groups section{padding:9px 12px;border-radius:12px;background:#eef7f2}
+.ev-auto-groups :is(h3,p){margin:0 0 4px}
 .lesson-slide[data-page="课题封面"] .primary{background:#d1ebac;color:#173c36;font-weight:700}
 body.evaluation-teacher{height:auto!important;min-height:100vh;overflow-y:auto!important;padding-bottom:145px!important}
 .evaluation-teacher .teacher-model-view,.evaluation-teacher .model-shell{height:auto!important;overflow:visible!important}

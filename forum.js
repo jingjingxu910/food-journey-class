@@ -1,5 +1,5 @@
 import {cloudDb, groupId} from './student-data.js?v=20261116-tablet-fixes';
-import {roundId} from './evaluation-data.js?v=award-journey-evidence';
+import {roundId, readDocument, awardIcon} from './evaluation-data.js?v=automatic-stars';
 import {forumTopics} from './forum-content.js?v=forum-voice';
 
 const $ = selector => document.querySelector(selector);
@@ -15,6 +15,7 @@ const topicLabels = {
   homework:['🛡️','保护器官']
 };
 let collection, round, active;
+let awards = {};
 let hintIndex = -1;
 let hintAudio;
 
@@ -27,6 +28,43 @@ function element(tag, text, className) {
   if (text !== undefined) node.textContent = text;
   if (className) node.className = className;
   return node;
+}
+
+function awardTitle(award) {
+  if (award.awardBasis?.isEncouragement) return '课堂探索家';
+  if (award.awardBasis?.isAdditional && /^第\s*\d+\s*组/.test(award.title)) return '发现小先锋';
+  return award.title || '本轮奖状';
+}
+
+function groupLabel(node, id) {
+  node.textContent = groupName(id);
+  const award = awards[id];
+  if (award?.issuedAt && Number(award.groupId ?? id) === Number(id)) {
+    const badge = element('span', awardIcon({...award, groupId:id}), 'group-award-badge');
+    badge.title = awardTitle(award);
+    badge.setAttribute('aria-label', badge.title);
+    node.append(badge);
+  }
+  return node;
+}
+
+function showAwardUnlock() {
+  const award = awards[group];
+  if (teacher || !award?.issuedAt || Number(award.groupId ?? group) !== group) return;
+  const hasOpenGuide = document.querySelector('.student-guide[open]');
+  if (hasOpenGuide) {
+    hasOpenGuide.addEventListener('close', showAwardUnlock, {once:true});
+    return;
+  }
+  const dialog = $('#award-unlock');
+  if (dialog.open || typeof dialog.showModal !== 'function') return;
+  const key = 'food-journey-forum-medal:' + group;
+  const roundKey = JSON.stringify(round);
+  try { if (localStorage.getItem(key) === roundKey) return; } catch {}
+  $('#award-unlock-icon').textContent = awardIcon({...award, groupId:group});
+  $('#award-unlock-name').textContent = awardTitle(award);
+  dialog.showModal();
+  try { localStorage.setItem(key, roundKey); } catch {}
 }
 
 function forumKey(topic, parent=0) {
@@ -100,7 +138,7 @@ function composer(key, fields, publishText, saved, onSave) {
 function thread(view, post) {
   const article = element('article', undefined, 'thread');
   const fields = view.topic.fields || discussionFields;
-  article.append(element('h3', groupName(post.groupId)));
+  article.append(groupLabel(element('h3'), post.groupId));
   for (const field of fields) {
     const value = post.values?.[field.name];
     if (typeof value !== 'string') continue;
@@ -148,7 +186,7 @@ function thread(view, post) {
       feedback.textContent = '';
       const messages = comments.map(entry => {
         const reply = element('div', undefined, 'reply');
-        reply.append(element('strong', groupName(entry.groupId)), element('p', entry.values.message));
+        reply.append(groupLabel(element('strong'), entry.groupId), element('p', entry.values.message));
         return reply;
       });
       replies.replaceChildren(...(messages.length ? messages : [element('p','还没有评论。')]));
@@ -268,8 +306,12 @@ async function connect() {
     const db = await cloudDb();
     round = params.has('round') ? params.get('round') || null : await roundId();
     collection = db.collection('food-journey-groups');
+    const feedback = await readDocument('class-feedback').catch(() => null);
+    awards = feedback && (feedback.resetId || null) === round ? feedback.groups || {} : {};
+    if (!teacher) groupLabel($('#audience'), group);
     $('#topics').replaceChildren(...tabs);
     select(views[0]);
+    showAwardUnlock();
   } catch {
     $('#status').textContent = '暂时无法连接论坛，请点击“刷新帖子”重试。';
     $('#refresh').disabled = false;

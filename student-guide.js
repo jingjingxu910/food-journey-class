@@ -168,6 +168,10 @@ export function installStudentGuide(frame, url) {
       replay.hidden=true;
       view.addEventListener('class-command',event=>showEvaluationGuide(event.detail?.phase));
       showEvaluationGuide(params.get('activity'));
-    }else if(!hasSeen())open();
+    }else if(!hasSeen()){
+      const medal=doc.querySelector('#award-unlock[open]');
+      if(medal)medal.addEventListener('close',open,{once:true});
+      else open();
+    }
   }
 }

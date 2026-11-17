@@ -182,6 +182,54 @@ form button { justify-self: start; background: var(--primary); color: #fff; bord
 #threads { display: grid; gap: 14px; margin-top: 12px; }
 .thread { min-width: 0; padding: 14px; border: 1px solid var(--edge); border-radius: 16px; }
 .thread h3 { margin-bottom: 8px; color: #185446; }
+.group-award-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.65em;
+  min-height: 1.65em;
+  margin-inline-start: .4em;
+  padding: 0 .14em;
+  border: 1px solid #ead6a1;
+  border-radius: 999px;
+  background: #fff7df;
+  font-size: .85em;
+  line-height: 1;
+  vertical-align: middle;
+}
+.award-unlock {
+  container-type: inline-size;
+  width: min(390px, calc(100% - 36px));
+  box-sizing: border-box;
+  padding: 25px 22px 22px;
+  border: 2px solid #f2d89a;
+  border-radius: 27px;
+  text-align: center;
+  color: #315448;
+  background: radial-gradient(ellipse at top, #fff4d4, #fffdf7 76%);
+  box-shadow: 0 14px 50px #26423955;
+}
+.award-unlock::backdrop { background: #1f453d78; }
+.award-unlock[open] { animation: award-arrive .34s ease-out; }
+.award-unlock-art { display: flex; align-items: center; justify-content: center; gap: 12px; color: #b77326; font-size: 24px; margin-bottom: 14px; }
+.award-unlock-art div {
+  display: grid;
+  place-items: center;
+  width: 92px;
+  height: 92px;
+  border: 4px double #d49839;
+  border-radius: 50%;
+  background: #ffe7a4;
+  font-size: 48px;
+  box-shadow: 0 5px 0 #e6bb6f;
+}
+.award-unlock h2 {
+  font-size: min(25px, calc(100cqi / 14));
+  white-space: nowrap;
+}
+#award-unlock-name { margin-top: 6px; color: #6f5034; font-weight: 750; }
+.award-unlock form { display: flex; justify-content: center; }
+@keyframes award-arrive { from { opacity: 0; transform: translateY(12px) scale(.92); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .award-unlock[open] { animation: none; } }
 .thread p { white-space: pre-wrap; overflow-wrap: anywhere; }
 .thread-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
 .thread-actions button { background: #f6faf8; }

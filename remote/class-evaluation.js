@@ -1,5 +1,5 @@
 import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from '../student-data.js?v=20261116-tablet-fixes';
-import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from '../evaluation-data.js?v=award-journey-evidence';
+import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from '../evaluation-data.js?v=automatic-stars';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
