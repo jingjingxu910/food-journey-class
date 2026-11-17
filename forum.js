@@ -276,7 +276,7 @@ async function refresh(view) {
   if (active !== view) return;
   const request = ++view.request;
   $('#refresh').disabled = true;
-  $('#status').textContent = '正在读取帖子…';
+  $('#status').textContent = teacher ? '' : '正在读取帖子…';
   try {
     const key = forumKey(view.topic);
     const entries = (await readEntries(key)).sort((a,b)=>a.groupId-b.groupId);
@@ -355,7 +355,7 @@ function select(view) {
 
 async function connect() {
   $('#refresh').disabled = true;
-  $('#status').textContent = '正在连接论坛…';
+  $('#status').textContent = teacher ? '' : '正在连接论坛…';
   try {
     const db = await cloudDb();
     round = params.has('round') ? params.get('round') || null : await roundId();

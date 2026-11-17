@@ -11,7 +11,7 @@ if(teacher)setup();
 function setup(){
  const host=document.querySelector('#teacher-view');if(!host)return;
  const wall=document.createElement('section');wall.className='live-wall';wall.hidden=true;
- wall.innerHTML='<div class="live-toolbar"><div><h2>小组同步预览</h2></div><nav class="live-pages" aria-label="同步预览分页"><button data-page="0">第 1–6 组</button><button data-page="1">第 7–12 组</button></nav></div><p class="live-notice" role="status" aria-live="polite"></p><div class="live-grid"></div>';
+ wall.innerHTML='<div class="live-toolbar"><div><h2>小组同步预览</h2></div><nav class="live-pages" aria-label="同步预览分页"><button data-page="0">第 1–6 组</button><button data-page="1">第 7–12 组</button></nav></div><div class="live-grid"></div>';
  host.append(wall);
  const dialog=document.createElement('dialog');dialog.className='live-focus';dialog.innerHTML='<header><h2></h2><button type="button">返回小组预览</button></header><div class="live-focus-content"></div>';document.body.append(dialog);
  const gameFrame=document.createElement('iframe');
@@ -101,7 +101,6 @@ function setup(){
  let phase=window.currentTeacherLivePhase||null,page=0,focus=null,resetId=null,records=[],snapshots=new Map(),watcher=null,watchVersion=0,token='',initial=true,demo=false;
  const phaseSnapshots=new Map([[phase,snapshots]]),lastCameraFrames=new Map();
  const seen=new Map(),unread=new Map(),flashes=new Map(),demoSubmitted=new Set();let lastControl='',controlBusy=false,controlAgain=false;
- const focusedNotice=document.createElement('p');focusedNotice.className='live-notice';focusedNotice.setAttribute('role','status');dialog.querySelector('header').after(focusedNotice);
  const stageLabel=()=>({v1:'初始模型',observation:'AR观察',v2:'修正模型',journey:'食物旅行'}[phase]||'');
  let pageSize=6;
  const groupIds=()=>Array.from({length:Math.min(pageSize,12-page*pageSize)},(_,i)=>page*pageSize+i+1);
@@ -182,8 +181,7 @@ function setup(){
   wall.style.setProperty('--live-height',available+'px');
   const rows=Math.ceil(pageSize/(innerWidth>=1100?6:innerWidth>=680?3:2));
   const toolbar=wall.querySelector('.live-toolbar');
-  const notice=wall.querySelector('.live-notice');
-  const rowHeight=(available-toolbar.offsetHeight-Math.max(42,notice.offsetHeight)-24)/rows;
+  const rowHeight=(available-toolbar.offsetHeight-24)/rows;
   wall.style.setProperty('--game-preview-width',Math.max(75,(rowHeight-116)*.75)+'px');
   const pages=wall.querySelector('.live-pages');
   const pageMarkup=Array.from({length:Math.ceil(12/pageSize)},(_,p)=>{
@@ -228,9 +226,6 @@ function setup(){
    for(const frame of grid.querySelectorAll('iframe'))frame.contentWindow?.postMessage({channel:'journey-observer',paused},location.origin);
   }
   if(!paused)updateGameCards(grid);
-  const updatedGroups=[...unread.keys()].filter(key=>key.startsWith(phase+':')).map(key=>Number(key.split(':')[1]));
-  wall.querySelector('.live-notice').textContent=updatedGroups.length?'第 '+updatedGroups.join('、')+' 组已提交':'';
-  focusedNotice.textContent=focus&&updatedGroups.includes(focus)?'本组已提交':'';
   if(focus){
    dialog.querySelector('h2').textContent='第 '+focus+' 组 · '+stageLabel();
    const content=dialog.querySelector('.live-focus-content');
@@ -320,7 +315,7 @@ function setup(){
  window.addEventListener('pagehide',()=>{clearInterval(heartbeat);clearInterval(demoPlayback);clearInterval(previewPoll);watcher?.close();void writeTeacherFocus({phase:null,groups:[],token});});
  if(isLocalPreview){
   const row=document.createElement('div');row.className='live-demo-actions';row.innerHTML='<span class="live-demo-badge">本地预览 · 云端已隔离</span><button type="button">显示 12 组演示</button><button type="button" hidden>模拟另一页提交</button>';wall.querySelector('.live-toolbar').append(row);
-  const buttons=row.querySelectorAll('button');buttons[0].onclick=()=>{demo=!demo;buttons[0].textContent=demo?'返回本地真实小组':'显示 12 组演示';buttons[1].hidden=!demo;void subscribe();render();void control();};buttons[1].onclick=()=>{const id=page===0?pageSize+1:1,key=phase+':'+id;demoSubmitted.add(key);unread.set(key,Date.now());flashes.set(key,Date.now());wall.querySelector('.live-notice').textContent=`演示：第 ${id} 组已提交，另一页已标记`;render();};
+  const buttons=row.querySelectorAll('button');buttons[0].onclick=()=>{demo=!demo;buttons[0].textContent=demo?'返回本地真实小组':'显示 12 组演示';buttons[1].hidden=!demo;void subscribe();render();void control();};buttons[1].onclick=()=>{const id=page===0?pageSize+1:1,key=phase+':'+id;demoSubmitted.add(key);unread.set(key,Date.now());flashes.set(key,Date.now());render();};
  }
  render();void subscribe();void control();
 }

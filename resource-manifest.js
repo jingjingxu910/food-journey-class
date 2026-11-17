@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-03d54652d2be250a",
-  "bytes": 106398913,
+  "version": "20261102-chunks-2383dbccf5cf2576",
+  "bytes": 106397964,
   "files": [
     {
       "path": "app.js",
@@ -1864,8 +1864,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "class-evaluation.js",
-      "bytes": 24719,
-      "hash": "a15f9fe10f8c4f33e5844962dfa33ef80256b035e0f29028266406c8c09e4140"
+      "bytes": 24497,
+      "hash": "75572850d3c737917486828e592dbe75bb4a4f9111936273fd48500242e26442"
     },
     {
       "path": "cloud-loader.js",
@@ -1924,8 +1924,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "forum.js",
-      "bytes": 16840,
-      "hash": "0654f35487984fc42764a9b020e8ccd517ad3f10d5bb7296ae1e276275d4894e"
+      "bytes": 16870,
+      "hash": "69c9f7be18b0b85d98269770ded2c8cbb57e162e8fe3fdda0b5d6cf3f0958ded"
     },
     {
       "path": "frame-entry.js",
@@ -2094,8 +2094,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "live-dashboard.js",
-      "bytes": 23359,
-      "hash": "5294a498e5db2daac4b3351a0be86e42b7f943a59e0d2a5871194bd0e35e10f3"
+      "bytes": 22602,
+      "hash": "0237ac6adc424a786cab3e2ddac1200f2ad30dbc05508498769e677300ec25f5"
     },
     {
       "path": "live-sync.js",
@@ -2568,7 +2568,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-03d54652d2be250a"
+      "hash": "manifest-20261102-chunks-2383dbccf5cf2576"
     }
   ]
 };
