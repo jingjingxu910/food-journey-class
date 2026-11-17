@@ -1,7 +1,7 @@
 import './live-sync.js?v=20261118-classroom-review';
 import {organSegments} from './ar-media-segments.js';
 import {arGuideLines} from './ar-guide-lines.js';
-import {bindSproutDrag} from './sprout-controls.js?v=ar-sprout-drag';
+import {bindSproutDrag} from './sprout-controls.js?v=ar-sprout-dock';
 const isPreview=new URLSearchParams(location.search).get('preview')==='1';
 import {CameraMotion} from './ar-motion.js';
 import {BodyTracker,mapOverlay} from './ar-tracking.js';
@@ -208,6 +208,7 @@ function showArTip(id,queue=false){
  $('#ar-tip-bubble').hidden=false;
  tip.hidden=false;
  $('#ar-tip-trigger').setAttribute('aria-label',finishedFirstVideo?'听一条观察提示，也可以拖动小芽':'拖动小芽');
+ $('#ar-sprout-label').hidden=!finishedFirstVideo;
  if(!queue)stopTipVoice();
  const version=tipVoiceVersion;
  tipVoiceQueue=tipVoiceQueue.then(async()=>{
@@ -248,17 +249,17 @@ bindSproutDrag(arTip,arTipTrigger,()=>{},async()=>{
  const options=questionIds.filter(id=>id!==lastQuestion);
  lastQuestion=options[Math.floor(Math.random()*options.length)];
  showArTip(lastQuestion);
-},(x,y,width,height)=>{
+},(x,y,width,height,released=false)=>{
  const bounds=$('#camera-stage').getBoundingClientRect();
  const left=Math.max(4,Math.min(x-bounds.left,bounds.width-width-4));
  const top=Math.max(4,Math.min(y-bounds.top,bounds.height-height-4));
  const right=left+width/2>bounds.width/2;
- arTip.style.left=left+'px';
- arTip.style.top=top+'px';
+ arTip.style.left=released?(right?'auto':'4px'):left+'px';
+ arTip.style.right=released&&right?'4px':'auto';
+ arTip.style.top=released?`clamp(4px, ${100*top/bounds.height}%, calc(100% - var(--ar-sprout-height) - 4px))`:top+'px';
  arTip.style.bottom='auto';
  arTip.dataset.side=right?'right':'left';
  arTip.dataset.bubbleAnchor=top+height/2>bounds.height/2?'bottom':'top';
- arTip.style.setProperty('--ar-tip-room',Math.max(68,(right?left:bounds.width-left-width)-14)+'px');
 });
 function showBackObservationTip(){
  if(finishedFirstVideo||$('#organ-media').hidden||$('#organ-video').hidden||!$('#organ-video').hasAttribute('src'))return;

@@ -374,11 +374,11 @@ async function connect() {
 
 $('#audience').textContent = groupName(actor);
 if (!teacher) {
+  $('#instructions').hidden = false;
   const home = element('a', '← 课堂首页', 'forum-home');
   home.href = 'index.html?group=' + group;
   $('.header-actions').prepend(home);
 }
-if (teacher) $('#instructions').textContent = '选择话题查看各组的帖子，可以点赞或以许老师的名字留言。';
 $('#fullscreen').onclick = () => window.requestLessonFullscreen?.();
 const guide = $('.sprout-guide');
 const hintButton = $('#show-hint');

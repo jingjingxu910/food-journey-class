@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-7225e80c2e120589",
-  "bytes": 106398219,
+  "version": "20261102-chunks-03d54652d2be250a",
+  "bytes": 106398913,
   "files": [
     {
       "path": "app.js",
@@ -15,7 +15,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "ar-entry.js",
       "bytes": 857,
-      "hash": "f8bcd8cf46010f278e1c973c7574d2caa611834316605f1d56fb7ee9933e7a69"
+      "hash": "92fc640eecf1d476255022022668a6371899490830575a09a903054f7cf7a3b8"
     },
     {
       "path": "ar-guide-lines.js",
@@ -34,8 +34,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "ar-observation.css",
-      "bytes": 17747,
-      "hash": "1e7bd79dd8036264db50caef78ee0227a2f2c23f6bebddb4ac3be93e617c9c1b"
+      "bytes": 18161,
+      "hash": "9897e52052960dc7a0fc96ee737e6232372031ae9d027eb3d6c79ca7e7477e98"
     },
     {
       "path": "ar-organ-viewer.js",
@@ -1919,13 +1919,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "forum.html",
-      "bytes": 2277,
-      "hash": "a4d17651f7191391d11e15d4ca2d6d96d48b27beda19ee8dfdeb3eab8ff33b70"
+      "bytes": 2280,
+      "hash": "a8dd83687a2a77bec9cbb4712f4ae82af7f339850b037262bbbbc949213d637f"
     },
     {
       "path": "forum.js",
-      "bytes": 16934,
-      "hash": "fbb8f091df4ea05d7e538d1af08476fc48337d3f0cc33c0e8bdf827c7e19da2b"
+      "bytes": 16840,
+      "hash": "0654f35487984fc42764a9b020e8ccd517ad3f10d5bb7296ae1e276275d4894e"
     },
     {
       "path": "frame-entry.js",
@@ -2129,13 +2129,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "observation.html",
-      "bytes": 5342,
-      "hash": "4646b6a00a1a55458811ba531102dbc7abd25ce5ff6147f8aa8de51c270e76fa"
+      "bytes": 5482,
+      "hash": "1f5d79b06781e9c14ec3bc47044e4b0864c449d617c19b606f53ab7520007a4c"
     },
     {
       "path": "observation.js",
-      "bytes": 36503,
-      "hash": "23896b9077b156d0e55d3c6a9ade12b261035c444d76561a09d3ebc4c60d6dbd"
+      "bytes": 36640,
+      "hash": "15ad44b272080e51b4d95bf6cf7ddc961fb8a7f119092d04d4b9fb0509113fe4"
     },
     {
       "path": "organ-drag.js",
@@ -2174,8 +2174,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "sprout-controls.js",
-      "bytes": 2522,
-      "hash": "3f26a236b64e761cd834a3223ee06ccbcdf962882ba2b5104fec8ba640c3d0c7"
+      "bytes": 2616,
+      "hash": "8fc8d73e24bfa910f3e079f45c21890328994468139c1d151b5486910cbfaa4d"
     },
     {
       "path": "sprout.css",
@@ -2568,7 +2568,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-7225e80c2e120589"
+      "hash": "manifest-20261102-chunks-03d54652d2be250a"
     }
   ]
 };

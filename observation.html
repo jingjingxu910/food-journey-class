@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="styles.css?v=20261031-1">
   <link rel="stylesheet" href="student-flow.css?v=20261031-1">
   <script defer src="cloud-loader.js?v=20261031-1"></script>
-  <link rel="stylesheet" href="ar-observation.css?v=ar-tip-dismiss">
-  <script defer src="ar-entry.js?v=ar-tip-dismiss"></script>
+  <link rel="stylesheet" href="ar-observation.css?v=ar-sprout-dock">
+  <script defer src="ar-entry.js?v=ar-sprout-dock"></script>
   <script defer src="watermark.js?v=20261031-1"></script>
 <link rel="stylesheet" href="tablet.css?v=20261118-game-mirror">
 <script defer src="tablet-runtime.js?v=20261105-tablet"></script>
@@ -26,7 +26,10 @@
             <p>正对镜头，拍到脸、双肩和裤腰两侧</p>
           </div>
           <div id="ar-tap-tip" hidden>
-            <button id="ar-tip-trigger" type="button" aria-label="拖动小芽"><span aria-hidden="true"></span></button>
+            <button id="ar-tip-trigger" type="button" aria-label="拖动小芽">
+              <span class="ar-sprout-art" aria-hidden="true"></span>
+              <span id="ar-sprout-label" aria-hidden="true" hidden>点我看提示</span>
+            </button>
             <div id="ar-tip-bubble" hidden>
               <p role="status"></p>
               <button id="close-ar-tip" type="button" aria-label="收起提示">×</button>

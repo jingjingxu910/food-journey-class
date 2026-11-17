@@ -32,8 +32,10 @@ export function bindSproutDrag(guide,hintButton,hideHint,onTap,moveFreely){
   function finishDrag(event) {
     if (drag?.id !== event.pointerId) return;
     if (drag.moved) {
-      if(!moveFreely){
-        const bounds = hintButton.getBoundingClientRect();
+      const bounds = hintButton.getBoundingClientRect();
+      if (moveFreely) {
+        moveFreely(bounds.left, bounds.top, bounds.width, bounds.height, true);
+      } else {
         guide.dataset.side = bounds.left + bounds.width / 2 < window.innerWidth / 2 ? 'left' : 'right';
         guide.style.setProperty('--sprout-y', (100 * bounds.top / window.innerHeight) + '%');
         guide.style.removeProperty('--drag-x');
