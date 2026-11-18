@@ -1,6 +1,6 @@
 self.LESSON_RESOURCES = {
-  "version": "20261102-chunks-2383dbccf5cf2576",
-  "bytes": 106397964,
+  "version": "20261102-chunks-7e2fb02e9159188e",
+  "bytes": 106401340,
   "files": [
     {
       "path": "app.js",
@@ -1864,8 +1864,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "class-evaluation.js",
-      "bytes": 24497,
-      "hash": "75572850d3c737917486828e592dbe75bb4a4f9111936273fd48500242e26442"
+      "bytes": 25104,
+      "hash": "f796a3851f488018bdbd9bb33644d9c766100907c8d1ce5273723b360633de9b"
     },
     {
       "path": "cloud-loader.js",
@@ -2089,13 +2089,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "live-dashboard.css",
-      "bytes": 17857,
-      "hash": "d0b2adc640575668f33e368ec999d00096c7e9b7fe61fd68e4168e0de9e66b37"
+      "bytes": 19265,
+      "hash": "57939ac107d36a3009e42bc6c9a7573cd4fa48f1ff1c11b76532fd53f403ab56"
     },
     {
       "path": "live-dashboard.js",
-      "bytes": 22602,
-      "hash": "0237ac6adc424a786cab3e2ddac1200f2ad30dbc05508498769e677300ec25f5"
+      "bytes": 23055,
+      "hash": "ef727dd93622066d0b63ebd49361b2b79a76335c3d72d661c7d0a56fb0ef56de"
     },
     {
       "path": "live-sync.js",
@@ -2119,13 +2119,13 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "model-workbench.html",
-      "bytes": 6319,
-      "hash": "fe6f5573dfe62f9741628a4af96511cbc9faf1314766256396df756b32702595"
+      "bytes": 6324,
+      "hash": "4099c6c64f19ff450545f0f0efddb9205eec99bfb6bf782faac09fab85b053b1"
     },
     {
       "path": "model-workbench.js",
-      "bytes": 49492,
-      "hash": "5959cc40dd6c069cd3bd05d0169f232112bc622c807e48b60112f38ed2772bb4"
+      "bytes": 49755,
+      "hash": "67662037d545207cb676f20cbb6b5026ea428f5efd7b85fdb3c56940fd53e64a"
     },
     {
       "path": "observation.html",
@@ -2239,8 +2239,8 @@ self.LESSON_RESOURCES = {
     },
     {
       "path": "teacher-auto-stars.js",
-      "bytes": 2061,
-      "hash": "9aedf98dde5b0308dc8ad8737f177dc1da20857e101161ffb125940c013fb6e4"
+      "bytes": 2701,
+      "hash": "2413fa594602dcf680931aa40e49e5811cba616a226c03c3401749e8b90b6a2c"
     },
     {
       "path": "vendor/BufferGeometryUtils.js",
@@ -2568,7 +2568,7 @@ self.LESSON_RESOURCES = {
     {
       "path": "resource-manifest.js",
       "bytes": 0,
-      "hash": "manifest-20261102-chunks-2383dbccf5cf2576"
+      "hash": "manifest-20261102-chunks-7e2fb02e9159188e"
     }
   ]
 };

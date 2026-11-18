@@ -715,12 +715,16 @@ function renderDashboard(records) {
 
 async function loadCloudRecords() {
   const database = await initializeCloud();
-  const result = await database.collection(CLOUD_COLLECTION).get();
+  const ids = Array.from({length:12}, (_,index) => 'group-' + (index + 1));
+  const result = await database.collection(CLOUD_COLLECTION).where({_id:database.command.in(ids)}).limit(ids.length).get();
   if (result?.code) throw new Error(result.message || "无法读取云端记录");
   const documents = Array.isArray(result?.data) ? result.data : [];
-  return documents.flatMap((document) => Array.isArray(document.records)
-    ? document.records.filter((record) => Number(record.groupId) === Number(document.id))
-    : []);
+  return documents.flatMap(recordsInGroupDocument);
+}
+
+function recordsInGroupDocument(document) {
+  const id = document._id?.match(/^group-(\d+)$/)?.[1] ?? document.id;
+  return (Array.isArray(document.records) ? document.records : []).filter(record => Number(record.groupId) === Number(id));
 }
 
 async function refreshDashboard() {
@@ -728,23 +732,21 @@ async function refreshDashboard() {
   if(button.disabled)return;
   button.disabled = true;
   button.textContent = "正在刷新…";
-  const localRecords = await loadLocalRecords().catch(() => []);
-  let cloudRecords = [];
   try {
-    activeResetId = await loadClassResetId();
-    if (activeResetId) await updateLocalLessonRecords((record) => record.resetId !== activeResetId);
-    cloudRecords = await loadCloudRecords();
+    const [resetId, cloudRecords] = await Promise.all([loadClassResetId(), loadCloudRecords()]);
+    activeResetId = resetId;
+    const records = cloudRecords.filter(record => (record.resetId || null) === (resetId || null));
+    renderDashboard(records);
+    window.dispatchEvent(new CustomEvent("lesson-records", {detail:{records,resetId}}));
     document.querySelector("#connection-status").textContent = "教师端已连接";
   } catch (error) {
     console.error("教师端云端读取失败", error);
     document.querySelector("#connection-status").textContent = "连接失败：" + (error?.code ? error.code + " · " : "") + error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = "刷新数据";
+    if(mode==='teacher')void watchTeacherRecords();
   }
-  const visibleRecords = cloudRecords.filter(record => (record.resetId || null) === (activeResetId || null));
-  renderDashboard(visibleRecords);
-  window.dispatchEvent(new CustomEvent("lesson-records", {detail:{records:cloudRecords.filter(r=>(r.resetId||null)===(activeResetId||null)),resetId:activeResetId}}));
-  button.disabled = false;
-  button.textContent = "刷新数据";
-  if(mode==='teacher')void watchTeacherRecords();
 }
 
 let teacherWatcher=null,teacherWatchStarting=false;
@@ -763,14 +765,14 @@ async function watchTeacherRecords(){
         if(document.hidden||!Array.isArray(snapshot.docs))return;
         const docs=snapshot.docs,reset=docs.find(d=>d._id==='class-reset'||d.id==='class-reset');
         if((reset?.resetId||null)!==(activeResetId||null)){void refreshDashboard();return;}
-        const records=docs.flatMap(d=>Array.isArray(d.records)?d.records.filter(r=>Number(r.groupId)===Number(d.id)):[])
+        const records=docs.flatMap(recordsInGroupDocument)
           .filter(r=>(r.resetId||null)===(activeResetId||null));
         renderDashboard(records);
         const feedback=docs.find(d=>d._id==='class-feedback'||(d.groups&&d.resetId!==undefined));
         window.dispatchEvent(new CustomEvent('lesson-records',{detail:{records,resetId:activeResetId,feedback}}));
         document.querySelector('#connection-status').textContent='教师端实时接收中';
       },
-      onError(){stopTeacherWatch();document.querySelector('#connection-status').textContent='实时接收中断，可点刷新重连';}
+      onError(){stopTeacherWatch();}
     });
   }catch{stopTeacherWatch();}finally{teacherWatchStarting=false;}
 }
@@ -778,8 +780,12 @@ document.addEventListener('visibilitychange',()=>{
   if(mode!=='teacher')return;
   if(document.hidden)stopTeacherWatch();else void refreshDashboard();
 });
-window.addEventListener('online',()=>{if(mode==='teacher')void refreshDashboard();});
-if(mode==='teacher')setInterval(()=>{if(!document.hidden&&!teacherWatcher&&!teacherWatchStarting)void refreshDashboard();},8000);
+window.addEventListener('online',()=>{
+  if(mode!=='teacher'||document.hidden)return;
+  stopTeacherWatch();
+  void refreshDashboard();
+});
+if(mode==='teacher')setInterval(()=>{if(navigator.onLine&&!document.hidden&&!teacherWatchStarting)void refreshDashboard();},8000);
 window.addEventListener('pagehide',stopTeacherWatch);
 
 async function clearAllClassData() {
@@ -860,17 +866,19 @@ async function exportRecords() {
   URL.revokeObjectURL(url);
 }
 
-function renderSubmittedModelAnalysis(record,phaseName){
+function renderSubmittedModelAnalysis(record,phaseName,modelMarkup){
   const model=record?.[phaseName];
-  if(!model)return '';
+  if(!model)return modelMarkup||'';
   const inferred=inferRouteOrder(model,phaseName);
   const routeNames=inferred.displayOrder||[];
   const route = routeNames.length ? routeNames.join(" → ") : model.routePoints?.length >= 2 ? "已有笔迹，未识别到经过的器官，请对照上图查看" : "本次提交没有路线笔迹";
   const revision = phaseName === "v2" ? compareModels(record.v1, model) : null;
   const before = revision && record.v1 ? inferRouteOrder(record.v1,"v1",model).displayOrder?.join(" → ") : '';
   const routeComparison = revision ? '<small class="route-inference-note model-route-before">初始模型 · '+(before||'未识别到器官顺序')+'</small><small class="route-inference-note model-route-before">修正模型 · '+route+'</small>' : '';
-  const metrics = `<dl class="model-preview-metrics"><div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>建模用时</dt><dd>${formatDuration(model)}</dd></div><div class="model-metric-route"><dt>所画路线</dt><dd>${route}${inferred.hasDrawn?'<small class="route-inference-note">'+(inferred.unmatchedDrawn?'另有补画部分，暂无法可靠排入顺序，请结合原图查看。':'已纳入路线附近的补画部分；具体名称请结合小组说明确认。')+'</small>':''}</dd></div>${revision ? `<div class="model-metric-revision"><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div class="model-metric-revision"><dt>器官顺序</dt><dd>${revision.routeChanged ? "有变化" : "相同"}${routeComparison}</dd></div>` : ""}</dl>`;
-  return metrics;
+  const behavior = `<div><dt>摆放调整</dt><dd>${model.modificationCount || 0} 次</dd></div><div><dt>建模用时</dt><dd>${formatDuration(model)}</dd></div>`;
+  const routes = `<div class="model-metric-route"><dt>所画路线</dt><dd>${route}${inferred.hasDrawn?'<small class="route-inference-note">'+(inferred.unmatchedDrawn?'另有补画部分，暂无法可靠排入顺序，请结合原图查看。':'已纳入路线附近的补画部分；具体名称请结合小组说明确认。')+'</small>':''}</dd></div>${revision ? `<div class="model-metric-revision"><dt>修正器官</dt><dd>${revision.organs.join("、") || "未调整位置"}</dd></div><div class="model-metric-revision"><dt>器官顺序</dt><dd>${revision.routeChanged ? "有变化" : "相同"}${routeComparison}</dd></div>` : ""}`;
+  if(!modelMarkup)return `<dl class="model-preview-metrics">${behavior}${routes}</dl>`;
+  return `<div class="model-preview-layout"><section class="live-analysis"><strong>建模行为</strong><dl class="model-preview-metrics">${behavior}</dl></section><div class="model-preview-main">${modelMarkup}</div><section class="live-analysis"><strong>路线分析</strong><dl class="model-preview-metrics">${routes}</dl></section></div>`;
 }
 window.renderSubmittedModelAnalysis=renderSubmittedModelAnalysis;
 
@@ -879,9 +887,8 @@ function openModelPreview(groupId, phaseName) {
   const model = phaseName === "v2" ? record?.v2 : record?.v1;
   if (!model) return;
   const label = phaseName === "v2" ? "观察后修正" : "观察前想法";
-  const metrics=renderSubmittedModelAnalysis(record,phaseName);
   document.querySelector("#preview-model-title").textContent = `第 ${groupId} 组 · ${label}`;
-  document.querySelector("#preview-model-content").innerHTML = `<div class="preview-model-image">${miniModel(model, label, {phase:phaseName})}</div>${metrics}`;
+  document.querySelector("#preview-model-content").innerHTML = renderSubmittedModelAnalysis(record,phaseName,miniModel(model,label,{phase:phaseName}));
   document.querySelector("#model-preview-dialog").showModal();
 }
 

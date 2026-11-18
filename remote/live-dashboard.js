@@ -140,13 +140,17 @@ function setup(){
  function preview(state,id,submitted,expanded=false){
   const record=demo&&['v1','v2'].includes(phase)?{v1:demoState(id,'v1').model,v2:demoState(id,'v2').model}:recordFor(id);
   if(submitted&&phase==='journey')return (expanded?'':'<div class="live-scene live-game-scene"></div>')+journeyAnalysis(record?.journey,expanded);
-  const analysis=submitted&&['v1','v2'].includes(phase)?window.renderSubmittedModelAnalysis?.(record,phase)||'':'';
-  const summary=analysis?'<div class="live-analysis"><strong>行为与路线分析</strong>'+analysis+'</div>':'';
+  const withAnalysis=markup=>{
+   if(!submitted||!['v1','v2'].includes(phase)||!window.renderSubmittedModelAnalysis)return markup;
+   if(expanded)return window.renderSubmittedModelAnalysis(record,phase,markup);
+   const metrics=window.renderSubmittedModelAnalysis(record,phase);
+   return metrics?markup+'<div class="live-analysis"><strong>行为与路线分析</strong>'+metrics+'</div>':markup;
+  };
 
   if(phase==='v2'){
    const before=demo?demoState(id,'v1').model:record?.v1?.completedAt?record.v1:null;
    const after=submitted&&!demo?record?.v2:state?.model;
-   return (window.renderLiveComparison?.(before,after)||'')+summary;
+   return withAnalysis(window.renderLiveComparison?.(before,after)||'');
   }
   if(!state)return '<div class="live-empty"><span>◌</span><b>等待本组进入</b></div>';
   if(state.phase==='observation'){
@@ -161,7 +165,7 @@ function setup(){
    const src=organ?'assets/models/ar-thumbnails/'+organ+'.png':'';
    return src?'<div class="live-scene live-capture"><img src="'+src+'" alt="'+escape(state.organName||'器官观察')+'"></div><p class="live-game-copy">'+escape(state.organName||'器官观察')+'</p>':'<div class="live-empty">'+(state.completed?'观察完成':'观察身体里的器官')+'</div>';
   }
-  if(state.phase!=='journey')return (window.renderLiveModel?.(state.model)||'<div class="live-empty">模型正在准备</div>')+summary;
+  if(state.phase!=='journey')return withAnalysis(window.renderLiveModel?.(state.model)||'<div class="live-empty">模型正在准备</div>');
   if(state.stage==='done')return expanded?'':'<div class="live-scene live-game-scene"></div>';
   const food=state.foodName||'食物正在变化';
   const viewport=expanded?'':'<div class="live-scene live-game-scene"></div>';
@@ -246,7 +250,9 @@ function setup(){
   try{if(signature!==lastControl)token=crypto.randomUUID();await writeTeacherFocus({phase,groups,focus:!!focus,resetId,token});lastControl=signature;}catch{lastControl='';}finally{controlBusy=false;if(controlAgain){controlAgain=false;void control(true);}}
  }
  async function subscribe(){
+ let pullSnapshots;
   const version=++watchVersion;
+  pullSnapshots=undefined;
   watcher?.close();
   watcher=null;
   if(!phase||demo)return;
@@ -273,8 +279,16 @@ function setup(){
      onError(){if(version!==watchVersion)return;watcher?.close();watcher=null;}
     });
    }
-   const result=await query.get();
-   if(!result?.code)receive(result.data);
+   let pulling=false;
+   pullSnapshots=async()=>{
+    if(pulling||version!==watchVersion)return;
+    pulling=true;
+    try{
+     const result=await query.get();
+     if(!result?.code)receive(result.data);
+    }catch{}finally{pulling=false;}
+   };
+   await pullSnapshots();
   }catch{/* Reconnect on the next heartbeat. */}
  }
  async function selectPhase(next){if(next===phase){render();return;}phase=next;focus=null;if(!phaseSnapshots.has(next))phaseSnapshots.set(next,new Map());snapshots=phaseSnapshots.get(next);if(dialog.open)dialog.close();lastControl='';render();void control();await subscribe();}
@@ -308,7 +322,7 @@ function setup(){
  dialog.querySelector('header button').onclick=()=>dialog.close();dialog.addEventListener('close',()=>{if(dialog.open)return;focus=null;window.speechSynthesis?.cancel();render();void control();});
  window.addEventListener('resize',()=>{render();void control();});
  document.querySelector('#refresh-dashboard')?.addEventListener('click',()=>{if(phase&&!demo){void control(true);void subscribe();}});
- const previewPoll=setInterval(()=>{if(!document.hidden&&!watcher&&phase&&!demo)void subscribe();},2000);
+ const previewPoll=setInterval(()=>{if(!document.hidden&&phase&&!demo){if(watcher)void pullSnapshots?.();else void subscribe();}},3000);
  const demoPlayback=setInterval(()=>{if(demo&&phase==='journey'&&!document.hidden){updateGameCards(wall.querySelector('.live-grid'));showGame();}},250);
  const heartbeat=setInterval(()=>{if(!document.hidden){void control(true);if(!watcher&&phase&&!demo)void subscribe();}},20000);
  document.addEventListener('visibilitychange',()=>{if(document.hidden){watchVersion++;watcher?.close();watcher=null;}else void subscribe();void control(true);});

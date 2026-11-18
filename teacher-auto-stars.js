@@ -1,6 +1,25 @@
 import {automaticStars,readForumStarGroups,submittedRecords} from './evaluation-data.js?v=classroom-remote';
 
-export function makeAutomaticStarsButton({el,button,symbols,readState}){
+export function makeForumStarRefresh(readRound, onScores) {
+ let lastRound, lastRequest=0, pending=false;
+ return async function refresh(){
+   const round=readRound();
+   if(round===undefined||pending||round===lastRound&&Date.now()-lastRequest<30000)return;
+   pending=true;
+   lastRound=round;
+   lastRequest=Date.now();
+   try {
+     const replies=await readForumStarGroups(round);
+     if(readRound()===round)onScores(replies);
+   } catch {
+     // Preserve the last successful tally through a connection interruption.
+   } finally {
+     pending=false;
+   }
+ };
+}
+
+export function makeAutomaticStarsButton({el,button,symbols,readState,onScores}){
  const autoDialog=el('dialog',undefined,'ev-auto-stars');
  autoDialog.setAttribute('aria-label','自动加星明细');
  const autoBody=el('div');
@@ -20,7 +39,8 @@ export function makeAutomaticStarsButton({el,button,symbols,readState}){
    if(!autoDialog.open)return;
    if(round!==readState().resetId){autoBody.replaceChildren(el('p','课堂已换轮次，请关闭后重新查看。'));return;}
    const current=submissions.status==='fulfilled'?submissions.value:readState().records;
-   const replies=forum.status==='fulfilled'?forum.value:new Set();
+   const replies=forum.status==='fulfilled'?forum.value:readState().forumReplyGroups||new Set();
+   onScores?.(current,replies);
    const table=el('div',undefined,'ev-auto-groups');
    for(let id=1;id<=12;id++){
      const record=current.find(item=>Number(item.groupId)===id);

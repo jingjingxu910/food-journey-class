@@ -90,3 +90,4 @@ async function writeLease(active,expiresAt){
  if(result?.code)throw Error(result.message);
 }
 setInterval(check,750);
+window.addEventListener('online',check);

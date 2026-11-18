@@ -1,13 +1,34 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
 import {stages,phases,round,readRemote,readLease,writeRemote} from './channel.js?v=classroom-remote';
-import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards} from '../evaluation-data.js?v=classroom-remote';
+import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,automaticStars} from '../evaluation-data.js?v=classroom-remote';
+import {makeAutomaticStarsButton,makeForumStarRefresh} from '../teacher-auto-stars.js?v=teacher-live-layout';
 const $=selector=>document.querySelector(selector);
 const symbols=['🔎','🤝','🌱'],dimensions=['观察','合作','坚持'];
 let active=null,feedback={},queue=Promise.resolve();
-function element(tag,text=''){
+let scoreRecords=[], forumReplyGroups=new Set(), scoreRound;
+function element(tag,text='',className){
  const node=document.createElement(tag);
  node.textContent=text;
+ if(className)node.className=className;
  return node;
+}
+const autoStarsButton=makeAutomaticStarsButton({el:element,button,symbols,readState:()=>({
+ ready:!!active,resetId:active?.resetId,records:scoreRecords,forumReplyGroups
+}),onScores:(records,replies)=>{
+ scoreRecords=records;forumReplyGroups=replies;render();
+}});
+const refreshForumStars=makeForumStarRefresh(()=>active?.resetId,replies=>{
+ forumReplyGroups=replies;
+ render();
+});
+async function refreshScores(resetId){
+ if(!active||active.resetId!==resetId)return;
+ if(scoreRound!==resetId){scoreRound=resetId;scoreRecords=[];forumReplyGroups=new Set();}
+ void refreshForumStars();
+ const records=await submittedRecords(resetId);
+ if(!active||active.resetId!==resetId)return;
+ scoreRecords=records;
+ render();
 }
 function button(text,click,pressed){
  const node=element('button',text);
@@ -65,6 +86,7 @@ $('#pairing').onsubmit=async event=>{
   $('#remote-controls').hidden=false;
   $('#status').textContent='已连接大屏';
   render();
+  void refreshScores(display.resetId).catch(()=>{});
   void feedbackFor(display.resetId).then(saved=>{if(active?.session===display.session){feedback=saved;render();}}).catch(error=>{if(active?.session===display.session)$('#status').textContent='已连接大屏，评价暂未读取：'+errorText(error);});
  }catch(error){disconnected(errorText(error));}
  finally{connect.disabled=false;}
@@ -85,6 +107,7 @@ function run(operation){
    active=next;
    if(next.resetId!==display.resetId){
     feedback={resetId:next.resetId,groups:{},shares:{}};
+    scoreRecords=[];forumReplyGroups=new Set();
     await sendClassCommand(next.resetId,'cover',String(Date.now()));
    }
   }
@@ -102,6 +125,7 @@ function render(){
  if(!state)return;
  $('#phases').replaceChildren(...stages.map(stage=>button(stage==='小论坛'?'身体小论坛':stage,()=>run(display=>switchStage(display,stage)),stage===state.stage)));
  const actions=element('div');actions.className='actions';
+ actions.append(autoStarsButton);
  actions.append(button('清除数据',()=>{
   if(!window.confirm('确定结束本轮课堂并清除本轮显示的数据吗？'))return;
   run(async display=>{
@@ -152,11 +176,14 @@ function render(){
    const change=delta=>run(async display=>{
     feedback=await feedbackFor(display.resetId);
     const group=feedback.groups[id]??={};
+  const auto=automaticStars(scoreRecords.find(record=>Number(record.groupId)===id),forumReplyGroups.has(id)).stars;
     const counts=group.stars??=[0,0,0];
     counts[i]=Math.max(0,Math.min(5,(counts[i]||0)+delta));
     await saveFeedback(feedback);
    });
-   const star=button(symbol+' '+(feedback.groups?.[id]?.stars?.[i]||0),()=>change(1));
+   const manual=feedback.groups?.[id]?.stars?.[i]||0;
+   const star=button(symbol+' '+(manual+auto[i]),()=>change(1));
+   star.title='教师 '+manual+' 星 · 自动 '+auto[i]+' 星';
    star.setAttribute('aria-label','第 '+id+' 组'+dimensions[i]+'加星');
    let held=false,timer;
    star.onpointerdown=()=>{held=false;timer=setTimeout(()=>{held=true;change(-1);},650);};
@@ -175,7 +202,8 @@ setInterval(async()=>{
  checking=true;
  try{
   const display=await readRemote(),lease=await readLease();
-  if(display.expiresAt===0||display.session!==active.session||lease.session!==active.session||lease.expiresAt<=Date.now())disconnected('大屏已退出跟随，请重新配对');
+  if(display.expiresAt===0||display.session!==active.session||lease.session!==active.session)disconnected('大屏已退出跟随，请重新配对');
  }catch{/* Retry without changing the classroom. */}
  finally{checking=false;}
 },3000);
+setInterval(()=>{if(active&&!document.hidden)void refreshScores(active.resetId).catch(()=>{});},12000);

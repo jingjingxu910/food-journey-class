@@ -1,6 +1,6 @@
-import {makeAutomaticStarsButton} from './teacher-auto-stars.js';
+import {makeAutomaticStarsButton,makeForumStarRefresh} from './teacher-auto-stars.js?v=teacher-live-layout';
 import {cloudErrorText,groupId,currentRecord,saveRecord,submitRecord,isPhotoPreview} from './student-data.js?v=20261116-tablet-fixes';
-import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards} from './evaluation-data.js?v=classroom-remote';
+import {dimensions,readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,awardIcon,journeyEvents,participationPraise,sharingAwards,automaticStars} from './evaluation-data.js?v=classroom-remote';
 const teacher=new URLSearchParams(location.search).get('mode')==='teacher';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
 const button=(text,action,cls='ev-button')=>{const b=el('button',text,cls);b.type='button';b.onclick=action;return b;};
@@ -75,7 +75,7 @@ function setupTeacher(){
  header.append(el('b','点一下，送一颗星'),el('span','🔎 观察   🤝 合作   🌱 坚持'),status);
  const rows=el('div',undefined,'ev-star-groups');dock.append(header,rows);const galleryPages=el('nav',undefined,'gallery-pages live-pages');galleryPages.hidden=true;galleryPages.setAttribute('aria-label','小组分页');
  host.append(galleryPages,panel,dock);
- let galleryPage=0;
+ let galleryPage=0, forumReplyGroups=new Set();
  window.addEventListener('resize',()=>render());
  tabs.setAttribute('aria-label','教学页面和学生活动');
  host.insertBefore(tabs,heading);
@@ -109,12 +109,14 @@ function setupTeacher(){
    rows.replaceChildren();
    for(let id=1;id<=12;id++){
      const cell=el('div',undefined,'ev-star-group');cell.append(el('b',id+' 组'));
+     const auto=automaticStars(records.find(record=>Number(record.groupId)===id),forumReplyGroups.has(id)).stars;
      dimensions.forEach((name,i)=>{
-       const star=button(symbols[i]+' '+(entry(id).stars[i]||0),()=>{
+       const manual=entry(id).stars[i]||0;
+       const star=button(symbols[i]+' '+(manual+auto[i]),()=>{
          if(!ready||busy)return;
          entry(id).stars[i]=Math.min(5,(entry(id).stars[i]||0)+1);schedule();renderStars();
        },'quick-star');
-       star.title=name+'，点击加星；长按或右键撤回一星';star.setAttribute('aria-label',id+'组'+name+'加星');
+       star.title=name+' · 教师 '+manual+' 星 · 自动 '+auto[i]+' 星。点按或长按调整教师星。';star.setAttribute('aria-label',id+'组'+name+'加星');
        let press;
        star.onpointerdown=()=>{press=setTimeout(()=>{if(!ready||busy)return;entry(id).stars[i]=Math.max(0,(entry(id).stars[i]||0)-1);schedule();renderStars();},650);};
        star.onpointerup=star.onpointerleave=star.onpointercancel=()=>clearTimeout(press);
@@ -156,7 +158,15 @@ function setupTeacher(){
    tab.title=name==='课题封面'?'展示封面并带领学生回到课堂初始页':'展示并带领学生进入'+label;
    tabs.append(tab);
  });
- const autoStars=makeAutomaticStarsButton({el,button,symbols,readState:()=>({ready,resetId:state.resetId,records})});
+ const refreshForumStars=makeForumStarRefresh(()=>state.resetId,replies=>{
+   forumReplyGroups=replies;
+   renderStars();
+ });
+ const autoStars=makeAutomaticStarsButton({el,button,symbols,readState:()=>({ready,resetId:state.resetId,records,forumReplyGroups}),onScores:(latest,replies)=>{
+   records=latest;
+   forumReplyGroups=replies;
+   renderStars();
+ }});
  tabs.append(autoStars,fullscreen);
  function renderSlide(){
    if(stage==='小论坛'){
@@ -309,6 +319,7 @@ function setupTeacher(){
  window.addEventListener('lesson-records',async event=>{
    ready=false;renderStars();
    const round=event.detail.resetId||null;
+   if(round!==state.resetId)forumReplyGroups=new Set();
    records=[...event.detail.records].sort((a,b)=>b.updatedAt-a.updatedAt).filter((r,i,all)=>all.findIndex(x=>Number(x.groupId)===Number(r.groupId))===i);
    try{
      if(saving)await saving;
@@ -317,6 +328,7 @@ function setupTeacher(){
      const local=JSON.parse(localStorage.getItem('teacher-evaluation-draft')||'null');
      if(local?.resetId===round){state=local;dirty=true;}else localStorage.removeItem('teacher-evaluation-draft');
      ready=true;status.textContent='';
+     void refreshForumStars();
      if(dirty)schedule();
      if(stage==='课题封面'&&coverCommandRound!==JSON.stringify(round)){
        await sendClassCommand(round,'cover',String(Date.now()));
