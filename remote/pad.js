@@ -1,10 +1,11 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
-import {stages,phases,round,readRemote,readLease,writeRemote} from './channel.js?v=classroom-remote';
+import {stages,phases,round,readRemote,readLease,writeRemote} from './channel.js?v=classroom-recovery';
 import {readDocument,saveFeedback,sendClassCommand,submittedRecords,makeAwards,automaticStars} from '../evaluation-data.js?v=classroom-remote';
 import {makeAutomaticStarsButton,makeForumStarRefresh} from '../teacher-auto-stars.js?v=teacher-live-layout';
 const $=selector=>document.querySelector(selector);
 const symbols=['🔎','🤝','🌱'],dimensions=['观察','合作','坚持'];
 let active=null,feedback={},queue=Promise.resolve();
+let screenLayout;
 let scoreRecords=[], forumReplyGroups=new Set(), scoreRound;
 function element(tag,text='',className){
  const node=document.createElement(tag);
@@ -62,6 +63,7 @@ async function connection(){
  ]);
  if(display.expiresAt===0||!(lease.expiresAt>Date.now())||lease.session!==display.session)throw Error('大屏已退出跟随或连接超时');
  if((display.resetId||null)!==resetId)throw Error('课堂已开始新一轮，请重新配对');
+ screenLayout=lease.layout;
  return display;
 }
 async function feedbackFor(resetId){
@@ -116,9 +118,9 @@ function run(operation){
 }
 async function switchStage(display,stage,question=display.question){
  const phase=phases[stages.indexOf(stage)];
- if(phase==='awards')return {...display,stage,page:0,group:0};
+ if(phase==='awards')return {...display,stage,page:0,pageStart:1,group:0};
  await sendClassCommand(display.resetId,phase,String(Date.now()),{discussionIndex:question});
- return {...display,stage,question,page:0,group:0};
+ return {...display,stage,question,page:0,pageStart:1,group:0};
 }
 function render(){
  const state=active;
@@ -133,15 +135,20 @@ function render(){
    const db=await cloudDb();
    const result=await db.collection('food-journey-groups').doc('class-reset').set({id:'class-reset',resetId,updatedAt:Date.now()});
    if(result?.code||!(result?.updated>0||result?.upsertedId||result?.id))throw Error('清除数据未完成，请重试。');
-   return {...display,resetId,stage:'课题封面',group:0,page:0,question:0};
+   return {...display,resetId,stage:'课题封面',group:0,page:0,pageStart:1,question:0};
   });
  }));
  const grids=['初始模型','AR观察','修正模型','实体拼装','食物旅行','小组自评','专属奖状'];
- if(grids.includes(state.stage))actions.append(
-  button('第 1–6 组',()=>run(display=>({...display,page:0,group:0})),state.page===0),
-  button('第 7–12 组',()=>run(display=>({...display,page:1,group:0})),state.page===1),
-  button('返回总览',()=>run(display=>({...display,group:0})),!state.group)
- );
+ const pageSize=screenLayout?.stage===state.stage&&Number.isInteger(screenLayout.pageSize)&&screenLayout.pageSize>=1&&screenLayout.pageSize<=12
+  ?screenLayout.pageSize:6;
+ const page=Math.floor(((state.group||state.pageStart||state.page*6+1)-1)/pageSize);
+ if(grids.includes(state.stage)){
+  for(let index=0;index<Math.ceil(12/pageSize);index++){
+   const first=index*pageSize+1,last=Math.min(12,(index+1)*pageSize);
+   if(pageSize<12)actions.append(button('第 '+first+'–'+last+' 组',()=>run(display=>({...display,page:index,pageStart:first,group:0})),page===index));
+  }
+  actions.append(button('返回总览',()=>run(display=>({...display,page,pageStart:page*pageSize+1,group:0})),!state.group));
+ }
  if(state.stage==='课堂研讨')for(let i=0;i<3;i++)actions.append(button('第 '+(i+1)+' 题',()=>run(display=>switchStage(display,'课堂研讨',i)),state.question===i));
  if(state.stage==='专属奖状')actions.append(button('颁发奖状',()=>run(async display=>{
   const records=await submittedRecords(display.resetId);
@@ -150,10 +157,10 @@ function render(){
   for(const award of makeAwards(records,feedback.groups,feedback.shares))feedback.groups[award.groupId]=award;
   await saveFeedback(feedback);
   await sendClassCommand(display.resetId,'awards',String(Date.now()));
-  return {...display,page:0,group:0};
+  return {...display,page:0,pageStart:1,group:0};
  })));
  const groupButtons=element('div');groupButtons.className='groups';
- if(grids.includes(state.stage))for(let id=state.page*6+1;id<=state.page*6+6;id++)groupButtons.append(button('放大第 '+id+' 组',()=>run(display=>({...display,group:id})),state.group===id));
+ if(grids.includes(state.stage))for(let id=page*pageSize+1;id<=Math.min(12,(page+1)*pageSize);id++)groupButtons.append(button('放大第 '+id+' 组',()=>run(display=>({...display,group:id})),state.group===id));
  const sharing=element('label','本环节交流小组');
  const select=element('select');
  for(let id=0;id<=12;id++){const option=element('option',id?'第 '+id+' 组':'未指定');option.value=id;select.append(option);}
@@ -172,11 +179,11 @@ function render(){
  const stars=element('div');stars.className='star-grid';
  for(let id=1;id<=12;id++){
   const item=element('article');item.append(element('b','第 '+id+' 组'));
+  const auto=automaticStars(scoreRecords.find(record=>Number(record.groupId)===id),forumReplyGroups.has(id)).stars;
   symbols.forEach((symbol,i)=>{
    const change=delta=>run(async display=>{
     feedback=await feedbackFor(display.resetId);
     const group=feedback.groups[id]??={};
-  const auto=automaticStars(scoreRecords.find(record=>Number(record.groupId)===id),forumReplyGroups.has(id)).stars;
     const counts=group.stars??=[0,0,0];
     counts[i]=Math.max(0,Math.min(5,(counts[i]||0)+delta));
     await saveFeedback(feedback);
@@ -203,6 +210,7 @@ setInterval(async()=>{
  try{
   const display=await readRemote(),lease=await readLease();
   if(display.expiresAt===0||display.session!==active.session||lease.session!==active.session)disconnected('大屏已退出跟随，请重新配对');
+  else if(JSON.stringify(screenLayout)!==JSON.stringify(lease.layout)){screenLayout=lease.layout;render();}
  }catch{/* Retry without changing the classroom. */}
  finally{checking=false;}
 },3000);

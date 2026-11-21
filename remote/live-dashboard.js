@@ -179,6 +179,7 @@ function setup(){
   wall.querySelector('h2').textContent=stageLabel();
   const available=Math.max(120,innerHeight-wall.getBoundingClientRect().top-(document.querySelector('.ev-stars')?.offsetHeight||0)-12);
   pageSize=innerWidth>=1100?6:innerWidth>=680&&available>=365?6:innerWidth>=680?3:available>=440?4:2;
+  wall.dataset.pageSize=pageSize;
   page=Math.min(page,Math.ceil(12/pageSize)-1);
   wall.style.setProperty('--live-columns',innerWidth>=1100?6:innerWidth>=680?3:2);
   wall.style.setProperty('--live-rows',Math.ceil(pageSize/(innerWidth>=1100?6:innerWidth>=680?3:2)));
@@ -297,7 +298,7 @@ function setup(){
   if(!phase)return;
   const remote=event.detail;
   const nextFocus=remote.group||null;
-  const nextPage=Math.floor(((nextFocus||remote.page*6+1)-1)/pageSize);
+  const nextPage=Math.floor(((nextFocus||remote.pageStart||remote.page*6+1)-1)/pageSize);
   if(nextFocus){
    const key=phase+':'+nextFocus;
    unread.delete(key);

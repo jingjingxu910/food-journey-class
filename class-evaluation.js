@@ -67,8 +67,8 @@ function setupTeacher(){
    schedule();
  };
  const fullscreen=button('全屏',()=>window.requestLessonFullscreen?.(),'ev-button lesson-fullscreen');
- const forumStatus=el('p','','forum-stage-status');
- forumStatus.setAttribute('role','status');
+ const stageError=el('p','','forum-stage-status');
+ stageError.setAttribute('role','alert');
  let discussionIndex=0;
  const status=el('span','连接课堂中…','ev-status');
  const header=el('div',undefined,'ev-star-heading');
@@ -79,6 +79,7 @@ function setupTeacher(){
  window.addEventListener('resize',()=>render());
  tabs.setAttribute('aria-label','教学页面和学生活动');
  host.insertBefore(tabs,heading);
+ tabs.after(stageError);
  host.insertBefore(slide,summary);
  function showStage(name){
    if(stage!==name) document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
@@ -126,10 +127,9 @@ function setupTeacher(){
      rows.append(cell);
    }
  }
- async function choose(name){
+ async function choose(name,question=discussionIndex){
    if(busy)return;
-   if(name==='小论坛')forumStatus.textContent='';
-   showStage(name);
+   stageError.textContent='';
 
    busy=true;renderStars();
    try{
@@ -143,12 +143,12 @@ function setupTeacher(){
        await saveFeedback(next);state=next;
      }
      const phases={'课题封面':'cover','初始模型':'v1','AR观察':'observation','修正模型':'v2','实体拼装':'assembly','食物旅行':'journey','小组自评':'evaluation','专属奖状':'awards','课堂研讨':'discussion','小论坛':'forum'};
-     await sendClassCommand(state.resetId,phases[name],String(Date.now()),name==='课堂研讨'?{discussionIndex}:{});
+     await sendClassCommand(state.resetId,phases[name],String(Date.now()),name==='课堂研讨'?{discussionIndex:question}:{});
+     discussionIndex=question;
+     showStage(name);
      if(name!=='专属奖状')void flush().catch(()=>{status.textContent='暂未保存，点击重试';});
-     render();
    }catch(error){
-     status.textContent=error.message;
-     if(name==='小论坛')forumStatus.textContent='论坛切换未完成，'+error.message;
+     stageError.textContent='环节切换未完成，'+error.message;
    }finally{busy=false;renderStars();}
  }
  ['课题封面','初始模型','AR观察','修正模型','实体拼装','食物旅行','课堂研讨','小组自评','专属奖状','小论坛'].forEach(name=>{
@@ -171,7 +171,7 @@ function setupTeacher(){
  function renderSlide(){
    if(stage==='小论坛'){
      slide.dataset.page=stage;
-     slide.replaceChildren(...forumSlide(ready?state.resetId:undefined),forumStatus);
+     slide.replaceChildren(...forumSlide(ready?state.resetId:undefined));
      return;
    }
    const cover=stage==='课题封面';
@@ -189,11 +189,7 @@ function setupTeacher(){
      const actions=el('div',undefined,'lesson-slide-actions');
      function move(step){
        if(busy)return;
-       discussionIndex+=step;
-       renderSlide();
-       renderSharing();
-       slide.querySelector('h1').focus({preventScroll:true});
-       void choose('课堂研讨');
+       void choose('课堂研讨',discussionIndex+step);
      }
      const previous=button('← 上一题',()=>move(-1));
      const next=button('下一题 →',()=>move(1),'ev-button primary');

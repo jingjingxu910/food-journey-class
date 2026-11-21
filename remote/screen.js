@@ -1,5 +1,5 @@
 import {cloudDb} from '../student-data.js?v=20261116-tablet-fixes';
-import {stages,phases,round,readRemote,writeRemote} from './channel.js?v=classroom-remote';
+import {stages,phases,round,readRemote,writeRemote} from './channel.js?v=classroom-recovery';
 import {readDocument} from '../evaluation-data.js?v=20261113-awards';
 const stopText='跟随 iPad';
 const toolbar=document.createElement('div');
@@ -10,6 +10,7 @@ follow.textContent=stopText;
 fullscreen.textContent='全屏';
 let lease, generation=0, busy=false, lastApplied='', lastRenewal=0;
 let resetMismatchAt=0;
+let lastLayout='';
 function mount(){
  const tabs=document.querySelector('.ev-tabs');
  if(tabs){tabs.append(toolbar);return true;}
@@ -43,7 +44,7 @@ follow.onclick=async()=>{
   if(lease){await stop();return;}
   const resetId=await round(),command=await readDocument('class-control');
   const value={resetId,session:crypto.randomUUID(),pairingCode:crypto.randomUUID().slice(0,6),expiresAt:Date.now()+30000,
-   stage:stages[phases.indexOf(command.phase)]||stages[0],page:0,group:0,question:command.discussionIndex||0};
+   stage:stages[phases.indexOf(command.phase)]||stages[0],page:0,pageStart:1,group:0,question:command.discussionIndex||0};
   await writeRemote(value);
   lease=value;await writeLease(value,Date.now()+30000);lastRenewal=Date.now();follow.textContent='退出跟随 · '+value.pairingCode;follow.setAttribute('aria-pressed','true');
  }catch{
@@ -72,22 +73,31 @@ async function check(){
    }
    resetMismatchAt=0;
    if(lease!==active)return;
-   await writeLease(active,Date.now()+30000);
+   await writeLease(active,Date.now()+30000,current.stage);
    lastRenewal=Date.now();
   }
-  const key=JSON.stringify([current.resetId,current.stage,current.page,current.group,current.question,current.displayRevision]);
+  const key=JSON.stringify([current.resetId,current.stage,current.page,current.pageStart,current.group,current.question,current.displayRevision]);
   if(key!==lastApplied){
    window.dispatchEvent(new CustomEvent('remote-display-state',{detail:current}));
    lastApplied=key;
   }
+  const layoutKey=JSON.stringify(screenLayout(current.stage));
+  if(layoutKey!==lastLayout)await writeLease(active,Date.now()+30000,current.stage);
  }catch{/* Keep the current display during connection interruptions. */}
  finally{busy=false;}
 }
-async function writeLease(active,expiresAt){
+function screenLayout(stage){
+ const live=['初始模型','AR观察','修正模型','食物旅行'].includes(stage);
+ const surface=document.querySelector(live?'.live-wall':'#teacher-view .ev-grid');
+ return {stage,pageSize:Number(surface?.dataset.pageSize)||6};
+}
+async function writeLease(active,expiresAt,stage=active.stage){
  const db=await cloudDb();
  if(expiresAt&&lease!==active)return;
- const result=await db.collection('food-journey-groups').doc('class-display-lease').set({session:active.session,resetId:active.resetId,expiresAt});
+ const layout=screenLayout(stage);
+ const result=await db.collection('food-journey-groups').doc('class-display-lease').set({session:active.session,resetId:active.resetId,expiresAt,layout});
  if(result?.code)throw Error(result.message);
+ lastLayout=JSON.stringify(layout);
 }
 setInterval(check,750);
 window.addEventListener('online',check);

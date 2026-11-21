@@ -576,7 +576,10 @@ function showSavedTransition(record) {
   studentView.hidden = true;
   transitionPanel.hidden = false;
   if (!record.v2?.completedAt || (params.get('review')==='1' && params.get('phase')==='v1')) {
-    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已提交</p><h1>初始想法已提交</h1>${record.pendingSync ? '<p>已保存在本机，暂未传给老师。</p>' : ''}<div class="saved-model-preview saved-v1-preview">${miniModel(record.v1, "已保存模型")}</div><p>请等待老师开启下一项活动。</p>`;
+    const nextStep = params.get('phase') === 'v2' && !lessonExtras.observation?.completedAt
+      ? '请先完成并提交 AR 观察，再进入修正模型。'
+      : '请等待老师开启下一项活动。';
+    transitionPanel.innerHTML = `<p class="model-eyebrow">第 ${groupId} 组 · V1 已提交</p><h1>初始想法已提交</h1>${record.pendingSync ? '<p>已保存在本机，暂未传给老师。</p>' : ''}<div class="saved-model-preview saved-v1-preview">${miniModel(record.v1, "已保存模型")}</div><p>${nextStep}</p>`;
     addSyncRetry(record);
     return;
   }
@@ -590,7 +593,11 @@ function addSyncRetry(record){
   transitionPanel.querySelector('h1').textContent='模型已保存在本机';
   const retry=document.createElement('button');retry.className='submit-model-button';retry.textContent='重新提交给老师';
   retry.onclick=async()=>{if(modelSubmitting)return;modelSubmitting=true;retry.disabled=true;try{await syncRecord(record);showSavedTransition(record);}finally{modelSubmitting=false;}};
-  transitionPanel.querySelector('.transition-actions').prepend(retry);
+  retry.type='button';
+  const actions=document.createElement('div');
+  actions.className='transition-actions';
+  actions.append(retry);
+  transitionPanel.append(actions);
 }
 
 function applyRevisionView() {
@@ -954,6 +961,9 @@ async function initialize() {
     }
     showSavedTransition(savedRecord);
     return;
+  }
+  if(params.get('phase')==='v2'&&!v1.completedAt){
+    document.querySelector('#model-prompt').textContent='请先完成并提交初始模型，再进行 AR 观察和模型修正。';
   }
   render();
   resizeCanvas();

@@ -219,10 +219,20 @@ button.teacher-award-tile{display:block;padding:0;overflow:hidden;text-align:ini
 .model-preview-layout .mini-compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0}
 .evaluation-teacher .model-preview-main .mini-model{
  height:auto;
- width:min(100%,calc((var(--teacher-preview-height,70dvh) - 90px) * 2 / 3));
+ width:min(100%,calc((var(--teacher-preview-height,70dvh) - 104px) * 2 / 3));
  margin-inline:auto;
 }
-@media(max-width:760px){
+@media(min-width:641px){
+ .evaluation-teacher .live-focus[open]:has(.model-preview-layout){
+  display:grid;
+  grid-template-rows:auto minmax(0,1fr);
+ }
+ .live-focus .live-focus-content:has(.model-preview-layout){container-type:size}
+ .evaluation-teacher .live-focus .model-preview-main .mini-model{
+  width:min(100%,calc((100cqh - 42px) * 2 / 3));
+ }
+}
+@media(max-width:640px){
  .model-preview-layout{grid-template-columns:repeat(2,minmax(0,1fr))}
  .model-preview-main{grid-column:1/-1;grid-row:1}
 }
